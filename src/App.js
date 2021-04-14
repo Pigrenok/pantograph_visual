@@ -1,4 +1,4 @@
-import { Layer, Stage, Text, Rect, Arrow } from "react-konva";
+import { Layer, Stage, Text, Rect } from "react-konva";
 import React, { Component } from "react";
 
 import "./App.css";
@@ -148,8 +148,8 @@ class App extends Component {
 
     index_to_component_to_visualize_dict = {};
 
-    const beginBin = this.props.store.getBeginBin();
-    let newEndBin = this.props.store.getEndBin();
+    const beginBin = this.props.store.getBeginBin;
+    let newEndBin = this.props.store.getEndBin;
 
     let firstFieldX = -1;
 
@@ -187,7 +187,7 @@ class App extends Component {
     }
 
     //console.log(this.schematic.components.length)
-    //console.log(this.props.store.getBeginBin() + ' - ' + this.props.store.getEndBin())
+    //console.log(this.props.store.getBeginBin + ' - ' + this.props.store.getEndBin)
     //console.log('index_to_component_to_visualize_dict: '  + Object.keys(index_to_component_to_visualize_dict))
 
     return newEndBin;
@@ -207,7 +207,7 @@ class App extends Component {
     ) {
       return; //before the class is fully initialized
     }
-    const beginBin = this.props.store.getBeginBin();
+    const beginBin = this.props.store.getBeginBin;
 
     // With new chunkIndex, it sets the available zoom levels
     this.props.store.setAvailableZoomLevels(
@@ -236,7 +236,7 @@ class App extends Component {
     if (scaling_factor !== 1) {
       this.props.store.updateBeginEndBin(
         Math.round((beginBin - 1) * scaling_factor),
-        Math.round((this.props.store.getEndBin() - 1) * scaling_factor)
+        Math.round((this.props.store.getEndBin - 1) * scaling_factor)
       );
       // The updating will re-trigger openRelevantChunksFromIndex
     } else {
@@ -310,7 +310,7 @@ class App extends Component {
         window.innerWidth / this.props.store.pixelsPerColumn
       );
       this.props.store.updateBeginEndBin(
-        this.props.store.getBeginBin(),
+        this.props.store.getBeginBin,
         newEndBin
       );
 
@@ -567,10 +567,10 @@ class App extends Component {
   // Specific utility function to calculate the visualization shift for the first partial visualized component
   _column_shift(first_visualized_component) {
     return !this.props.store.useWidthCompression
-      ? first_visualized_component.firstBin === this.props.store.getBeginBin()
+      ? first_visualized_component.firstBin === this.props.store.getBeginBin
         ? 0
         : first_visualized_component.arrivals.length +
-          (this.props.store.getBeginBin() - first_visualized_component.firstBin)
+          (this.props.store.getBeginBin - first_visualized_component.firstBin)
       : 0; // When only rearrangements are shown, the width does not correspond to the number of bin, so for now we avoid any shifting
   }
 
@@ -714,7 +714,7 @@ class App extends Component {
       !this.props.store.loading &&
       // The conditions on binWidht and useWidthCompression are lifted here,
       // avoiding any computation if nucleotides have not to be visualized.
-      this.props.store.getBinWidth() === 1 &&
+      this.props.store.getBinWidth === 1 &&
       !this.props.store.useWidthCompression &&
       this.props.store.pixelsPerColumn >= 10 &&
       this.schematic.nucleotides.length > 0
@@ -804,7 +804,7 @@ class App extends Component {
         ),
         1
       ),
-      this.props.store.getEndBin()
+      this.props.store.getEndBin
     );
   };
   handleMouseMove = (event) => {
@@ -833,16 +833,16 @@ class App extends Component {
     const navigation_bar_width = window.innerWidth - 2;
 
     let x_navigation =
-      this.props.store.getBeginBin() === 1
+      this.props.store.getBeginBin === 1
         ? 0
         : Math.ceil(
-            (this.props.store.getBeginBin() /
+            (this.props.store.getBeginBin /
               this.props.store.last_bin_pangenome) *
               navigation_bar_width
           );
 
     let width_navigation = Math.ceil(
-      ((this.props.store.getEndBin() - this.props.store.getBeginBin() + 1) /
+      ((this.props.store.getEndBin - this.props.store.getBeginBin + 1) /
         this.props.store.last_bin_pangenome) *
         navigation_bar_width
     );

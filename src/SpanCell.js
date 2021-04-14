@@ -1,5 +1,5 @@
 import React from "react";
-import { Rect, Text, Line } from "react-konva";
+import { Rect, Text } from "react-konva";
 import PropTypes from "prop-types";
 
 export class MatrixCell extends React.Component {
@@ -63,6 +63,10 @@ export class MatrixCell extends React.Component {
     this.props.store.updateCellTooltipContent(""); // we don't want any tooltip displayed if we leave the cell
   }
 
+  isStartInRange(array) {
+    return array.filter((value) => value[0] === 1 || value[1] === 1).length > 0;
+  }
+
   /**Reduced number of Text elements generated for inversions,
    * mouse events restored**/
   inversionText(inverted) {
@@ -85,10 +89,10 @@ export class MatrixCell extends React.Component {
     }
   }
 
-  renderStart(color) {
+  renderStart(color, startPos = 0) {
     return (
       <Rect
-        x={this.props.x}
+        x={this.props.x + startPos * this.props.store.pixelsPerColumn}
         y={this.props.y}
         width={this.props.store.pixelsPerColumn}
         height={this.props.height || 1}
@@ -108,12 +112,14 @@ export class MatrixCell extends React.Component {
     }
     const inverted = this.props.range[0][1] > 0.5;
     const copyNumber = this.props.range[0][0];
-    const startBlock =
-      this.props.range[0][2][0][0] === 1 || this.props.range[0][2][0][1] === 1;
+    const startBlock = this.props.range.findIndex((value) =>
+      this.isStartInRange(value[2])
+    );
+    // this.props.range[0][2][0][0] === 1 || this.props.range[0][2][0][1] === 1;
 
     let color = this.props.color;
 
-    let boundaryThickness = 0;
+    // let boundaryThickness = 0;
 
     if (copyNumber > 1 && !inverted) {
       // 11 items is number of colors in copyNumberColorArray
@@ -142,13 +148,11 @@ export class MatrixCell extends React.Component {
           width={this.props.width}
           height={this.props.height || 1}
           fill={color}
-          stroke={"red"}
-          strokeWidth={boundaryThickness}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
         />
         {this.inversionText(inverted)}
-        {startBlock ? this.renderStart(color) : null}
+        {startBlock > -1 ? this.renderStart(color, startBlock) : null}
       </>
     );
   }

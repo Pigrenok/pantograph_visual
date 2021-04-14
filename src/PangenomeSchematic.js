@@ -165,7 +165,7 @@ class PangenomeSchematic extends React.Component {
     }
 
     // may have additional chunks to pre-render
-    //console.log("processArray - parsing components ", store.getBeginBin(), " - ", store.getEndBin());
+    //console.log("processArray - parsing components ", store.getBeginBin, " - ", store.getEndBin);
 
     for (let urlIndex = 0; urlIndex < store.chunkURLs.length; urlIndex++) {
       //if end of pre-render is earlier than end of contiguous available chunks, process new data

@@ -6,8 +6,8 @@ import "./App.css";
 
 class ControlHeader extends React.Component {
   shift(percentage) {
-    const beginBin = this.props.store.getBeginBin();
-    const endBin = this.props.store.getEndBin();
+    const beginBin = this.props.store.getBeginBin;
+    const endBin = this.props.store.getEndBin;
     let size = endBin - beginBin;
     let diff = Math.floor(size * (percentage / 100));
     console.log(endBin + "-" + beginBin + "=" + size + " --> diff: " + diff);
@@ -37,9 +37,9 @@ class ControlHeader extends React.Component {
         console.log(result);
         // go from nucleotide position to bin
         result = parseInt(result);
-        const newBeginBin = Math.ceil(result / store.getBinWidth());
+        const newBeginBin = Math.ceil(result / store.getBinWidth);
         console.log(newBeginBin);
-        store.updateBeginEndBin(newBeginBin, store.getEndBin());
+        store.updateBeginEndBin(newBeginBin, store.getEndBin);
       }
     }
     // httpGetAsync(addr + "hi", printResult);
@@ -99,7 +99,7 @@ class ControlHeader extends React.Component {
                 </button>
                 <select
                   id="select_bin_width"
-                  onChange={(val) => this.change_zoom_level(val.target)}
+                  onChange={(event) => this.change_zoom_level(event.target)}
                   value={this.props.store.indexSelectedZoomLevel}
                 >
                   {this.props.store.availableZoomLevels.map((item, i) => (
@@ -136,7 +136,7 @@ class ControlHeader extends React.Component {
                   onChange={(event) =>
                     this.props.store.updateBeginEndBin(
                       event.target.value,
-                      this.props.store.getEndBin()
+                      this.props.store.getEndBin
                     )
                   }
                   style={{ width: "80px" }}
