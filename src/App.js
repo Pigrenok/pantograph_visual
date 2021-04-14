@@ -425,6 +425,8 @@ class App extends Component {
         this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
           Object.values(index_to_component_to_visualize_dict)
         );
+        // TODO: This is part where the height of the component is defined. To make it equal for all views this needs to be modified
+        // but also the top position of filled cell should also be modified.
       }
       /*console.log(
         "maxNumRowsAcrossComponents",

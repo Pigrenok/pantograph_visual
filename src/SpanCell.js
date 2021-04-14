@@ -1,5 +1,5 @@
 import React from "react";
-import { Rect, Text } from "react-konva";
+import { Rect, Text, Line } from "react-konva";
 import PropTypes from "prop-types";
 
 export class MatrixCell extends React.Component {
@@ -13,7 +13,7 @@ export class MatrixCell extends React.Component {
       Math.max(0, event.evt.layerX - this.props.x) /
         this.props.store.pixelsPerColumn
     );
-    //console.log(event, this.props.range, relColumnX);
+    // console.log(event, this.props.range, relColumnX);
 
     let item = this.props.range[
       Math.min(this.props.range.length - 1, relColumnX)
@@ -39,7 +39,7 @@ export class MatrixCell extends React.Component {
       if (start === 0) {
         new_content = end + "+";
       } else if (end === 0) {
-        new_content = start + "-";
+        new_content = start; // + "-";
       } else {
         new_content = start + "-" + end;
       }
@@ -85,14 +85,35 @@ export class MatrixCell extends React.Component {
     }
   }
 
+  renderStart(color) {
+    return (
+      <Rect
+        x={this.props.x}
+        y={this.props.y}
+        width={this.props.store.pixelsPerColumn}
+        height={this.props.height || 1}
+        fill={color}
+        stroke={"limegreen"}
+        strokeWidth={2}
+        onMouseMove={this.onHover.bind(this)}
+        onMouseLeave={this.onLeave.bind(this)}
+        zIndex={0}
+      />
+    );
+  }
+
   render() {
     if (this.props.range === undefined || this.props.range.length === 0) {
       return null; //giving up
     }
     const inverted = this.props.range[0][1] > 0.5;
     const copyNumber = this.props.range[0][0];
+    const startBlock =
+      this.props.range[0][2][0][0] === 1 || this.props.range[0][2][0][1] === 1;
 
     let color = this.props.color;
+
+    let boundaryThickness = 0;
 
     if (copyNumber > 1 && !inverted) {
       // 11 items is number of colors in copyNumberColorArray
@@ -121,10 +142,13 @@ export class MatrixCell extends React.Component {
           width={this.props.width}
           height={this.props.height || 1}
           fill={color}
+          stroke={"red"}
+          strokeWidth={boundaryThickness}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
         />
         {this.inversionText(inverted)}
+        {startBlock ? this.renderStart(color) : null}
       </>
     );
   }

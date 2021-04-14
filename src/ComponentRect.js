@@ -1,6 +1,6 @@
 /* eslint-disable require-jsdoc */
 import React from "react";
-import { Rect } from "react-konva";
+import { Rect, Line } from "react-konva";
 import { ConnectorRect } from "./ComponentConnectorRect";
 import { SpanCell } from "./SpanCell";
 import PropTypes from "prop-types";
@@ -160,6 +160,34 @@ class ComponentRect extends React.Component {
     }
   }
 
+  renderSeparators() {
+    const lines = [];
+    // console.log("Departures:",this.props.item.departures)
+    // console.log("Arrivals:",this.props.item.arrivals)
+    for (
+      let h = 0;
+      h <= this.props.height;
+      h += this.props.store.pixelsPerRow
+    ) {
+      lines.push(
+        <Line
+          points={[
+            this.props.item.relativePixelX,
+            this.props.store.topOffset + h,
+            this.props.item.relativePixelX +
+              this.props.widthInColumns * this.props.store.pixelsPerColumn,
+            this.props.store.topOffset + h,
+          ]}
+          stroke={"black"}
+          strokeWidth={1}
+          zIndex={0}
+          key={"LineHeight" + h}
+        />
+      );
+    }
+    return <>{lines}</>;
+  }
+
   renderComponentConnector(verticalRank, uncompressedRow) {
     let component = this.props.item;
     // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
@@ -204,6 +232,7 @@ class ComponentRect extends React.Component {
         />
         {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
         {this.props.store.useConnector ? this.renderAllConnectors() : null}
+        {this.renderSeparators()}
       </>
     );
   }

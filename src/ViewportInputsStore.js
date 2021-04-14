@@ -43,14 +43,14 @@ RootStore = types
     binScalingFactor: 3,
     useConnector: true,
     pixelsPerColumn: 10,
-    pixelsPerRow: 4,
+    pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
     topOffset: 400,
     highlightedLink: 0, // we will compare linkColumns
     maximumHeightThisFrame: 150,
     cellToolTipContent: "",
-    jsonName: "SARS-CoV-2.genbank.small",
+    jsonName: "AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
     // Added attributes for the zoom level management
     availableZoomLevels: types.optional(types.array(types.string), ["1"]),
 
@@ -64,7 +64,7 @@ RootStore = types
     chunksProcessedFasta: types.optional(types.array(types.string), []),
 
     pathNucPos: types.optional(PathNucPos, { path: "path", nucPos: 0 }), // OR: types.maybe(PathNucPos)
-    pathIndexServerAddress: "http://193.196.29.24:3010/",
+    pathIndexServerAddress: "http://localhost:3010", // "http://193.196.29.24:3010/",
 
     loading: true,
     copyNumberColorArray: types.optional(types.array(types.string), [
@@ -113,8 +113,8 @@ RootStore = types
     function updateBeginEndBin(newBegin, newEnd) {
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
 
+      // This function is called 5 times every time the bin number is updated.
       console.log("updateBeginEndBin - " + newBegin + " - " + newEnd);
-
       // Sometimes, typing new bin, it arrives something that is not a valid integer
       if (!isInt(newBegin) || !isInt(newEnd)) {
         newBegin = 1;
