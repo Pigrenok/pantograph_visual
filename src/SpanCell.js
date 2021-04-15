@@ -80,7 +80,7 @@ export class MatrixCell extends React.Component {
           align={"center"}
           verticalAlign={"center"}
           text={inverted ? "<" : " "}
-          onMouseOver={this.onHover.bind(this)}
+          onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
         />
       );
