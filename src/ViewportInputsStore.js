@@ -42,7 +42,7 @@ RootStore = types
     useWidthCompression: false,
     binScalingFactor: 3,
     useConnector: true,
-    pixelsPerColumn: 10,
+    pixelsPerColumn: 30,
     pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
@@ -50,7 +50,7 @@ RootStore = types
     highlightedLink: 0, // we will compare linkColumns
     maximumHeightThisFrame: 150,
     cellToolTipContent: "",
-    jsonName: "small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
+    jsonName: "shorttest1.seg", //"small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
     // Added attributes for the zoom level management
     availableZoomLevels: types.optional(types.array(types.string), ["1"]),
 
@@ -100,6 +100,10 @@ RootStore = types
     metaDataKey: "Path",
     metaData: types.map(metaDataModelEntry),
     //metaDataChoices: types.array(types.string)
+    selectedComponents: types.optional(
+      types.array(types.array(types.integer)),
+      []
+    ),
   })
   .actions((self) => ({
     setChunkIndex(json) {
@@ -304,6 +308,16 @@ RootStore = types
       self.metaDataChoices = ar;
     },
 
+    addToSelection(colStart, colEnd) {
+      self.selectedComponents.push([colStart, colEnd]);
+    },
+
+    delFromSelection(colStart, colEnd) {
+      // Removing all selected intervals that intersect with the given one.
+      self.selectedComponents = self.selectedComponents.filter((val) => {
+        return (colEnd - val[0]) * (val[1] - colStart) > 0;
+      });
+    },
     // return {
     //   setChunkIndex,
     //   updateBeginEndBin,

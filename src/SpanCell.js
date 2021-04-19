@@ -110,12 +110,22 @@ export class MatrixCell extends React.Component {
     if (this.props.range === undefined || this.props.range.length === 0) {
       return null; //giving up
     }
-    const inverted = this.props.range[0][1] > 0.5;
-    const copyNumber = this.props.range[0][0];
+    const rangeLength = this.props.range.length;
+
+    const inverted =
+      this.props.range.reduce((total, element) => {
+        return total + element[1];
+      }, 0) /
+        rangeLength >
+      0.5;
+    const copyNumber = Math.round(
+      this.props.range.reduce((total, element) => {
+        return total + element[0];
+      }, 0) / rangeLength
+    );
     const startBlock = this.props.range.findIndex((value) =>
       this.isStartInRange(value[2])
     );
-    // this.props.range[0][2][0][0] === 1 || this.props.range[0][2][0][1] === 1;
 
     let color = this.props.color;
 

@@ -223,6 +223,9 @@ class Component {
     this.firstBin = component.first_bin;
     this.lastBin = component.last_bin;
 
+    this.firstCol = component.firstCol;
+    this.lastCol = component.lastCol;
+
     this.arrivals = [];
     for (let arrival of component.arrivals) {
       this.arrivals.push(new LinkColumn(arrival));
