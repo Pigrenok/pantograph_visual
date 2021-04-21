@@ -1,6 +1,7 @@
 /* eslint-disable require-jsdoc */
 import React from "react";
 import { Rect, Line } from "react-konva";
+import { observer } from "mobx-react";
 import { ConnectorRect } from "./ComponentConnectorRect";
 import { SpanCell } from "./SpanCell";
 import PropTypes from "prop-types";
@@ -70,183 +71,264 @@ export function compress_visible_rows(components, pathNames, annotationNames) {
   return row_mapping;
 }
 
-class ComponentRect extends React.Component {
-  state = {
-    color: "lightgray",
-  };
+const ComponentRect = observer(
+  class extends React.Component {
+    state = {
+      //   isSelected: this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol)
+    };
 
-  handleClick = () => {
-    if (this.state.color === "lightgray") {
-      this.setState({ color: "lightblue" });
-    } else if (this.state.color === "lightblue") {
-      this.setState({ color: "lightgray" });
+    constructor(props) {
+      super(props);
     }
-  };
 
-  renderMatrix() {
-    let parts = this.props.item.matrix.map((entry, vertical_rank) => {
-      let row_n = entry[0];
-      return this.renderMatrixRow(entry[1], vertical_rank, row_n);
-    });
-    this.props.store.updateMaxHeight(this.props.item.occupants.length); //Set max observed occupants in mobx store for render height
-    return <>{parts}</>;
-  }
-
-  renderMatrixRow(entry, verticalRank, uncompressed_y) {
-    let this_y = verticalRank;
-    if (!this.props.store.useVerticalCompression) {
-      if (!this.props.compressed_row_mapping.hasOwnProperty(uncompressed_y)) {
-        return null; // we need compressed_y and we don't have it.  give up
+    handleClick = () => {
+      // if (this.state.color === "lightgray") {
+      //   this.setState({ color: "lightblue" });
+      // } else if (this.state.color === "lightblue") {
+      //   this.setState({ color: "lightgray" });
+      // }
+      if (this.isSelected) {
+        console.log("Deselected");
+        this.props.store.delFromSelection(
+          this.props.item.firstCol,
+          this.props.item.lastCol
+        );
+      } else {
+        console.log("Selected");
+        this.props.store.addToSelection(
+          this.props.item.firstCol,
+          this.props.item.lastCol
+        );
       }
-      this_y = this.props.compressed_row_mapping[uncompressed_y];
+      console.log(this.props.store.selectedComponents);
+      // this.setState({isSelected: this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol)})
+    };
+
+    get isSelected() {
+      return (
+        this.props.store.selectedComponents.filter((val) => {
+          return (
+            (this.props.item.lastCol - val[0]) *
+              (val[1] - this.props.item.firstCol) >
+            0
+          );
+        }).length > 0
+      );
     }
 
-    let pathName = this.props.pathNames[uncompressed_y];
-    let rowColor = "#838383";
-    if (this.props.store.colorByGeneAnnotation && this.props.store.metaData) {
-      let metaData = this.props.store.metaData;
-      if (metaData.get(pathName) !== undefined) {
-        if (metaData.get(pathName).Color.startsWith("#")) {
-          rowColor = metaData.get(pathName).Color;
-        } else {
-          rowColor = colorFromStr(metaData.get(pathName).Color);
+    renderMatrix() {
+      let parts = this.props.item.matrix.map((entry, vertical_rank) => {
+        let row_n = entry[0];
+        return this.renderMatrixRow(entry[1], vertical_rank, row_n);
+      });
+      this.props.store.updateMaxHeight(this.props.item.occupants.length); //Set max observed occupants in mobx store for render height
+      return <>{parts}</>;
+    }
+
+    renderMatrixRow(entry, verticalRank, uncompressed_y) {
+      let this_y = verticalRank;
+      if (!this.props.store.useVerticalCompression) {
+        if (!this.props.compressed_row_mapping.hasOwnProperty(uncompressed_y)) {
+          return null; // we need compressed_y and we don't have it.  give up
+        }
+        this_y = this.props.compressed_row_mapping[uncompressed_y];
+      }
+
+      let pathName = this.props.pathNames[uncompressed_y];
+      let rowColor = "#838383";
+      if (this.props.store.colorByGeneAnnotation && this.props.store.metaData) {
+        let metaData = this.props.store.metaData;
+        if (metaData.get(pathName) !== undefined) {
+          if (metaData.get(pathName).Color.startsWith("#")) {
+            rowColor = metaData.get(pathName).Color;
+          } else {
+            rowColor = colorFromStr(metaData.get(pathName).Color);
+          }
         }
       }
+
+      return (
+        <SpanCell
+          key={"occupant" + uncompressed_y}
+          row={entry[1]}
+          iColumns={entry[0]}
+          parent={this.props.item}
+          store={this.props.store}
+          pathName={pathName}
+          color={rowColor}
+          x={
+            this.props.item.relativePixelX +
+            this.props.item.arrivals.length * this.props.store.pixelsPerColumn
+          }
+          y={
+            this_y * this.props.store.pixelsPerRow + this.props.store.topOffset
+          }
+          rowNumber={uncompressed_y}
+          verticalRank={verticalRank}
+          handleClickMethod={this.handleClick}
+        />
+      );
     }
 
-    return (
-      <SpanCell
-        key={"occupant" + uncompressed_y}
-        row={entry[1]}
-        iColumns={entry[0]}
-        parent={this.props.item}
-        store={this.props.store}
-        pathName={pathName}
-        color={rowColor}
-        x={
-          this.props.item.relativePixelX +
-          this.props.item.arrivals.length * this.props.store.pixelsPerColumn
-        }
-        y={this_y * this.props.store.pixelsPerRow + this.props.store.topOffset}
-        rowNumber={uncompressed_y}
-        verticalRank={verticalRank}
-      />
-    );
-  }
+    renderAllConnectors() {
+      const departures = this.props.item.departures;
+      let connectorsColumn = departures.slice(-1)[0];
+      if (connectorsColumn !== undefined) {
+        //count starts at the sum(sum(departure columns)) so that it's clear
+        // adjacent connectors are alternatives to LinkColumns
+        //offset the y to start below link columns when using vertical compression
+        let yOffset = departures
+          .slice(0, -1)
+          .map((column) => {
+            return column.participants.length;
+          })
+          .reduce(sum, 0); // sum of trues in all columns
+        return (
+          <>
+            {connectorsColumn.participants.map((uncompressed_row) => {
+              yOffset++; // only used in vertical compression
+              return this.renderComponentConnector(yOffset, uncompressed_row);
+            })}
+          </>
+        );
+      } else {
+        return null;
+      }
+    }
 
-  renderAllConnectors() {
-    const departures = this.props.item.departures;
-    let connectorsColumn = departures.slice(-1)[0];
-    if (connectorsColumn !== undefined) {
-      //count starts at the sum(sum(departure columns)) so that it's clear
-      // adjacent connectors are alternatives to LinkColumns
-      //offset the y to start below link columns when using vertical compression
-      let yOffset = departures
-        .slice(0, -1)
-        .map((column) => {
-          return column.participants.length;
-        })
-        .reduce(sum, 0); // sum of trues in all columns
+    renderSeparators() {
+      const lines = [];
+      // console.log("Departures:",this.props.item.departures)
+      // console.log("Arrivals:",this.props.item.arrivals)
+      for (
+        let h = 0;
+        h <= this.props.height;
+        h += this.props.store.pixelsPerRow
+      ) {
+        lines.push(
+          <Line
+            points={[
+              this.props.item.relativePixelX,
+              this.props.store.topOffset + h,
+              this.props.item.relativePixelX +
+                this.props.widthInColumns * this.props.store.pixelsPerColumn,
+              this.props.store.topOffset + h,
+            ]}
+            stroke={"black"}
+            strokeWidth={1}
+            key={"LineHeight" + h}
+          />
+        );
+      }
+      return <>{lines}</>;
+    }
+
+    // isSelected() {
+    //   console.log("Selected components: ",this.props.store.selectedComponents);
+    //   return true;
+    // }
+
+    renderSelectedMarker() {
       return (
         <>
-          {connectorsColumn.participants.map((uncompressed_row) => {
-            yOffset++; // only used in vertical compression
-            return this.renderComponentConnector(yOffset, uncompressed_row);
-          })}
+          <Line
+            points={[
+              this.props.item.relativePixelX,
+              this.props.store.topOffset,
+              this.props.item.relativePixelX,
+              this.props.store.topOffset + this.props.height - 1,
+            ]}
+            stroke={"red"}
+            strokeWidth={2}
+            key={"LeftSelectionMarker"}
+          />
+          <Line
+            points={[
+              this.props.item.relativePixelX +
+                this.props.widthInColumns * this.props.store.pixelsPerColumn,
+              this.props.store.topOffset,
+              this.props.item.relativePixelX +
+                this.props.widthInColumns * this.props.store.pixelsPerColumn,
+              this.props.store.topOffset + this.props.height - 1,
+            ]}
+            stroke={"red"}
+            strokeWidth={2}
+            key={"RightSelectionMarker"}
+          />
         </>
       );
-    } else {
-      return null;
     }
-  }
 
-  renderSeparators() {
-    const lines = [];
-    // console.log("Departures:",this.props.item.departures)
-    // console.log("Arrivals:",this.props.item.arrivals)
-    for (
-      let h = 0;
-      h <= this.props.height;
-      h += this.props.store.pixelsPerRow
-    ) {
-      lines.push(
-        <Line
-          points={[
-            this.props.item.relativePixelX,
-            this.props.store.topOffset + h,
-            this.props.item.relativePixelX +
-              this.props.widthInColumns * this.props.store.pixelsPerColumn,
-            this.props.store.topOffset + h,
-          ]}
-          stroke={"black"}
-          strokeWidth={1}
-          zIndex={0}
-          key={"LineHeight" + h}
+    renderComponentConnector(verticalRank, uncompressedRow) {
+      let component = this.props.item;
+      // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
+      const x_val =
+        component.relativePixelX +
+        (component.arrivals.length +
+          (this.props.store.useWidthCompression
+            ? this.props.store.binScalingFactor
+            : component.num_bin) +
+          component.departures.length -
+          1) *
+          this.props.store.pixelsPerColumn;
+      let this_y = verticalRank;
+      if (!this.props.store.useVerticalCompression) {
+        this_y = this.props.compressed_row_mapping[uncompressedRow];
+      }
+      return (
+        <ConnectorRect
+          key={"connector" + uncompressedRow}
+          x={x_val}
+          y={
+            this.props.store.topOffset + this_y * this.props.store.pixelsPerRow
+          }
+          width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
+          height={this.props.store.pixelsPerRow}
+          color={"#AAAABE"}
         />
       );
     }
-    return <>{lines}</>;
-  }
 
-  renderComponentConnector(verticalRank, uncompressedRow) {
-    let component = this.props.item;
-    // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
-    const x_val =
-      component.relativePixelX +
-      (component.arrivals.length +
-        (this.props.store.useWidthCompression
-          ? this.props.store.binScalingFactor
-          : component.num_bin) +
-        component.departures.length -
-        1) *
-        this.props.store.pixelsPerColumn;
-    let this_y = verticalRank;
-    if (!this.props.store.useVerticalCompression) {
-      this_y = this.props.compressed_row_mapping[uncompressedRow];
+    render() {
+      // console.log("First column: ",this.props.item.firstCol)
+      // console.log("Last column: ",this.props.item.lastCol)
+      // console.log("Is selected: ",this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol))
+
+      return (
+        <>
+          <Rect
+            x={this.props.item.relativePixelX}
+            y={this.props.store.topOffset}
+            key={this.state.key + "R"}
+            width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
+            height={this.props.height - 2} //TODO: change to compressed height
+            fill={this.isSelected ? "lightblue" : "lightgray"}
+            onClick={this.handleClick}
+            onMouseOver={this.onHover.bind(this)}
+            onMouseLeave={this.onLeave.bind(this)}
+          />
+          {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
+          {this.props.store.useConnector ? this.renderAllConnectors() : null}
+          {this.renderSeparators()}
+          {this.isSelected ? this.renderSelectedMarker() : null}
+        </>
+      );
     }
-    return (
-      <ConnectorRect
-        key={"connector" + uncompressedRow}
-        x={x_val}
-        y={this.props.store.topOffset + this_y * this.props.store.pixelsPerRow}
-        width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
-        height={this.props.store.pixelsPerRow}
-        color={"#AAAABE"}
-      />
-    );
-  }
 
-  render() {
-    return (
-      <>
-        <Rect
-          x={this.props.item.relativePixelX}
-          y={this.props.store.topOffset}
-          key={this.state.key + "R"}
-          width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
-          height={this.props.height - 2} //TODO: change to compressed height
-          fill={this.state.color}
-          onClick={this.handleClick}
-          onMouseOver={this.onHover.bind(this)}
-          onMouseLeave={this.onLeave.bind(this)}
-        />
-        {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
-        {this.props.store.useConnector ? this.renderAllConnectors() : null}
-        {this.renderSeparators()}
-      </>
-    );
-  }
+    onHover() {
+      this.props.store.updateCellTooltipContent(
+        "Bin range: " +
+          this.props.item.firstBin +
+          " - " +
+          this.props.item.lastBin
+      );
+    }
 
-  onHover() {
-    this.props.store.updateCellTooltipContent(
-      "Bin range: " + this.props.item.firstBin + " - " + this.props.item.lastBin
-    );
+    onLeave() {
+      this.props.store.updateCellTooltipContent("");
+    }
   }
-
-  onLeave() {
-    this.props.store.updateCellTooltipContent("");
-  }
-}
+);
 
 ComponentRect.propTypes = {
   store: PropTypes.object,

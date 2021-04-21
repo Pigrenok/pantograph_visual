@@ -82,6 +82,7 @@ export class MatrixCell extends React.Component {
           text={inverted ? "<" : " "}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
+          onClick={this.props.handleClickMethod}
         />
       );
     } else {
@@ -101,7 +102,7 @@ export class MatrixCell extends React.Component {
         strokeWidth={2}
         onMouseMove={this.onHover.bind(this)}
         onMouseLeave={this.onLeave.bind(this)}
-        zIndex={0}
+        onClick={this.props.handleClickMethod}
       />
     );
   }
@@ -160,6 +161,7 @@ export class MatrixCell extends React.Component {
           fill={color}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
+          onClick={this.props.handleClickMethod}
         />
         {this.inversionText(inverted)}
         {startBlock > -1 ? this.renderStart(color, startBlock) : null}
@@ -224,6 +226,7 @@ export class SpanCell extends React.Component {
             rowNumber={this.props.rowNumber}
             width={span.width * this.props.store.pixelsPerColumn}
             height={this.props.store.pixelsPerRow}
+            handleClickMethod={this.props.handleClickMethod}
           />
         ))}
       </>

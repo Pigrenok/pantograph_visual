@@ -42,7 +42,7 @@ RootStore = types
     useWidthCompression: false,
     binScalingFactor: 3,
     useConnector: true,
-    pixelsPerColumn: 30,
+    pixelsPerColumn: 10,
     pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
@@ -50,7 +50,7 @@ RootStore = types
     highlightedLink: 0, // we will compare linkColumns
     maximumHeightThisFrame: 150,
     cellToolTipContent: "",
-    jsonName: "shorttest1.seg", //"small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
+    jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg", //"shorttest1_new.seg", //"small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
     // Added attributes for the zoom level management
     availableZoomLevels: types.optional(types.array(types.string), ["1"]),
 
@@ -314,9 +314,35 @@ RootStore = types
 
     delFromSelection(colStart, colEnd) {
       // Removing all selected intervals that intersect with the given one.
-      self.selectedComponents = self.selectedComponents.filter((val) => {
-        return (colEnd - val[0]) * (val[1] - colStart) > 0;
+      const newSelection = [];
+
+      self.selectedComponents.forEach((val) => {
+        if ((colEnd - val[0]) * (val[1] - colStart) > 0) {
+          const intersection = [
+            Math.max(colStart, val[0]),
+            Math.min(colEnd, val[1]),
+          ];
+
+          if (intersection[0] - val[0] > 0) {
+            newSelection.push([val[0], intersection[0]]);
+          }
+
+          if (intersection[1] - val[1] > 0) {
+            newSelection.push([val[1], intersection[1]]);
+          }
+        } else {
+          newSelection.push(val);
+        }
       });
+      self.selectedComponents = newSelection;
+    },
+
+    isInSelection(colStart, colEnd) {
+      return (
+        self.selectedComponents.filter((val) => {
+          return (colEnd - val[0]) * (val[1] - colStart) > 0;
+        }).length > 0
+      );
     },
     // return {
     //   setChunkIndex,
