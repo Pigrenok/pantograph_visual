@@ -104,8 +104,15 @@ RootStore = types
       types.array(types.array(types.integer)),
       []
     ),
+    zoomHighlightBoundaries: types.array(types.integer),
   })
   .actions((self) => ({
+    setZoomHighlightBoundaries(startBin, endBin) {
+      self.zoomHighlightBoundaries = [startBin, endBin];
+    },
+    clearZoomHighlightBoundaries() {
+      self.zoomHighlightBoundaries = [];
+    },
     setChunkIndex(json) {
       console.log("STEP #2: chunkIndex contents loaded");
       //console.log("Index updated with content:", json);

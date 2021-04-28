@@ -74,6 +74,7 @@ export function compress_visible_rows(components, pathNames, annotationNames) {
 const ComponentRect = observer(
   class extends React.Component {
     state = {
+      relativePixelX: this.props.item.relativePixelX,
       //   isSelected: this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol)
     };
 
@@ -88,19 +89,19 @@ const ComponentRect = observer(
       //   this.setState({ color: "lightgray" });
       // }
       if (this.isSelected) {
-        console.log("Deselected");
+        // console.log("Deselected");
         this.props.store.delFromSelection(
           this.props.item.firstCol,
           this.props.item.lastCol
         );
       } else {
-        console.log("Selected");
+        // console.log("Selected");
         this.props.store.addToSelection(
           this.props.item.firstCol,
           this.props.item.lastCol
         );
       }
-      console.log(this.props.store.selectedComponents);
+      // console.log(this.props.store.selectedComponents);
       // this.setState({isSelected: this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol)})
     };
 
@@ -157,7 +158,7 @@ const ComponentRect = observer(
           pathName={pathName}
           color={rowColor}
           x={
-            this.props.item.relativePixelX +
+            this.state.relativePixelX +
             this.props.item.arrivals.length * this.props.store.pixelsPerColumn
           }
           y={
@@ -208,9 +209,9 @@ const ComponentRect = observer(
         lines.push(
           <Line
             points={[
-              this.props.item.relativePixelX,
+              this.state.relativePixelX,
               this.props.store.topOffset + h,
-              this.props.item.relativePixelX +
+              this.state.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.store.topOffset + h,
             ]}
@@ -233,9 +234,9 @@ const ComponentRect = observer(
         <>
           <Line
             points={[
-              this.props.item.relativePixelX,
+              this.state.relativePixelX,
               this.props.store.topOffset,
-              this.props.item.relativePixelX,
+              this.state.relativePixelX,
               this.props.store.topOffset + this.props.height - 1,
             ]}
             stroke={"red"}
@@ -244,10 +245,10 @@ const ComponentRect = observer(
           />
           <Line
             points={[
-              this.props.item.relativePixelX +
+              this.state.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.store.topOffset,
-              this.props.item.relativePixelX +
+              this.state.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.store.topOffset + this.props.height - 1,
             ]}
@@ -259,11 +260,76 @@ const ComponentRect = observer(
       );
     }
 
+    renderZoomBoundary() {
+      const lines = [];
+      if (this.props.store.zoomHighlightBoundaries.length === 2) {
+        // console.log("[ComponentRect.renderZoomBoundary] left zoom boundary",this.props.store.zoomHighlightBoundaries[0])
+        // console.log("[ComponentRect.renderZoomBoundary] right zoom boundary",this.props.store.zoomHighlightBoundaries[1])
+        if (
+          this.props.item.firstBin <=
+            this.props.store.zoomHighlightBoundaries[0] &&
+          this.props.item.lastBin >= this.props.store.zoomHighlightBoundaries[0]
+        ) {
+          // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
+          let xPos =
+            this.state.relativePixelX +
+            (this.props.item.arrivals.length +
+              (this.props.store.zoomHighlightBoundaries[0] -
+                this.props.item.firstBin)) *
+              this.props.store.pixelsPerColumn;
+          lines.push(
+            <Line
+              points={[
+                xPos,
+                this.props.store.topOffset,
+                xPos,
+                this.props.store.topOffset + this.props.height - 1,
+              ]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"LeftZoomMarker"}
+            />
+          );
+        }
+
+        if (
+          this.props.item.firstBin <=
+            this.props.store.zoomHighlightBoundaries[1] &&
+          this.props.item.lastBin >= this.props.store.zoomHighlightBoundaries[1]
+        ) {
+          // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
+          let xPos =
+            this.state.relativePixelX +
+            (this.props.item.arrivals.length +
+              (this.props.store.zoomHighlightBoundaries[1] -
+                this.props.item.firstBin)) *
+              this.props.store.pixelsPerColumn;
+          lines.push(
+            <Line
+              points={[
+                xPos,
+                this.props.store.topOffset,
+                xPos,
+                this.props.store.topOffset + this.props.height - 1,
+              ]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"RightZoomMarker"}
+            />
+          );
+        }
+        window.setTimeout(() => {
+          this.props.store.clearZoomHighlightBoundaries();
+        }, 10000);
+      }
+      return <>{lines}</>;
+    }
+
     renderComponentConnector(verticalRank, uncompressedRow) {
       let component = this.props.item;
       // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
       const x_val =
-        component.relativePixelX +
+        this.state.relativePixelX +
         (component.arrivals.length +
           (this.props.store.useWidthCompression
             ? this.props.store.binScalingFactor
@@ -288,16 +354,25 @@ const ComponentRect = observer(
         />
       );
     }
+    // componentDidUpdate(prevProps) {
+    //   console.log("[ComponentRect.componentDidUpdate] prevProps", prevProps,
+    //     " new props ", this.props,
+    //     " current state ", this.state.relativePixelX)
+    //   this.forceUpdate()
+    //   // if (prevProps.item.relativePixelX !== this.props.item.relativePixelX) {
+    //   //   this.setState({relativePixelX: this.props.item.relativePixelX})
+    //   // }
+    // }
 
     render() {
       // console.log("First column: ",this.props.item.firstCol)
       // console.log("Last column: ",this.props.item.lastCol)
       // console.log("Is selected: ",this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol))
-
+      // console.log("[ComponentRect.render] component to render", this.props.item)
       return (
         <>
           <Rect
-            x={this.props.item.relativePixelX}
+            x={this.state.relativePixelX}
             y={this.props.store.topOffset}
             key={this.state.key + "R"}
             width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
@@ -311,6 +386,9 @@ const ComponentRect = observer(
           {this.props.store.useConnector ? this.renderAllConnectors() : null}
           {this.renderSeparators()}
           {this.isSelected ? this.renderSelectedMarker() : null}
+          {this.props.store.zoomHighlightBoundaries.length === 2
+            ? this.renderZoomBoundary()
+            : null}
         </>
       );
     }

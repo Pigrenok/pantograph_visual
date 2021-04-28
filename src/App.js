@@ -234,10 +234,23 @@ class App extends Component {
     //console.log("scaling_factor: " + scaling_factor);
 
     if (scaling_factor !== 1) {
+      if (scaling_factor < 1) {
+        console.log(
+          "[App.openRelevantChunksFromIndex] Zoom Highlight Boundaries set",
+          Math.round(beginBin * scaling_factor),
+          Math.round(this.props.store.getEndBin * scaling_factor)
+        );
+        this.props.store.setZoomHighlightBoundaries(
+          Math.ceil(beginBin * scaling_factor),
+          Math.ceil(this.props.store.getEndBin * scaling_factor)
+        );
+      }
+
       this.props.store.updateBeginEndBin(
         Math.round((beginBin - 1) * scaling_factor),
         Math.round((this.props.store.getEndBin - 1) * scaling_factor)
       );
+
       // The updating will re-trigger openRelevantChunksFromIndex
     } else {
       const newEndBin = this.prepareWhichComponentsToVisualize(widthInColumns);
@@ -352,7 +365,7 @@ class App extends Component {
         0
       );
     }
-
+    // console.log("[App.recalcXLayout] Component List", this.schematic.components)
     let actualWidth = 0;
     if (Object.values(index_to_component_to_visualize_dict).length > 0) {
       // The actualWidth is calculated on the visualized components
@@ -577,7 +590,7 @@ class App extends Component {
   leftXStart(schematizeComponent, i, firstDepartureColumn, j) {
     // Avoid calling the function too early or for not visualized components
     if (!(schematizeComponent.index in index_to_component_to_visualize_dict)) {
-      return;
+      return -1;
     }
 
     //Return the x coordinate pixel that starts the LinkColumn at i, j
@@ -607,12 +620,13 @@ class App extends Component {
   }
 
   renderComponent(schematizeComponent, i, pathNames) {
+    // console.log("[App.renderComponent] rendering component",schematizeComponent)
     return (
       <>
         <ComponentRect
           store={this.props.store}
           item={schematizeComponent}
-          key={"r" + i}
+          key={"r" + Math.random()}
           height={this.visibleHeightPixels()}
           widthInColumns={
             schematizeComponent.arrivals.length +
@@ -755,9 +769,13 @@ class App extends Component {
     if (this.props.store.loading) {
       return;
     }
+    // console.log("[App.renderSchematic] component list", this.schematic.components)
+    // console.log("[App.renderSchematic] index_to_component_to_visualize_dict", index_to_component_to_visualize_dict)
 
     return this.schematic.components.map((schematizeComponent, i) => {
       if (schematizeComponent.index in index_to_component_to_visualize_dict) {
+        // console.log("[App.renderSchematic] rendering component", schematizeComponent)
+
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i, this.state.pathNames)}
