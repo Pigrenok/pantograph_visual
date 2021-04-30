@@ -2,6 +2,102 @@ import { types } from "mobx-state-tree";
 import { urlExists } from "./URL";
 import { arraysEqual, checkAndForceMinOrMaxValue, isInt } from "./utilities";
 
+const BinData = types.model({
+  repeats: types.number,
+  reversal: types.number,
+  startPos: types.optional(types.integer, 0),
+  endPos: types.optional(types.integer, 0),
+});
+
+const ComponentMatrixElement = types
+  .model({
+    pathID: types.identifierNumber,
+    occupiedBins: types.array(types.integer),
+    binData: types.array(BinData),
+  })
+  .actions((self) => ({
+    addBinData(binArray) {
+      for (bin of binArray) {
+        self.binData.push({
+          repeats: bin[0],
+          reversal: bin[1],
+          startPos: bin[2][0],
+          endPos: bin[2][1],
+        });
+      }
+    },
+  }));
+
+const LinkColumn = types
+  .model({
+    upstream: types.integer,
+    downstream: types.integer,
+    participants: types.array(types.integer),
+  })
+  .views((self) => ({
+    get key() {
+      return (
+        String(this.downstream).padStart(13, "0") +
+        String(this.upstream).padStart(13, "0")
+      );
+    },
+  }));
+
+const Component = types
+  .model({
+    index: types.identifier,
+    columnX: types.integer,
+    compressedColumnX: types.integer,
+    firstBin: types.integer,
+    lastBin: types.integer,
+    firstCol: types.integer,
+    lastCol: types.integer,
+    arrivals: types.map(LinkColumn),
+    departures: types.map(LinkColumn),
+    relativePixelX: types.optional(types.integer, -1),
+    occupants: types.array(types.integer),
+    numBins: types.integer,
+    matrix: types.map(ComponentMatrixElement),
+  })
+  .actions((self) => ({
+    addMatrixElement(matrixElement) {
+      mel = ComponentMatrixElement.create({
+        pathID: matrixElement[0],
+        occupiedBins: matrixElement[1][0],
+      });
+      mel.addBinData(matrixElement[1][1]);
+      self.matrix.set(mel.pathID, mel);
+    },
+
+    addMatrixElements(matrix) {
+      for (el of matrix) {
+        addMatrixElement(el);
+      }
+    },
+
+    addArrivalLinks(linkArray) {
+      for (const link in linkArray) {
+        linkCol = LinkColumn.create(link);
+        self.arrivals.set(linkCol.key, linkCol);
+      }
+    },
+
+    addDepartureLinks(linkArray) {
+      for (const link in linkArray) {
+        linkCol = LinkColumn.create(link);
+        self.departures.set(linkCol.key, linkCol);
+      }
+    },
+
+    moveTo(newRelativePixelX) {
+      self.relativePixelX = newRelativePixelX;
+    },
+
+    getColumnX(useWidthCompression) {
+      return useWidthCompression ? self.compressedColumnX : self.columnX;
+    },
+  }));
+
 const Chunk = types.model({
   file: types.string,
   fasta: types.maybeNull(types.string),
@@ -105,11 +201,43 @@ RootStore = types
       []
     ),
     zoomHighlightBoundaries: types.array(types.integer),
+    components: types.map(Component),
   })
   .actions((self) => ({
+    addComponent(component) {
+      // Component index by first zoom
+      curComp = Component.create({
+        columnX: component.x,
+        compressedColumnX: component.compressedX,
+
+        index: component.first_bin,
+        firstBin: component.first_bin,
+        lastBin: component.last_bin,
+
+        firstCol: component.firstCol,
+        lastCol: component.lastCol,
+
+        relativePixelX: -1,
+
+        // deep copy of occupants
+        occupants: component.occupants,
+        num_bin: component.last_bin - component.first_bin + 1,
+      });
+      curComp.addMatrixElements(component.matrix);
+      curComp.addArrivalLinks(component.arrivals);
+      curComp.addDepartureLinks(component.departures);
+    },
+
+    addComponents(compArray) {
+      for (const component of compArray) {
+        self.addComponent(component);
+      }
+    },
+
     setZoomHighlightBoundaries(startBin, endBin) {
       self.zoomHighlightBoundaries = [startBin, endBin];
     },
+
     clearZoomHighlightBoundaries() {
       self.zoomHighlightBoundaries = [];
     },
