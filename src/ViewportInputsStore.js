@@ -2,6 +2,108 @@ import { types } from "mobx-state-tree";
 import { urlExists } from "./URL";
 import { arraysEqual, checkAndForceMinOrMaxValue, isInt } from "./utilities";
 
+class JSONCache {
+  constructor() {
+    this.cacheAvailable = "caches" in window;
+
+    if (this.cacheAvailable) {
+      caches.delete("jsonData");
+      caches.open("jsonData").then((cache) => {
+        this.cache = cache;
+      });
+    } else {
+      this.cache = new Map();
+    }
+  }
+
+  clear() {
+    this.cache.keys().then((keys) => {
+      for (const key of keys) {
+        this.cache.delete(key);
+      }
+    });
+  }
+
+  _fetchJSON(url) {
+    if (this.cacheAvailable) {
+      if (urlExists(url)) {
+        return this.cache.add(url).then(() => {
+          return this.cache.match(url);
+        });
+      } else {
+        // console.error(`File ${url} does not exist`);
+        throw `File ${url} does not exist`;
+      }
+    } else {
+      let res = fetch(new Request(url))
+        .then((response) => {
+          response.json();
+          this.cache.set(response.url, response);
+          return response;
+        })
+        .catch((error) => {
+          // console.error(`Fetch error: URL ${url} did not return expected format file - ${error}`);
+          throw `Fetch error: URL ${url} did not return expected format file (JSON) - ${error}`;
+        });
+      return res;
+    }
+  }
+
+  _addData(url, data) {
+    if (!(data instanceof Response)) {
+      throw "Data is not Response object. It is not currently supported.";
+    }
+
+    if (this.cacheAvailable) {
+      this.cache.put(url, data); // data should be Response. If json needs to be stores, do jsonData.stringify() before passing it here.
+    } else {
+      this.cache.set(url, data); // in this case, data can be anything, but for compatibility with the main Cache API,
+      //the Response is still required.
+    }
+  }
+
+  _addURL(url, data = null) {
+    //data has to be either string or null or your `data` will be converted to string by `String(data)` method.`
+    if (data !== null) {
+      console.debug("[JSONCache._addURL] data is provided");
+      this._addData(url, data);
+    } else {
+      console.debug("[JSONCache._addURL] data is not provided");
+
+      return this._fetchJSON(url);
+    }
+  }
+
+  getJSON(url) {
+    console.debug(this.cache.keys());
+    let result = this.cache.match(url).then((response) => {
+      if (response) {
+        console.debug("[JSONCache.getJSON] Got from cache");
+        return response;
+      } else {
+        console.debug("[JSONCache.getJSON] Fetched from server");
+        return this._addURL(url);
+      }
+    });
+
+    return result.then((response) => {
+      console.debug(response);
+      return response.json();
+    });
+  }
+
+  setJSON(url, jsonData) {
+    let resp = new Response(JSON.stringify(jsonData), {
+      status: 200,
+      statusMessage: "OK",
+    });
+    Object.defineProperty(resp, "url", { value: "url" });
+    this._addURL(url, resp);
+  }
+}
+
+export let jsonCache = new JSONCache();
+
 const BinData = types.model({
   repeats: types.number,
   reversal: types.number,
@@ -17,7 +119,7 @@ const ComponentMatrixElement = types
   })
   .actions((self) => ({
     addBinData(binArray) {
-      for (bin of binArray) {
+      for (const bin of binArray) {
         self.binData.push({
           repeats: bin[0],
           reversal: bin[1],
@@ -61,7 +163,7 @@ const Component = types
   })
   .actions((self) => ({
     addMatrixElement(matrixElement) {
-      mel = ComponentMatrixElement.create({
+      let mel = ComponentMatrixElement.create({
         pathID: matrixElement[0],
         occupiedBins: matrixElement[1][0],
       });
@@ -70,21 +172,21 @@ const Component = types
     },
 
     addMatrixElements(matrix) {
-      for (el of matrix) {
-        addMatrixElement(el);
+      for (const el of matrix) {
+        self.addMatrixElement(el);
       }
     },
 
     addArrivalLinks(linkArray) {
       for (const link in linkArray) {
-        linkCol = LinkColumn.create(link);
+        let linkCol = LinkColumn.create(link);
         self.arrivals.set(linkCol.key, linkCol);
       }
     },
 
     addDepartureLinks(linkArray) {
       for (const link in linkArray) {
-        linkCol = LinkColumn.create(link);
+        let linkCol = LinkColumn.create(link);
         self.departures.set(linkCol.key, linkCol);
       }
     },
@@ -206,7 +308,7 @@ RootStore = types
   .actions((self) => ({
     addComponent(component) {
       // Component index by first zoom
-      curComp = Component.create({
+      let curComp = Component.create({
         columnX: component.x,
         compressedColumnX: component.compressedX,
 

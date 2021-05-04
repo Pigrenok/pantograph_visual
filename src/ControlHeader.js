@@ -4,6 +4,8 @@ import { httpGetAsync } from "./URL";
 import PropTypes from "prop-types";
 import "./App.css";
 
+import { jsonCache } from "./ViewportInputsStore";
+
 class ControlHeader extends React.Component {
   shift(percentage) {
     const beginBin = this.props.store.getBeginBin;
@@ -71,6 +73,14 @@ class ControlHeader extends React.Component {
     if (indexSelZoomLevel < this.props.store.availableZoomLevels.length - 1) {
       this.props.store.setIndexSelectedZoomLevel(indexSelZoomLevel + 1);
     }
+  }
+
+  testJSON() {
+    jsonCache
+      .getJSON("/test_data/shorttest2.seg/bin2file.json")
+      .then((response) => {
+        console.log("This is what was returned from cache: ", response);
+      });
   }
 
   render() {
@@ -272,6 +282,9 @@ class ControlHeader extends React.Component {
             >
               <strong>Pantograph Tutorial</strong>
             </a>
+            <button className="button" onClick={() => this.testJSON()}>
+              Test json cache!
+            </button>
           </span>
         </div>
       </div>
