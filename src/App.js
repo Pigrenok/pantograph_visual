@@ -644,23 +644,20 @@ const App = observer(
       j,
       linkColumn
     ) {
-      const xCoordArrival = this.leftXStart(
-        schematizeComponent,
-        i,
-        firstDepartureColumn,
-        j
-      );
+      const xCoordArrival =
+        schematizeComponent.relativePixelX +
+        (firstDepartureColumn + j) * this.props.store.pixelsPerColumn;
       const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
         linkColumn,
-        this.state.highlightedLink,
-        this.state.selectedLink
+        this.props.store.highlightedLink,
+        this.props.store.selectedLink
       );
       return (
         <LinkColumn
           store={this.props.store}
           key={"departure" + i + j}
           item={linkColumn}
-          pathNames={this.store.chunkIndex.pathNames}
+          pathNames={this.props.store.chunkIndex.pathNames}
           x={xCoordArrival}
           pixelsPerRow={this.props.store.pixelsPerRow}
           width={this.props.store.pixelsPerColumn}
@@ -795,7 +792,7 @@ const App = observer(
             widthInColumns={width}
           />
 
-          {/*{values(schematizeComponent.arrivals).map((linkColumn, j) => {
+          {values(schematizeComponent.arrivals).map((linkColumn, j) => {
             return this.renderLinkColumn(
               schematizeComponent,
               i,
@@ -804,12 +801,16 @@ const App = observer(
               linkColumn
             );
           })}
-          {values(schematizeComponent.departures).slice(0, -1).map((linkColumn, j) => {
+          {values(schematizeComponent.departures).map((linkColumn, j) => {
+            if (linkColumn.upstream + 1 == linkColumn.downstream) {
+              return null;
+            }
+
             let leftPad =
               schematizeComponent.arrivals.size +
               (this.props.store.useWidthCompression
                 ? this.props.store.binScalingFactor
-                : schematizeComponent.num_bin);
+                : schematizeComponent.numBins);
 
             return this.renderLinkColumn(
               schematizeComponent,
@@ -818,7 +819,7 @@ const App = observer(
               j,
               linkColumn
             );
-          })}*/}
+          })}
         </>
       );
     }

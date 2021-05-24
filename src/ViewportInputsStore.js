@@ -134,20 +134,20 @@ const ComponentMatrixElement = types
     },
   }));
 
-const LinkColumn = types
-  .model({
-    upstream: types.integer,
-    downstream: types.integer,
-    participants: types.array(types.integer),
-  })
-  .views((self) => ({
-    get key() {
-      return (
-        String(this.downstream).padStart(13, "0") +
-        String(this.upstream).padStart(13, "0")
-      );
-    },
-  }));
+const LinkColumn = types.model({
+  key: types.identifier,
+  upstream: types.integer,
+  downstream: types.integer,
+  participants: types.array(types.integer),
+});
+// .views((self) => ({
+//   get key() {
+//     return (
+//       String(this.downstream).padStart(13, "0") +
+//       String(this.upstream).padStart(13, "0")
+//     );
+//   },
+// }));
 
 const Component = types
   .model({
@@ -184,14 +184,27 @@ const Component = types
     addArrivalLinks(linkArray) {
       for (const link of linkArray) {
         // console.debug("[Component.addArrivalLinks]", link)
-        let linkCol = LinkColumn.create(link);
+        let linkCol = LinkColumn.create({
+          key:
+            "a" +
+            String(link.downstream).padStart(13, "0") +
+            String(link.upstream).padStart(13, "0"),
+          ...link,
+        });
         self.arrivals.set(linkCol.key, linkCol);
       }
     },
 
     addDepartureLinks(linkArray) {
       for (const link of linkArray) {
-        let linkCol = LinkColumn.create(link);
+        let linkCol = LinkColumn.create({
+          key:
+            "d" +
+            String(link.downstream).padStart(13, "0") +
+            String(link.upstream).padStart(13, "0"),
+          ...link,
+        });
+
         self.departures.set(linkCol.key, linkCol);
       }
     },
@@ -203,6 +216,20 @@ const Component = types
     getColumnX(useWidthCompression) {
       return useWidthCompression ? self.compressedColumnX : self.columnX;
     },
+  }))
+  .views((self) => ({
+    get connectorLink() {
+      for (let link of values(self.departures)) {
+        if (Number(link.upstream) + 1 === Number(link.downstream)) {
+          return link;
+        }
+      }
+
+      return null;
+    },
+    // when we will get across information about order of passes
+    // through the node in relation to links, its sorting needs
+    // to be included here
   }));
 
 const Chunk = types.model({
@@ -259,7 +286,8 @@ RootStore = types
     heightNavigationBar: 25,
     leftOffset: 1,
     topOffset: 70,
-    highlightedLink: 0, // we will compare linkColumns
+    highlightedLink: types.maybeNull(types.reference(LinkColumn)), // we will compare linkColumns
+    selectedLink: types.maybeNull(types.reference(LinkColumn)),
     cellToolTipContent: "",
     jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg", //"shorttest1_new.seg", //"small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
     // Added attributes for the zoom level management
@@ -325,6 +353,12 @@ RootStore = types
     updatingVisible: false,
   })
   .actions((self) => ({
+    updateHighlightedLink(link) {
+      self.highlightedLink = link.key;
+    },
+
+    jumpLink(link) {},
+
     updateMouse(x, y) {
       self.mouseX = x;
       self.mouseY = y;

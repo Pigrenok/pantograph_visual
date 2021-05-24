@@ -179,29 +179,33 @@ const ComponentRect = observer(
     }
 
     renderAllConnectors() {
-      const departures = this.props.item.departures;
-      let connectorsColumn = departures.slice(-1)[0];
-      if (connectorsColumn !== undefined) {
-        //count starts at the sum(sum(departure columns)) so that it's clear
-        // adjacent connectors are alternatives to LinkColumns
-        //offset the y to start below link columns when using vertical compression
-        let yOffset = values(departures)
-          .slice(0, -1)
-          .map((column) => {
-            return column.participants.length;
-          })
-          .reduce(sum, 0); // sum of trues in all columns
-        return (
-          <>
-            {connectorsColumn.participants.map((uncompressed_row) => {
-              yOffset++; // only used in vertical compression
-              return this.renderComponentConnector(yOffset, uncompressed_row);
-            })}
-          </>
-        );
-      } else {
+      // debugger;
+
+      let connectorsColumn = this.props.item.connectorLink;
+
+      if (connectorsColumn === null) {
         return null;
       }
+
+      //count starts at the sum(sum(departure columns)) so that it's clear
+      // adjacent connectors are alternatives to LinkColumns
+      //offset the y to start below link columns when using vertical compression
+      // let yOffset = values(departures)
+      //   .slice(0, -1)
+      //   .map((column) => {
+      //     return column.participants.length;
+      //   })
+      //   .reduce(sum, 0); // sum of trues in all columns
+      return (
+        <>
+          {connectorsColumn.participants.map((uncompressed_row) => {
+            {
+              /*yOffset++; // only used in vertical compression*/
+            }
+            return this.renderComponentConnector(uncompressed_row);
+          })}
+        </>
+      );
     }
 
     renderSeparators() {
@@ -334,25 +338,26 @@ const ComponentRect = observer(
       return <>{lines}</>;
     }
 
-    renderComponentConnector(verticalRank, uncompressedRow) {
+    renderComponentConnector(this_y) {
+      // debugger;
       let component = this.props.item;
       // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
       const x_val =
         this.props.item.relativePixelX +
-        (component.arrivals.length +
+        (component.arrivals.size +
           (this.props.store.useWidthCompression
             ? this.props.store.binScalingFactor
-            : component.num_bin) +
-          component.departures.length -
+            : component.numBins) +
+          component.departures.size -
           1) *
           this.props.store.pixelsPerColumn;
-      let this_y = verticalRank;
-      if (!this.props.store.useVerticalCompression) {
-        this_y = this.props.compressed_row_mapping[uncompressedRow];
-      }
+
+      // if (!this.props.store.useVerticalCompression) {
+      //   this_y = this.props.compressed_row_mapping[uncompressedRow];
+      // }
       return (
         <ConnectorRect
-          key={"connector" + uncompressedRow}
+          key={"connector" + this_y}
           x={x_val}
           y={
             this.props.store.topOffset + this_y * this.props.store.pixelsPerRow
@@ -393,7 +398,7 @@ const ComponentRect = observer(
             onMouseLeave={this.onLeave.bind(this)}
           />
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
-          {/*{this.props.store.useConnector ? this.renderAllConnectors() : null}*/}
+          {this.props.store.useConnector ? this.renderAllConnectors() : null}
           {this.renderSeparators()}
           {this.isSelected ? this.renderSelectedMarker() : null}
           {this.props.store.zoomHighlightBoundaries.length === 2
