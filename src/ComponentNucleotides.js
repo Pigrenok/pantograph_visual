@@ -1,39 +1,47 @@
 import React from "react";
 import { Text } from "react-konva";
 import PropTypes from "prop-types";
+import { observer } from "mobx-react";
 
-class ComponentNucleotides extends React.Component {
-  renderMatrixRow() {
-    const parent = this.props.item;
-    const x_val =
-      parent.relativePixelX +
-      parent.arrivals.length * this.props.store.pixelsPerColumn;
+const ComponentNucleotides = observer(
+  class extends React.Component {
+    renderMatrixRow() {
+      const parent = this.props.item;
+      let x_val = parent.relativePixelX;
+      let startPos = 0;
 
-    //console.log('x_val: ' + x_val)
+      if (parent.firstBin < this.props.store.getBeginBin) {
+        startPos = this.props.store.getBeginBin - parent.firstBin;
+      } else {
+        x_val += parent.arrivals.size * this.props.store.pixelsPerColumn;
+      }
 
-    var listOfObjects = [];
-    for (var x = 0; x < this.props.item.num_bin; x++) {
-      listOfObjects.push(
-        <Text
-          key={"nuc_text" + x}
-          x={x_val + x * this.props.store.pixelsPerColumn}
-          y={this.props.store.topOffset - this.props.store.pixelsPerColumn}
-          text={this.props.nucleotides[x]}
-          align="center"
-          height={this.props.store.pixelsPerColumn}
-          width={this.props.store.pixelsPerColumn}
-          fontSize={this.props.store.pixelsPerColumn + 2}
-        />
-      );
+      console.debug("[ComponentNucleotides.renderMatrixRow] x_val: ", x_val);
+
+      let listOfObjects = [];
+      for (var x = startPos; x < this.props.item.numBins; x++) {
+        listOfObjects.push(
+          <Text
+            key={"nuc_text" + x}
+            x={x_val + (x - startPos) * this.props.store.pixelsPerColumn}
+            y={this.props.store.topOffset - this.props.store.pixelsPerColumn}
+            text={this.props.nucleotides[x]}
+            align="center"
+            height={this.props.store.pixelsPerColumn}
+            width={this.props.store.pixelsPerColumn}
+            fontSize={this.props.store.pixelsPerColumn + 2}
+          />
+        );
+      }
+      return listOfObjects;
     }
-    return listOfObjects;
-  }
 
-  render() {
-    //console.log('ComponentNucleotides - render')
-    return this.renderMatrixRow();
+    render() {
+      //console.log('ComponentNucleotides - render')
+      return this.renderMatrixRow();
+    }
   }
-}
+);
 
 ComponentNucleotides.propTypes = {
   store: PropTypes.object,

@@ -5,6 +5,8 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import { store } from "./ViewportInputsStore";
 
+// console.debug("[index.js]", store)
+
 ReactDOM.render(<App store={store} />, document.getElementById("root"));
 
 // If you want your app to work offline and load faster, you can change

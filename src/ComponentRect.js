@@ -2,6 +2,7 @@
 import React from "react";
 import { Rect, Line } from "react-konva";
 import { observer } from "mobx-react";
+import { values } from "mobx";
 import { ConnectorRect } from "./ComponentConnectorRect";
 import { SpanCell } from "./SpanCell";
 import PropTypes from "prop-types";
@@ -73,10 +74,10 @@ export function compress_visible_rows(components, pathNames, annotationNames) {
 
 const ComponentRect = observer(
   class extends React.Component {
-    state = {
-      relativePixelX: this.props.item.relativePixelX,
-      //   isSelected: this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol)
-    };
+    // state = {
+    //   relativePixelX: this.props.item.relativePixelX,
+    //   //   isSelected: this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol)
+    // };
 
     constructor(props) {
       super(props);
@@ -118,24 +119,34 @@ const ComponentRect = observer(
     }
 
     renderMatrix() {
-      let parts = this.props.item.matrix.map((entry, vertical_rank) => {
-        let row_n = entry[0];
-        return this.renderMatrixRow(entry[1], vertical_rank, row_n);
+      let parts = values(this.props.item.matrix).map((entry) => {
+        return this.renderMatrixRow(entry);
       });
-      this.props.store.updateMaxHeight(this.props.item.occupants.length); //Set max observed occupants in mobx store for render height
+      // this.props.store.updateMaxHeight(this.props.item.occupants.length); //Set max observed occupants in mobx store for render height
       return <>{parts}</>;
     }
 
-    renderMatrixRow(entry, verticalRank, uncompressed_y) {
-      let this_y = verticalRank;
-      if (!this.props.store.useVerticalCompression) {
-        if (!this.props.compressed_row_mapping.hasOwnProperty(uncompressed_y)) {
-          return null; // we need compressed_y and we don't have it.  give up
-        }
-        this_y = this.props.compressed_row_mapping[uncompressed_y];
+    renderMatrixRow(entry) {
+      // let this_y = verticalRank;
+      // if (!this.props.store.useVerticalCompression) {
+      //   if (!this.props.compressed_row_mapping.hasOwnProperty(uncompressed_y)) {
+      //     return null; // we need compressed_y and we don't have it.  give up
+      //   }
+      //   this_y = this.props.compressed_row_mapping[uncompressed_y];
+      // }
+      let this_y = entry.pathID;
+
+      let this_x;
+
+      if (this.props.store.getBeginBin > this.props.item.firstBin) {
+        this_x = this.props.item.relativePixelX;
+      } else {
+        this_x =
+          this.props.item.relativePixelX +
+          this.props.item.arrivals.size * this.props.store.pixelsPerColumn;
       }
 
-      let pathName = this.props.pathNames[uncompressed_y];
+      let pathName = this.props.store.chunkIndex.pathNames[entry.pathID];
       let rowColor = "#838383";
       if (this.props.store.colorByGeneAnnotation && this.props.store.metaData) {
         let metaData = this.props.store.metaData;
@@ -147,25 +158,21 @@ const ComponentRect = observer(
           }
         }
       }
+      // console.debug("[ComponentRect.renderMatrixRow] matrix entry", entry);
 
       return (
         <SpanCell
-          key={"occupant" + uncompressed_y}
-          row={entry[1]}
-          iColumns={entry[0]}
+          key={"occupant" + this_y}
+          entry={entry}
           parent={this.props.item}
           store={this.props.store}
           pathName={pathName}
           color={rowColor}
-          x={
-            this.state.relativePixelX +
-            this.props.item.arrivals.length * this.props.store.pixelsPerColumn
-          }
+          x={this_x}
           y={
             this_y * this.props.store.pixelsPerRow + this.props.store.topOffset
           }
-          rowNumber={uncompressed_y}
-          verticalRank={verticalRank}
+          rowNumber={this_y}
           handleClickMethod={this.handleClick}
         />
       );
@@ -178,7 +185,7 @@ const ComponentRect = observer(
         //count starts at the sum(sum(departure columns)) so that it's clear
         // adjacent connectors are alternatives to LinkColumns
         //offset the y to start below link columns when using vertical compression
-        let yOffset = departures
+        let yOffset = values(departures)
           .slice(0, -1)
           .map((column) => {
             return column.participants.length;
@@ -209,9 +216,9 @@ const ComponentRect = observer(
         lines.push(
           <Line
             points={[
-              this.state.relativePixelX,
+              this.props.item.relativePixelX,
               this.props.store.topOffset + h,
-              this.state.relativePixelX +
+              this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.store.topOffset + h,
             ]}
@@ -234,9 +241,9 @@ const ComponentRect = observer(
         <>
           <Line
             points={[
-              this.state.relativePixelX,
+              this.props.item.relativePixelX,
               this.props.store.topOffset,
-              this.state.relativePixelX,
+              this.props.item.relativePixelX,
               this.props.store.topOffset + this.props.height - 1,
             ]}
             stroke={"red"}
@@ -245,10 +252,10 @@ const ComponentRect = observer(
           />
           <Line
             points={[
-              this.state.relativePixelX +
+              this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.store.topOffset,
-              this.state.relativePixelX +
+              this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.store.topOffset + this.props.height - 1,
             ]}
@@ -265,6 +272,7 @@ const ComponentRect = observer(
       if (this.props.store.zoomHighlightBoundaries.length === 2) {
         // console.log("[ComponentRect.renderZoomBoundary] left zoom boundary",this.props.store.zoomHighlightBoundaries[0])
         // console.log("[ComponentRect.renderZoomBoundary] right zoom boundary",this.props.store.zoomHighlightBoundaries[1])
+        // debugger;
         if (
           this.props.item.firstBin <=
             this.props.store.zoomHighlightBoundaries[0] &&
@@ -272,8 +280,8 @@ const ComponentRect = observer(
         ) {
           // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
           let xPos =
-            this.state.relativePixelX +
-            (this.props.item.arrivals.length +
+            this.props.item.relativePixelX +
+            (this.props.item.arrivals.size +
               (this.props.store.zoomHighlightBoundaries[0] -
                 this.props.item.firstBin)) *
               this.props.store.pixelsPerColumn;
@@ -299,10 +307,11 @@ const ComponentRect = observer(
         ) {
           // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
           let xPos =
-            this.state.relativePixelX +
-            (this.props.item.arrivals.length +
+            this.props.item.relativePixelX +
+            (this.props.item.arrivals.size +
               (this.props.store.zoomHighlightBoundaries[1] -
-                this.props.item.firstBin)) *
+                this.props.item.firstBin +
+                1)) *
               this.props.store.pixelsPerColumn;
           lines.push(
             <Line
@@ -329,7 +338,7 @@ const ComponentRect = observer(
       let component = this.props.item;
       // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
       const x_val =
-        this.state.relativePixelX +
+        this.props.item.relativePixelX +
         (component.arrivals.length +
           (this.props.store.useWidthCompression
             ? this.props.store.binScalingFactor
@@ -365,16 +374,17 @@ const ComponentRect = observer(
     // }
 
     render() {
-      // console.log("First column: ",this.props.item.firstCol)
-      // console.log("Last column: ",this.props.item.lastCol)
-      // console.log("Is selected: ",this.props.store.isInSelection(this.props.item.firstCol,this.props.item.lastCol))
-      // console.log("[ComponentRect.render] component to render", this.props.item)
+      // console.debug("[ComponentRect.render] component to render", this.props.item)
+      // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
+      // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
+      // console.debug("[ComponentRect.render] height", this.props.height)
+
       return (
         <>
           <Rect
-            x={this.state.relativePixelX}
+            x={this.props.item.relativePixelX}
             y={this.props.store.topOffset}
-            key={this.state.key + "R"}
+            key={this.props.item.index + "R"}
             width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
             height={this.props.height - 2} //TODO: change to compressed height
             fill={this.isSelected ? "lightblue" : "lightgray"}
@@ -383,7 +393,7 @@ const ComponentRect = observer(
             onMouseLeave={this.onLeave.bind(this)}
           />
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
-          {this.props.store.useConnector ? this.renderAllConnectors() : null}
+          {/*{this.props.store.useConnector ? this.renderAllConnectors() : null}*/}
           {this.renderSeparators()}
           {this.isSelected ? this.renderSelectedMarker() : null}
           {this.props.store.zoomHighlightBoundaries.length === 2
@@ -393,16 +403,17 @@ const ComponentRect = observer(
       );
     }
 
-    onHover() {
+    onHover(event) {
       this.props.store.updateCellTooltipContent(
         "Bin range: " +
           this.props.item.firstBin +
           " - " +
           this.props.item.lastBin
       );
+      this.props.store.updateMouse(event.evt.clientX, event.evt.clientY);
     }
 
-    onLeave() {
+    onLeave(event) {
       this.props.store.updateCellTooltipContent("");
     }
   }
