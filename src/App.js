@@ -1,4 +1,4 @@
-import { Layer, Stage, Text, Rect } from "react-konva";
+import { Layer, Stage, Text, Rect, Arrow } from "react-konva";
 import React, { Component } from "react";
 
 import "./App.css";
@@ -187,9 +187,8 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[
-            schematizeComponent.index
-          ] = schematizeComponent;
+          index_to_component_to_visualize_dict[schematizeComponent.index] =
+            schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -265,9 +264,8 @@ const App = observer(
 
         // The updating will re-trigger openRelevantChunksFromIndex
       } else {
-        const newEndBin = this.prepareWhichComponentsToVisualize(
-          widthInColumns
-        );
+        const newEndBin =
+          this.prepareWhichComponentsToVisualize(widthInColumns);
         this.props.store.updateBeginEndBin(beginBin, newEndBin);
 
         //console.log([selZoomLev, endBin, fileArray, fileArrayFasta]);
@@ -355,9 +353,8 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
-              this.schematic.components
-            ); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents =
+              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -637,35 +634,37 @@ const App = observer(
       return pixelsFromColumns + i * this.props.store.pixelsPerColumn;
     }
 
-    renderLinkColumn(
-      schematizeComponent,
-      i,
-      firstDepartureColumn,
-      j,
-      linkColumn
-    ) {
+    renderLinkColumn(schematizeComponent, firstColumn, linkColumn) {
+      const name = firstColumn === 0 ? "arrival" : "departure";
+
+      let offset = 0;
+      // if (linkColumn.key[0]==="d" && linkColumn.downstream-linkColumn.upstream>0) {
+      //   offset = 1;
+      // }
+
       const xCoordArrival =
         schematizeComponent.relativePixelX +
-        (firstDepartureColumn + j) * this.props.store.pixelsPerColumn;
+        (firstColumn + linkColumn.order - offset) *
+          this.props.store.pixelsPerColumn;
       const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
         linkColumn,
-        this.props.store.highlightedLink,
-        this.props.store.selectedLink
+        this.props.store.highlightedLink
       );
       return (
         <LinkColumn
           store={this.props.store}
-          key={"departure" + i + j}
+          key={name + schematizeComponent.index + linkColumn.order}
           item={linkColumn}
-          pathNames={this.props.store.chunkIndex.pathNames}
+          parent={schematizeComponent}
+          // pathNames={this.props.store.chunkIndex.pathNames}
           x={xCoordArrival}
-          pixelsPerRow={this.props.store.pixelsPerRow}
-          width={this.props.store.pixelsPerColumn}
+          // pixelsPerRow={this.props.store.pixelsPerRow}
+          // width={this.props.store.pixelsPerColumn}
           color={localColor}
           opacity={localOpacity}
           stroke={localStroke}
-          updateHighlightedNode={this.updateHighlightedNode}
-          compressed_row_mapping={this.compressed_row_mapping}
+          // updateHighlightedNode={this.updateHighlightedNode}
+          // compressed_row_mapping={this.compressed_row_mapping}
         />
       );
     }
@@ -673,8 +672,7 @@ const App = observer(
     renderLink(link) {
       const [localColor, localOpacity] = stringToColorAndOpacity(
         link.linkColumn,
-        this.state.highlightedLink,
-        this.state.selectedLink
+        this.props.store.highlightedLink
       );
 
       return (
@@ -759,7 +757,8 @@ const App = observer(
     renderComponent(schematizeComponent, i) {
       // console.log("[App.renderComponent] rendering component",schematizeComponent)
       let width;
-
+      let leftCut = false;
+      let rightCut = false;
       if (this.props.store.getBeginBin > schematizeComponent.firstBin) {
         width =
           schematizeComponent.lastBin -
@@ -767,6 +766,7 @@ const App = observer(
           1 +
           schematizeComponent.departures.size -
           1;
+        leftCut = true;
       } else {
         width =
           schematizeComponent.arrivals.size +
@@ -777,6 +777,7 @@ const App = observer(
 
       if (this.props.store.getEndBin < schematizeComponent.lastBin) {
         width -= schematizeComponent.lastBin - this.props.store.getEndBin;
+        rightCut = true;
       }
 
       return (
@@ -792,34 +793,41 @@ const App = observer(
             widthInColumns={width}
           />
 
-          {values(schematizeComponent.arrivals).map((linkColumn, j) => {
-            return this.renderLinkColumn(
-              schematizeComponent,
-              i,
-              0,
-              j,
-              linkColumn
-            );
-          })}
-          {values(schematizeComponent.departures).map((linkColumn, j) => {
-            if (linkColumn.upstream + 1 == linkColumn.downstream) {
-              return null;
-            }
+          {!leftCut
+            ? values(schematizeComponent.arrivals).map((linkColumn) => {
+                return this.renderLinkColumn(
+                  schematizeComponent,
+                  0,
+                  linkColumn
+                );
+              })
+            : null}
+          {!rightCut
+            ? values(schematizeComponent.departures).map((linkColumn, j) => {
+                if (linkColumn.upstream + 1 == linkColumn.downstream) {
+                  return null;
+                }
+                let leftPad;
 
-            let leftPad =
-              schematizeComponent.arrivals.size +
-              (this.props.store.useWidthCompression
-                ? this.props.store.binScalingFactor
-                : schematizeComponent.numBins);
-
-            return this.renderLinkColumn(
-              schematizeComponent,
-              i,
-              leftPad,
-              j,
-              linkColumn
-            );
-          })}
+                if (leftCut) {
+                  leftPad =
+                    schematizeComponent.lastBin -
+                    this.props.store.getBeginBin +
+                    1;
+                } else {
+                  leftPad =
+                    schematizeComponent.arrivals.size +
+                    (this.props.store.useWidthCompression
+                      ? this.props.store.binScalingFactor
+                      : schematizeComponent.numBins);
+                }
+                return this.renderLinkColumn(
+                  schematizeComponent,
+                  leftPad,
+                  linkColumn
+                );
+              })
+            : null}
         </>
       );
     }
@@ -832,11 +840,13 @@ const App = observer(
       }
       // console.log("[App.renderSchematic] component list", this.schematic.components)
       // console.log("[App.renderSchematic] index_to_component_to_visualize_dict", index_to_component_to_visualize_dict)
-
+      console.debug(
+        "[App.renderSchematic] visualisedComponents",
+        this.props.store.visualisedComponents
+      );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent = this.props.store.visualisedComponents.get(
-          index
-        );
+        let schematizeComponent =
+          this.props.store.visualisedComponents.get(index);
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}
@@ -932,7 +942,17 @@ const App = observer(
       /*console.log("navigation_bar_width " + navigation_bar_width);
       console.log("x_navigation " + x_navigation);
       console.log("width_navigation " + width_navigation);*/
-
+      console.debug("[App.render] store.topOffset", this.props.store.topOffset);
+      console.debug("[App.render] props.topOffset", this.props.topOffset);
+      console.debug(
+        "[App.render] navigation_bar_width",
+        this.props.store.navigation_bar_width
+      );
+      console.debug(
+        "[App.render] heightNavigationBar",
+        this.props.store.heightNavigationBar
+      );
+      console.debug("[App.render] x_navigation", this.props.store.x_navigation);
       return (
         <>
           <div
@@ -954,7 +974,7 @@ const App = observer(
             {this.props.store.navigation_bar_width > 0 ? (
               <Stage
                 x={this.props.store.leftOffset}
-                y={this.props.topOffset}
+                y={0}
                 style={{ cursor: "pointer" }}
                 width={this.props.store.navigation_bar_width + 2}
                 height={this.props.store.heightNavigationBar + 4}
@@ -985,32 +1005,37 @@ const App = observer(
               </Stage>
             ) : null}
 
-            {this.props.store.loading ? null : (
+            {/*{this.props.store.loading ? null : (
               <Stage
                 x={this.props.store.leftOffset}
-                y={this.props.topOffset}
+                y={this.props.store.topOffset}
                 width={this.props.store.actualWidth}
-                height={this.props.store.topOffset}
+                height={this.props.store.pixelsPerColumn}
               >
                 <Layer ref={this.layerRef2}>
-                  {/*{this.props.store.loading ? this.loadingMessage() : this.renderSortedLinks()}*/}
-                  {this.renderNucleotidesSchematic()}
+                  
                 </Layer>
               </Stage>
-            )}
+            )}*/}
           </div>
 
-          {this.props.store.loading ? null : (
+          {this.props.store.loading &&
+          this.props.store.visualisedComponents.size === 0 ? null : (
             <Stage
               x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
-              y={-this.props.store.topOffset} // For some reason, I have to put this, but I'd like to put 0
+              y={this.props.store.topOffset + this.props.store.pixelsPerColumn} // For some reason, I have to put this, but I'd like to put 0
               width={this.props.store.actualWidth}
               height={
                 this.props.store.chunkIndex.pathNames.length *
-                this.props.store.pixelsPerColumn
+                  this.props.store.pixelsPerRow +
+                (2 * this.props.store.arrowHeight + 2) *
+                  this.props.store.pixelsPerColumn
               }
             >
-              <Layer ref={this.layerRef}>{this.renderSchematic()}</Layer>
+              <Layer ref={this.layerRef}>
+                {this.renderNucleotidesSchematic()}
+                {this.renderSchematic()}
+              </Layer>
             </Stage>
           )}
           <NucleotideTooltip store={this.props.store} />

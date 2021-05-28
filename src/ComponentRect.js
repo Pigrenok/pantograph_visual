@@ -383,7 +383,9 @@ const ComponentRect = observer(
       // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
       // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
       // console.debug("[ComponentRect.render] height", this.props.height)
-
+      if (this.props.store.visualisedComponents.size === 0) {
+        return null;
+      }
       return (
         <>
           <Rect

@@ -6,6 +6,9 @@ import { observer } from "mobx-react";
 const ComponentNucleotides = observer(
   class extends React.Component {
     renderMatrixRow() {
+      if (this.props.store.components.size === 0) {
+        return null;
+      }
       const parent = this.props.item;
       let x_val = parent.relativePixelX;
       let startPos = 0;
@@ -17,14 +20,17 @@ const ComponentNucleotides = observer(
       }
 
       console.debug("[ComponentNucleotides.renderMatrixRow] x_val: ", x_val);
-
+      console.debug(
+        "[ComponentNucleotides.renderMatrixRow] heightArray: ",
+        this.props.store.arrowHeight
+      );
       let listOfObjects = [];
       for (var x = startPos; x < this.props.item.numBins; x++) {
         listOfObjects.push(
           <Text
             key={"nuc_text" + x}
             x={x_val + (x - startPos) * this.props.store.pixelsPerColumn}
-            y={this.props.store.topOffset - this.props.store.pixelsPerColumn}
+            y={1.7 * this.props.store.pixelsPerColumn}
             text={this.props.nucleotides[x]}
             align="center"
             height={this.props.store.pixelsPerColumn}

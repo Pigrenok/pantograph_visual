@@ -136,6 +136,7 @@ const ComponentMatrixElement = types
 
 const LinkColumn = types.model({
   key: types.identifier,
+  order: types.integer,
   upstream: types.integer,
   downstream: types.integer,
   participants: types.array(types.integer),
@@ -182,6 +183,23 @@ const Component = types
     },
 
     addArrivalLinks(linkArray) {
+      linkArray.sort((a, b) => {
+        let ad = a.downstream - a.upstream;
+        let bd = b.downstream - b.upstream;
+        if (ad * bd > 0) {
+          return ad - bd;
+        } else if (ad * bd < 0) {
+          return bd - ad;
+        } else {
+          if (ad === bd) {
+            return 0;
+          } else {
+            return -1;
+          }
+        }
+      });
+
+      let i = 0;
       for (const link of linkArray) {
         // console.debug("[Component.addArrivalLinks]", link)
         let linkCol = LinkColumn.create({
@@ -189,23 +207,37 @@ const Component = types
             "a" +
             String(link.downstream).padStart(13, "0") +
             String(link.upstream).padStart(13, "0"),
+          order: i,
           ...link,
         });
         self.arrivals.set(linkCol.key, linkCol);
+        i++;
       }
     },
 
     addDepartureLinks(linkArray) {
+      linkArray.sort((a, b) => {
+        let ad = a.downstream - a.upstream;
+        let bd = b.downstream - b.upstream;
+        if (ad * bd > 0) {
+          return bd - ad;
+        } else {
+          return ad - bd;
+        }
+      });
+      let i = 0;
       for (const link of linkArray) {
         let linkCol = LinkColumn.create({
           key:
             "d" +
             String(link.downstream).padStart(13, "0") +
             String(link.upstream).padStart(13, "0"),
+          order: i,
           ...link,
         });
 
         self.departures.set(linkCol.key, linkCol);
+        i++;
       }
     },
 
@@ -285,9 +317,11 @@ RootStore = types
     pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
-    topOffset: 70,
+    heightArray: types.array(types.integer),
     highlightedLink: types.maybeNull(types.reference(LinkColumn)), // we will compare linkColumns
-    selectedLink: types.maybeNull(types.reference(LinkColumn)),
+    // selectedLink: types.maybeNull(types.reference(LinkColumn)),
+    // Do we actually need selectedLink or should we use highlighted link even
+    // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
     jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg", //"shorttest1_new.seg", //"small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
     // Added attributes for the zoom level management
@@ -990,8 +1024,6 @@ RootStore = types
         Math.max(1, Math.round(newBegin))
       );
 
-      self.setBeginBin(newBegin);
-
       let sortedKeys = self.sortedComponentsKeys;
 
       if (sortedKeys.length > 0) {
@@ -1002,6 +1034,7 @@ RootStore = types
 
         if (lastBinInComponents <= newBegin) {
           self.clearComponents();
+          self.setBeginBin(newBegin);
           promiseArray = self.shiftComponentsRight(
             Math.max(newBegin - self.columnsInView, 1),
             Math.min(
@@ -1012,12 +1045,13 @@ RootStore = types
           );
 
           Promise.all(promiseArray).then(() => {
-            self.clearVisualisedComponents();
+            // self.clearVisualisedComponents();
             self.shiftVisualisedComponents();
             promiseArray = undefined;
           });
         } else if (firstBinInComponents >= newBegin + self.columnsInView) {
           self.clearComponents();
+          self.setBeginBin(newBegin);
           promiseArray = self.shiftComponentsRight(
             Math.max(newBegin - self.columnsInView, 1),
             Math.min(
@@ -1027,11 +1061,12 @@ RootStore = types
             false
           );
           Promise.all(promiseArray).then(() => {
-            self.clearVisualisedComponents();
+            // self.clearVisualisedComponents();
             self.shiftVisualisedComponents();
             promiseArray = undefined;
           });
         } else {
+          self.setBeginBin(newBegin);
           self.shiftVisualisedComponents();
 
           // This function is called 5 times every time the bin number is updated.
@@ -1066,6 +1101,7 @@ RootStore = types
           }
         }
       } else {
+        self.setBeginBin(newBegin);
         self.shiftComponentsRight(
           1,
           Math.min(
@@ -1430,6 +1466,11 @@ RootStore = types
       if (self.x_navigation + widthNav > self.navigation_bar_width) {
         widthNav = self.navigation_bar_width - self.x_navigation;
       }
+
+      if (self.getEndBin > self.getEndBin) {
+        widthNav = 1;
+      }
+
       return widthNav;
     },
 
@@ -1472,7 +1513,19 @@ RootStore = types
       let sortedKeys = self.sortedVisualComponentsKeys;
       return self.components.get(sortedKeys[sortedKeys.length - 1]).lastBin;
     },
-    // Add getters for the first and last component and first and last visualised component.
+    get topOffset() {
+      let res = self.heightNavigationBar + self.arrowHeight;
+
+      return res;
+    },
+
+    get arrowHeight() {
+      let res = 5;
+      if (self.heightArray.length > 0) {
+        res += Math.max(...self.heightArray);
+      }
+      return res;
+    },
   }));
 
 export const store = RootStore.create({});

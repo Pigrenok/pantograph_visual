@@ -1,3 +1,5 @@
+import { keys, values } from "mobx";
+
 import { getMax } from "./utilities";
 
 export class LinkRecord {
@@ -35,15 +37,16 @@ export function calculateLinkCoordinates(
     2. Element: the x-coordinate of the corresponding departure link column */
   let linkToXMapping = {}; //(paddedKey): [arrivalX, departureX]
 
-  for (let i = 0; i < schematic.length; i++) {
-    let schematizeComponent = schematic[i];
+  //for (let i = 0; i < schematic.size; i++) {
+  for (let key of keys(schematic)) {
+    let schematizeComponent = schematic.get(key);
 
     if (schematizeComponent.index in index_to_component_to_visualize_dict) {
       //schematizeComponent.relativePixelX = leftXStart(schematizeComponent, i, 0, 0);
       //ARRIVALS: Calculate all X
       for (let j = 0; j < schematizeComponent.arrivals.length; j++) {
         let arrival = schematizeComponent.arrivals[j];
-        let xCoordArrival = leftXStart(schematizeComponent, i, 0, j);
+        let xCoordArrival = leftXStart(schematizeComponent, 0, 0, j);
         let paddedKey = arrival.key;
         if (!(paddedKey in linkToXMapping)) {
           //place holder value, go as far right as possible
@@ -63,7 +66,7 @@ export function calculateLinkCoordinates(
         let departure = schematizeComponent.departures[k];
         let xCoordDeparture = leftXStart(
           schematizeComponent,
-          i,
+          0,
           schematizeComponent.arrivals.length +
             (useWidthCompression
               ? binScalingFactor
