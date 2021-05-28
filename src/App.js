@@ -953,6 +953,11 @@ const App = observer(
         this.props.store.heightNavigationBar
       );
       console.debug("[App.render] x_navigation", this.props.store.x_navigation);
+      console.debug(
+        "[App.render] x_navigation",
+        this.props.store.maxArrowHeight
+      );
+
       return (
         <>
           <div
@@ -1028,7 +1033,7 @@ const App = observer(
               height={
                 this.props.store.chunkIndex.pathNames.length *
                   this.props.store.pixelsPerRow +
-                (2 * this.props.store.arrowHeight + 2) *
+                (2 * this.props.store.maxArrowHeight + 2) *
                   this.props.store.pixelsPerColumn
               }
             >

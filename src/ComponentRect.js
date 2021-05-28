@@ -390,7 +390,11 @@ const ComponentRect = observer(
         <>
           <Rect
             x={this.props.item.relativePixelX}
-            y={this.props.store.topOffset}
+            y={
+              this.props.store.topOffset +
+              (this.props.store.maxArrowHeight + 2) *
+                this.props.store.pixelsPerColumn
+            }
             key={this.props.item.index + "R"}
             width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
             height={this.props.height - 2} //TODO: change to compressed height

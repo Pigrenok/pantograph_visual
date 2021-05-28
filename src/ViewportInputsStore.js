@@ -134,13 +134,20 @@ const ComponentMatrixElement = types
     },
   }));
 
-const LinkColumn = types.model({
-  key: types.identifier,
-  order: types.integer,
-  upstream: types.integer,
-  downstream: types.integer,
-  participants: types.array(types.integer),
-});
+const LinkColumn = types
+  .model({
+    key: types.identifier,
+    order: types.integer,
+    upstream: types.integer,
+    downstream: types.integer,
+    elevation: types.optional(types.integer, 0),
+    participants: types.array(types.integer),
+  })
+  .views((self) => ({
+    get distance() {
+      return Math.abs(self.downstream - self.upstream);
+    },
+  }));
 // .views((self) => ({
 //   get key() {
 //     return (
@@ -317,7 +324,7 @@ RootStore = types
     pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
-    heightArray: types.array(types.integer),
+    maxArrowHeight: types.optional(types.integer, 0),
     highlightedLink: types.maybeNull(types.reference(LinkColumn)), // we will compare linkColumns
     // selectedLink: types.maybeNull(types.reference(LinkColumn)),
     // Do we actually need selectedLink or should we use highlighted link even
@@ -724,12 +731,66 @@ RootStore = types
       self.visualisedComponents.clear();
     },
 
+    calcLinkElevations() {
+      let visibleLinks = [];
+
+      for (let comp of values(self.visualisedComponents)) {
+        if (comp.lastBin <= self.getEndBin) {
+          for (let link of values(comp.departures)) {
+            if (self.visualisedComponents.has(link.downstream)) {
+              visibleLinks.push({ compIndex: comp.index, link: link });
+              link.elevation = 0;
+            }
+          }
+        }
+      }
+
+      visibleLinks.sort((a, b) => {
+        return a.link.distance - b.link.distance;
+      });
+
+      const isInterseting = (curLinkIdx, prevLinkIdx) => {
+        let curStart = Math.min(
+          visibleLinks[curLinkIdx].link.upstream,
+          visibleLinks[curLinkIdx].link.downstream
+        );
+        let curEnd = Math.max(
+          visibleLinks[curLinkIdx].link.upstream,
+          visibleLinks[curLinkIdx].link.downstream
+        );
+        let prevStart = Math.min(
+          visibleLinks[prevLinkIdx].link.upstream,
+          visibleLinks[prevLinkIdx].link.downstream
+        );
+        let prevEnd = Math.max(
+          visibleLinks[prevLinkIdx].link.upstream,
+          visibleLinks[prevLinkIdx].link.downstream
+        );
+
+        return (curEnd - prevStart) * (prevEnd - curStart) > 0;
+      };
+
+      for (let curLinkIdx = 1; curLinkIdx < visibleLinks.length; curLinkIdx++) {
+        for (let prevLinkIdx = 0; prevLinkIdx < curLinkIdx; prevLinkIdx++) {
+          if (isInterseting(curLinkIdx, prevLinkIdx)) {
+            visibleLinks[curLinkIdx].link.elevation = Math.max(
+              visibleLinks[curLinkIdx].link.elevation,
+              visibleLinks[prevLinkIdx].link.elevation + 1
+            );
+            if (self.maxArrowHeight < visibleLinks[curLinkIdx].link.elevation) {
+            }
+            self.maxArrowHeight = visibleLinks[curLinkIdx].link.elevation;
+          }
+        }
+      }
+    },
+
     shiftVisualisedComponentsCentre(centreBin) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
       // console.debug("[Store.shiftVisualisedComponentsCentre] components", self.components)
 
-      // debugger;
       let visComps = [];
+      self.maxArrowHeight = 0;
 
       let begin = centreBin;
       let end = centreBin;
@@ -874,6 +935,7 @@ RootStore = types
 
       self.setBeginBin(begin);
       self.setEndBin(end);
+      self.calcLinkElevations();
 
       self.updatingVisible = false;
     },
@@ -1002,6 +1064,7 @@ RootStore = types
         self.setEndBin(end);
       }
 
+      self.calcLinkElevations();
       self.updatingVisible = false;
     },
 
@@ -1514,18 +1577,18 @@ RootStore = types
       return self.components.get(sortedKeys[sortedKeys.length - 1]).lastBin;
     },
     get topOffset() {
-      let res = self.heightNavigationBar + self.arrowHeight;
+      let res = self.heightNavigationBar + self.maxArrowHeight;
 
       return res;
     },
 
-    get arrowHeight() {
-      let res = 5;
-      if (self.heightArray.length > 0) {
-        res += Math.max(...self.heightArray);
-      }
-      return res;
-    },
+    // get arrowHeight() {
+    //   let res = 5;
+    //   if (self.heightArray.length > 0) {
+    //     res += Math.max(...self.heightArray);
+    //   }
+    //   return res;
+    // },
   }));
 
 export const store = RootStore.create({});

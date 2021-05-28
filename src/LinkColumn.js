@@ -59,7 +59,6 @@ const LinkColumn = observer(
             this.props.item.downstream
           );
           if (dComp.firstBin >= this.props.store.getBeginBin) {
-            let elevation = this.props.store.arrowHeight; //Change to calculation from store.heightArray
             let dLink = dComp.arrivals.get("a" + this.props.item.key.slice(1));
             let dX =
               dComp.relativePixelX +
@@ -67,9 +66,13 @@ const LinkColumn = observer(
               this.props.x;
             arrowPoints = arrowPoints.concat([
               5,
-              -1 * elevation * this.props.store.pixelsPerColumn,
+              -1 *
+                (this.props.item.elevation + 2) *
+                this.props.store.pixelsPerColumn,
               dX + 5,
-              -1 * elevation * this.props.store.pixelsPerColumn,
+              -1 *
+                (this.props.item.elevation + 2) *
+                this.props.store.pixelsPerColumn,
               dX + 5,
               0,
             ]);
@@ -102,7 +105,11 @@ const LinkColumn = observer(
       console.debug(
         "[LinkColumn.renderArrow] x,y",
         this.props.x,
-        this.props.store.topOffset - 2 * this.props.store.pixelsPerColumn
+        this.props.store.topOffset - this.props.store.pixelsPerColumn
+      );
+      console.debug(
+        "[LinkColumn.renderArrow] elevation",
+        this.props.item.elevation
       );
       console.debug("[LinkColumn.renderArrow] points", points);
       console.debug(
