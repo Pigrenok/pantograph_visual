@@ -169,6 +169,7 @@ const Component = types
     arrivals: types.map(LinkColumn),
     departures: types.map(LinkColumn),
     relativePixelX: types.optional(types.integer, -1),
+    departureVisible: types.optional(types.boolean, true),
     occupants: types.array(types.integer),
     numBins: types.integer,
     matrix: types.map(ComponentMatrixElement),
@@ -248,8 +249,19 @@ const Component = types
       }
     },
 
-    moveTo(newRelativePixelX) {
+    moveTo(newRelativePixelX, windowWidth, pixelsPerColumn) {
       self.relativePixelX = newRelativePixelX;
+      self.departureVisible = true;
+      if (windowWidth && pixelsPerColumn) {
+        if (
+          windowWidth <
+          self.relativePixelX +
+            (self.arrivals.size + self.numBins + self.departures.size) *
+              pixelsPerColumn
+        ) {
+          self.departureVisible = false;
+        }
+      }
     },
 
     getColumnX(useWidthCompression) {
@@ -266,6 +278,7 @@ const Component = types
 
       return null;
     },
+
     // when we will get across information about order of passes
     // through the node in relation to links, its sorting needs
     // to be included here
@@ -394,9 +407,9 @@ RootStore = types
     updatingVisible: false,
   })
   .actions((self) => ({
-    updateHighlightedLink(link) {
-      self.highlightedLink = link.key;
-    },
+    // updateHighlightedLink(link) {
+    //   self.highlightedLink = link.key;
+    // },
 
     jumpLink(link) {},
 
@@ -735,7 +748,7 @@ RootStore = types
       let visibleLinks = [];
 
       for (let comp of values(self.visualisedComponents)) {
-        if (comp.lastBin <= self.getEndBin) {
+        if (comp.lastBin <= self.getEndBin && comp.departureVisible) {
           for (let link of values(comp.departures)) {
             if (self.visualisedComponents.has(link.downstream)) {
               visibleLinks.push({ compIndex: comp.index, link: link });
@@ -749,7 +762,7 @@ RootStore = types
         return a.link.distance - b.link.distance;
       });
 
-      const isInterseting = (curLinkIdx, prevLinkIdx) => {
+      const isIntersecting = (curLinkIdx, prevLinkIdx) => {
         let curStart = Math.min(
           visibleLinks[curLinkIdx].link.upstream,
           visibleLinks[curLinkIdx].link.downstream
@@ -772,14 +785,15 @@ RootStore = types
 
       for (let curLinkIdx = 1; curLinkIdx < visibleLinks.length; curLinkIdx++) {
         for (let prevLinkIdx = 0; prevLinkIdx < curLinkIdx; prevLinkIdx++) {
-          if (isInterseting(curLinkIdx, prevLinkIdx)) {
+          if (isIntersecting(curLinkIdx, prevLinkIdx)) {
             visibleLinks[curLinkIdx].link.elevation = Math.max(
               visibleLinks[curLinkIdx].link.elevation,
               visibleLinks[prevLinkIdx].link.elevation + 1
             );
+            // if (visibleLinks[curLinkIdx].link.elevation>3) {debugger;}
             if (self.maxArrowHeight < visibleLinks[curLinkIdx].link.elevation) {
+              self.maxArrowHeight = visibleLinks[curLinkIdx].link.elevation;
             }
-            self.maxArrowHeight = visibleLinks[curLinkIdx].link.elevation;
           }
         }
       }
@@ -921,7 +935,11 @@ RootStore = types
 
       visComps.forEach((item) => {
         let curComp = self.components.get(item);
-        curComp.moveTo(relativePos * self.pixelsPerColumn);
+        curComp.moveTo(
+          relativePos * self.pixelsPerColumn,
+          self.windowWidth,
+          self.pixelsPerColumn
+        );
         let arrivalSize = curComp.arrivals.size;
         let bodySize = curComp.numBins;
 
@@ -974,7 +992,11 @@ RootStore = types
             ) {
               self.visualisedComponents.set(comp.index, comp.index);
               accountedComponents.push(comp.index);
-              comp.moveTo(visibleLengthInCols * self.pixelsPerColumn);
+              comp.moveTo(
+                visibleLengthInCols * self.pixelsPerColumn,
+                self.windowWidth,
+                self.pixelsPerColumn
+              );
               lastCompDepartureSize = comp.departures.size;
               if (visibleLengthInCols === 0 && begin > comp.firstBin) {
                 visibleLengthInCols +=
@@ -1008,7 +1030,11 @@ RootStore = types
           self.components.get(index).moveTo(-1);
           self.visualisedComponents.delete(index);
         } else {
-          vComp.moveTo(visibleLengthInCols * self.pixelsPerColumn);
+          vComp.moveTo(
+            visibleLengthInCols * self.pixelsPerColumn,
+            self.windowWidth,
+            self.pixelsPerColumn
+          );
           lastCompDepartureSize = vComp.departures.size;
           if (vComp.firstBin < begin && vComp.lastBin >= begin) {
             visibleLengthInCols +=
@@ -1031,7 +1057,11 @@ RootStore = types
             !self.visualisedComponents.has(comp.index)
           ) {
             self.visualisedComponents.set(comp.index, comp.index);
-            comp.moveTo(visibleLengthInCols * self.pixelsPerColumn);
+            comp.moveTo(
+              visibleLengthInCols * self.pixelsPerColumn,
+              self.windowWidth,
+              self.pixelsPerColumn
+            );
             lastCompDepartureSize = comp.departures.size;
             if (visibleLengthInCols === 0 && begin > comp.firstBin) {
               visibleLengthInCols +=
@@ -1582,6 +1612,11 @@ RootStore = types
       return res;
     },
 
+    upstreamInView(upstreamBin) {
+      return values(self.visualisedComponents).find((comp) => {
+        return comp.lastBin === upstreamBin;
+      });
+    },
     // get arrowHeight() {
     //   let res = 5;
     //   if (self.heightArray.length > 0) {

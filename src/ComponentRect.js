@@ -169,9 +169,7 @@ const ComponentRect = observer(
           pathName={pathName}
           color={rowColor}
           x={this_x}
-          y={
-            this_y * this.props.store.pixelsPerRow + this.props.store.topOffset
-          }
+          y={this_y * this.props.store.pixelsPerRow + this.props.y}
           rowNumber={this_y}
           handleClickMethod={this.handleClick}
         />
@@ -221,10 +219,10 @@ const ComponentRect = observer(
           <Line
             points={[
               this.props.item.relativePixelX,
-              this.props.store.topOffset + h,
+              this.props.y + h,
               this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
-              this.props.store.topOffset + h,
+              this.props.y + h,
             ]}
             stroke={"black"}
             strokeWidth={1}
@@ -246,9 +244,9 @@ const ComponentRect = observer(
           <Line
             points={[
               this.props.item.relativePixelX,
-              this.props.store.topOffset,
+              this.props.y,
               this.props.item.relativePixelX,
-              this.props.store.topOffset + this.props.height - 1,
+              this.props.y + this.props.height - 1,
             ]}
             stroke={"red"}
             strokeWidth={2}
@@ -258,10 +256,10 @@ const ComponentRect = observer(
             points={[
               this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
-              this.props.store.topOffset,
+              this.props.y,
               this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
-              this.props.store.topOffset + this.props.height - 1,
+              this.props.y + this.props.height - 1,
             ]}
             stroke={"red"}
             strokeWidth={2}
@@ -293,9 +291,9 @@ const ComponentRect = observer(
             <Line
               points={[
                 xPos,
-                this.props.store.topOffset,
+                this.props.y,
                 xPos,
-                this.props.store.topOffset + this.props.height - 1,
+                this.props.y + this.props.height - 1,
               ]}
               stroke={"red"}
               strokeWidth={4}
@@ -321,9 +319,9 @@ const ComponentRect = observer(
             <Line
               points={[
                 xPos,
-                this.props.store.topOffset,
+                this.props.y,
                 xPos,
-                this.props.store.topOffset + this.props.height - 1,
+                this.props.y + this.props.height - 1,
               ]}
               stroke={"red"}
               strokeWidth={4}
@@ -359,9 +357,7 @@ const ComponentRect = observer(
         <ConnectorRect
           key={"connector" + this_y}
           x={x_val}
-          y={
-            this.props.store.topOffset + this_y * this.props.store.pixelsPerRow
-          }
+          y={this.props.y + this_y * this.props.store.pixelsPerRow}
           width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
           height={this.props.store.pixelsPerRow}
           color={"#AAAABE"}
@@ -379,22 +375,25 @@ const ComponentRect = observer(
     // }
 
     render() {
-      // console.debug("[ComponentRect.render] component to render", this.props.item)
-      // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
-      // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
-      // console.debug("[ComponentRect.render] height", this.props.height)
       if (this.props.store.visualisedComponents.size === 0) {
         return null;
       }
+
+      console.debug(
+        "[ComponentRect.render] render component",
+        this.props.item.index
+      );
+
+      console.debug("[ComponentRect.render] props.y", this.props.y);
+      // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
+      // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
+      // console.debug("[ComponentRect.render] height", this.props.height)
+
       return (
         <>
           <Rect
             x={this.props.item.relativePixelX}
-            y={
-              this.props.store.topOffset +
-              (this.props.store.maxArrowHeight + 2) *
-                this.props.store.pixelsPerColumn
-            }
+            y={this.props.y}
             key={this.props.item.index + "R"}
             width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
             height={this.props.height - 2} //TODO: change to compressed height

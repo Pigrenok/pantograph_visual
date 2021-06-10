@@ -12,11 +12,7 @@ import NucleotideTooltip from "./NucleotideTooltip";
 import ControlHeader from "./ControlHeader";
 import { observe, keys, values } from "mobx";
 import { observer } from "mobx-react";
-import {
-  arraysEqual,
-  calculateEndBinFromScreen,
-  stringToColorAndOpacity,
-} from "./utilities";
+import { arraysEqual, calculateEndBinFromScreen } from "./utilities";
 
 //import makeInspectable from "mobx-devtools-mst";
 // TO_DO: improve the management of visualized components
@@ -646,10 +642,10 @@ const App = observer(
         schematizeComponent.relativePixelX +
         (firstColumn + linkColumn.order - offset) *
           this.props.store.pixelsPerColumn;
-      const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
-        linkColumn,
-        this.props.store.highlightedLink
-      );
+      // const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
+      //   linkColumn,
+      //   this.props.store.highlightedLink
+      // );
       return (
         <LinkColumn
           store={this.props.store}
@@ -660,33 +656,37 @@ const App = observer(
           x={xCoordArrival}
           // pixelsPerRow={this.props.store.pixelsPerRow}
           // width={this.props.store.pixelsPerColumn}
-          color={localColor}
-          opacity={localOpacity}
-          stroke={localStroke}
+          y={
+            this.props.store.topOffset +
+            this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn
+          }
+          // color={localColor}
+          // opacity={localOpacity}
+          // stroke={localStroke}
           // updateHighlightedNode={this.updateHighlightedNode}
           // compressed_row_mapping={this.compressed_row_mapping}
         />
       );
     }
 
-    renderLink(link) {
-      const [localColor, localOpacity] = stringToColorAndOpacity(
-        link.linkColumn,
-        this.props.store.highlightedLink
-      );
+    // renderLink(link) {
+    //   const [localColor, localOpacity] = stringToColorAndOpacity(
+    //     link.linkColumn,
+    //     this.props.store.highlightedLink
+    //   );
 
-      return (
-        <LinkArrow
-          store={this.props.store}
-          key={"arrow" + link.linkColumn.key}
-          link={link}
-          color={localColor}
-          opacity={localOpacity}
-          updateHighlightedNode={this.updateHighlightedNode}
-          updateSelectedLink={this.updateSelectedLink}
-        />
-      );
-    }
+    //   return (
+    //     <LinkArrow
+    //       store={this.props.store}
+    //       key={"arrow" + link.linkColumn.key}
+    //       link={link}
+    //       color={localColor}
+    //       opacity={localOpacity}
+    //       updateHighlightedNode={this.updateHighlightedNode}
+    //       updateSelectedLink={this.updateSelectedLink}
+    //     />
+    //   );
+    // }
 
     renderNucleotidesSchematic = () => {
       if (
@@ -744,6 +744,11 @@ const App = observer(
                   store={this.props.store}
                   item={component}
                   key={i}
+                  y={
+                    this.props.store.topOffset +
+                    this.props.store.maxArrowHeight *
+                      this.props.store.pixelsPerColumn
+                  }
                   // They are passed only the nucleotides associated to the current component
                   nucleotides={nucleotides_slice}
                 />
@@ -778,6 +783,11 @@ const App = observer(
       if (this.props.store.getEndBin < schematizeComponent.lastBin) {
         width -= schematizeComponent.lastBin - this.props.store.getEndBin;
         rightCut = true;
+      } else if (
+        this.props.store.getEndBin === schematizeComponent.lastBin &&
+        !schematizeComponent.departureVisible
+      ) {
+        rightCut = true;
       }
 
       return (
@@ -786,13 +796,16 @@ const App = observer(
             store={this.props.store}
             item={schematizeComponent}
             key={"r" + Math.random()}
+            y={
+              this.props.store.topOffset +
+              this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn
+            }
             height={
               this.props.store.chunkIndex.pathNames.length *
               this.props.store.pixelsPerColumn
             }
             widthInColumns={width}
           />
-
           {!leftCut
             ? values(schematizeComponent.arrivals).map((linkColumn) => {
                 return this.renderLinkColumn(
@@ -943,18 +956,8 @@ const App = observer(
       console.log("x_navigation " + x_navigation);
       console.log("width_navigation " + width_navigation);*/
       console.debug("[App.render] store.topOffset", this.props.store.topOffset);
-      console.debug("[App.render] props.topOffset", this.props.topOffset);
       console.debug(
-        "[App.render] navigation_bar_width",
-        this.props.store.navigation_bar_width
-      );
-      console.debug(
-        "[App.render] heightNavigationBar",
-        this.props.store.heightNavigationBar
-      );
-      console.debug("[App.render] x_navigation", this.props.store.x_navigation);
-      console.debug(
-        "[App.render] x_navigation",
+        "[App.render] store.maxArrowHeight",
         this.props.store.maxArrowHeight
       );
 
@@ -1009,31 +1012,18 @@ const App = observer(
                 </Layer>
               </Stage>
             ) : null}
-
-            {/*{this.props.store.loading ? null : (
-              <Stage
-                x={this.props.store.leftOffset}
-                y={this.props.store.topOffset}
-                width={this.props.store.actualWidth}
-                height={this.props.store.pixelsPerColumn}
-              >
-                <Layer ref={this.layerRef2}>
-                  
-                </Layer>
-              </Stage>
-            )}*/}
           </div>
 
           {this.props.store.loading &&
           this.props.store.visualisedComponents.size === 0 ? null : (
             <Stage
               x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
-              y={this.props.store.topOffset + this.props.store.pixelsPerColumn} // For some reason, I have to put this, but I'd like to put 0
+              y={0} // For some reason, I have to put this, but I'd like to put 0
               width={this.props.store.actualWidth}
               height={
                 this.props.store.chunkIndex.pathNames.length *
                   this.props.store.pixelsPerRow +
-                (2 * this.props.store.maxArrowHeight + 2) *
+                (this.props.store.maxArrowHeight + 5) *
                   this.props.store.pixelsPerColumn
               }
             >
