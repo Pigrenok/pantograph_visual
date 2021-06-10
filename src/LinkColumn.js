@@ -10,40 +10,117 @@ const LinkColumn = observer(
       super(props);
       this.handleMouseOut = this.handleMouseOut.bind(this);
       this.handleMouseOver = this.handleMouseOver.bind(this);
+      this.handleClick = this.handleClick.bind(this);
     }
+
     handleMouseOver(pathID) {
       this.props.store.updateCellTooltipContent(
         `Accession ${this.props.store.chunkIndex.pathNames[pathID]} \n From bin ${this.props.item.upstream}\nTo bin ${this.props.item.downstream}`
       );
       this.props.store.updateHighlightedLink(this.props.item);
     }
+
     handleMouseOut() {
       this.props.store.updateCellTooltipContent("");
       this.props.store.updateHighlightedLink(null);
     }
-    // linkCells() {
-    //   if (!this.props.store.useVerticalCompression) {
-    //     //regular layout
-    //     return this.props.item.participants.map(
-    //       (pathIndex) => pathIndex * this.props.store.pixelsPerRow
-    //     );
-    //   }
-    //   //else, just stack each up at the top of the screen
-    //   return range(0, this.props.item.participants.length).map(
-    //     (y) => y * this.props.store.pixelsPerRow
-    //   );
-    // }
-    // componentDidMount() {
-    //   this.setState({
-    //     color: this.props.color,
-    //   });
-    // }
+
+    handleClick() {
+      let centreBin;
+      let highlightedLink = null;
+      if (this.props.store.highlightedLink) {
+        highlightedLink = this.props.store.highlightedLink.key;
+      }
+
+      if (this.props.item.upstream === this.props.parent.lastBin) {
+        // departure
+        centreBin = this.props.item.downstream;
+        if (highlightedLink) {
+          highlightedLink = "a" + highlightedLink.slice(1);
+        }
+      }
+
+      if (this.props.item.downstream === this.props.parent.firstBin) {
+        //arrival
+        centreBin = this.props.item.upstream;
+        if (highlightedLink) {
+          highlightedLink = "d" + highlightedLink.slice(1);
+        }
+      }
+
+      let promiseArray = [];
+
+      if (
+        centreBin >= this.props.store.firstLoadedBin &&
+        centreBin <= this.props.store.lastLoadedBin
+      ) {
+        if (this.props.item.upstream < this.props.store.downstream) {
+          //Arrow to the right
+          promiseArray = promiseArray.concat(
+            this.props.store.shiftComponentsRight(
+              Math.max(
+                1,
+                centreBin - Math.round(this.props.store.columnsInView * 1.5)
+              ),
+              Math.min(
+                centreBin + Math.round(this.props.store.columnsInView * 1.5),
+                this.props.store.last_bin_pangenome
+              )
+            )
+          );
+        } else if (this.props.item.upstream < this.props.store.downstream) {
+          //Arrow to the left
+          promiseArray = promiseArray.concat(
+            this.props.store.shiftComponentsLeft(
+              Math.max(
+                1,
+                centreBin - Math.round(this.props.store.columnsInView * 1.5)
+              ),
+              Math.min(
+                centreBin + Math.round(this.props.store.columnsInView * 1.5),
+                this.props.store.last_bin_pangenome
+              )
+            )
+          );
+        } else {
+          // Self loop on single bin component
+          // do nothing with loaded components.
+        }
+      } else {
+        this.props.store.clearComponents();
+        promiseArray = promiseArray.concat(
+          this.props.store.shiftComponentsRight(
+            Math.max(1, centreBin + 1),
+            Math.min(
+              centreBin + Math.round(this.props.store.columnsInView * 1.5),
+              this.props.store.last_bin_pangenome
+            ),
+            false
+          )
+        );
+        promiseArray = promiseArray.concat(
+          this.props.store.shiftComponentsLeft(
+            Math.max(
+              1,
+              centreBin - Math.round(this.props.store.columnsInView * 1.5)
+            ),
+            Math.min(centreBin, this.props.store.last_bin_pangenome),
+            false
+          )
+        );
+      }
+
+      this.props.store.updateHighlightedLink(highlightedLink);
+
+      Promise.all(promiseArray).then(() => {
+        this.props.store.shiftVisualisedComponentsCentre(centreBin);
+      });
+      setTimeout(() => {
+        this.props.store.updateHighlightedLink(null);
+      }, 5000);
+    }
 
     points() {
-      // if (this.props.item.upstream === 73 && this.props.item.downstream === 69) {
-      //   debugger;
-      // }
-
       if (this.props.item.upstream === this.props.parent.lastBin) {
         // departure
 
@@ -104,21 +181,6 @@ const LinkColumn = observer(
     }
 
     renderArrow(points, color, opacity) {
-      // console.debug(
-      //   "[LinkColumn.renderArrow] x,y",
-      //   this.props.x,
-      //   this.props.store.topOffset - this.props.store.pixelsPerColumn
-      // );
-      // console.debug(
-      //   "[LinkColumn.renderArrow] elevation",
-      //   this.props.item.elevation
-      // );
-      // console.debug("[LinkColumn.renderArrow] points", points);
-      // console.debug(
-      //   "[LinkColumn.renderArrow] arrow condition",
-      //   points.length > 0
-      // );
-      // return null;
       return (
         <Arrow
           x={this.props.x}
@@ -134,9 +196,9 @@ const LinkColumn = observer(
           pointerLength={1}
           pointerWidth={1}
           tension={0}
-          // onMouseOver={this.handleMouseOver}
-          // onMouseOut={this.handleMouseOut}
-          // onClick={this.handleClick}
+          onMouseOver={this.handleMouseOver}
+          onMouseOut={this.handleMouseOut}
+          onClick={this.handleClick}
           // lineCap={'round'}
         />
       );
@@ -183,6 +245,7 @@ const LinkColumn = observer(
                 // onClick={this.handleClick}
                 onMouseOver={() => this.handleMouseOver(pathID)}
                 onMouseOut={this.handleMouseOut}
+                onClick={this.handleClick}
               />
             );
           })}
