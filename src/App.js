@@ -183,8 +183,9 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[schematizeComponent.index] =
-            schematizeComponent;
+          index_to_component_to_visualize_dict[
+            schematizeComponent.index
+          ] = schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -260,8 +261,9 @@ const App = observer(
 
         // The updating will re-trigger openRelevantChunksFromIndex
       } else {
-        const newEndBin =
-          this.prepareWhichComponentsToVisualize(widthInColumns);
+        const newEndBin = this.prepareWhichComponentsToVisualize(
+          widthInColumns
+        );
         this.props.store.updateBeginEndBin(beginBin, newEndBin);
 
         //console.log([selZoomLev, endBin, fileArray, fileArrayFasta]);
@@ -349,8 +351,9 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents =
-              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
+              this.schematic.components
+            ); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -657,7 +660,7 @@ const App = observer(
           // pixelsPerRow={this.props.store.pixelsPerRow}
           // width={this.props.store.pixelsPerColumn}
           y={
-            this.props.store.topOffset +
+            // this.props.store.topOffset +
             this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn
           }
           // color={localColor}
@@ -746,7 +749,7 @@ const App = observer(
                   key={i}
                   y={
                     this.props.store.topOffset +
-                    this.props.store.maxArrowHeight *
+                    (this.props.store.maxArrowHeight + 1) *
                       this.props.store.pixelsPerColumn
                   }
                   // They are passed only the nucleotides associated to the current component
@@ -797,12 +800,12 @@ const App = observer(
             item={schematizeComponent}
             key={"r" + Math.random()}
             y={
-              this.props.store.topOffset +
+              // this.props.store.topOffset +
               this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn
             }
             height={
               this.props.store.chunkIndex.pathNames.length *
-              this.props.store.pixelsPerColumn
+              this.props.store.pixelsPerRow
             }
             widthInColumns={width}
           />
@@ -858,8 +861,9 @@ const App = observer(
         this.props.store.visualisedComponents
       );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent =
-          this.props.store.visualisedComponents.get(index);
+        let schematizeComponent = this.props.store.visualisedComponents.get(
+          index
+        );
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}
@@ -1018,7 +1022,7 @@ const App = observer(
           this.props.store.visualisedComponents.size === 0 ? null : (
             <Stage
               x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
-              y={0} // For some reason, I have to put this, but I'd like to put 0
+              y={2 * this.props.store.pixelsPerColumn * 2} // For some reason, I have to put this, but I'd like to put 0
               width={this.props.store.actualWidth}
               height={
                 this.props.store.chunkIndex.pathNames.length *

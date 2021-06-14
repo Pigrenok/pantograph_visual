@@ -50,21 +50,36 @@ const ControlHeader = observer(
       function handleOdgiServerResponse(result) {
         if (result === "0") {
           alert(
-            "The jump query returned 0. Either your path does not exist or your position in the path is wrong. Please try again."
+            "The jump query returned 0. Either your path does not exist or your position in the path is wrong or server does not work. Please try again."
           );
         } else {
           console.log(result);
           // go from nucleotide position to bin
           result = parseInt(result);
-          const newBeginBin = Math.ceil(result / store.getBinWidth);
-          console.log(newBeginBin);
-          store.updateBeginEndBin(newBeginBin, store.getEndBin);
+          const centreBin = Math.ceil(result / store.getBinWidth);
+
+          let jumpToRight;
+          if (centreBin > this.props.store.centreBin) {
+            // Jump to right
+            jumpToRight = 1;
+          } else if (centreBin < this.props.store.centreBin) {
+            //Jump to left
+            jumpToRight = -1;
+          } else {
+            jumpToRight = 0;
+          }
+          store.jumpToCentre(centreBin, jumpToRight, null, true);
         }
       }
       // httpGetAsync(addr + "hi", printResult);
       // httpGetAsync(addr + "5/1", printResult);
       // httpGetAsync(addr + "4/3", printResult);
-      httpGetAsync(addr + path_name + "/" + nuc_pos, handleOdgiServerResponse);
+      let url = `${addr}/${path_name}/${nuc_pos}`;
+      //httpGetAsync(`${addr}/${path_name}/${nuc_pos}`, handleOdgiServerResponse);
+      jsonCache
+        .getRaw(url)
+        .then((data) => data.text())
+        .then(handleOdgiServerResponse.bind(this));
     }
 
     change_zoom_level(target) {
@@ -233,7 +248,7 @@ const ControlHeader = observer(
                   )
                 }
                 style={{ width: "80px" }}
-                disabled
+                // disabled
               />
             </span>
             <datalist id="path">
@@ -254,13 +269,13 @@ const ControlHeader = observer(
                 )
               }
               style={{ width: "80px" }}
-              disabled
+              // disabled
             />
             <span style={{ marginLeft: "2px" }}>
               <button
                 className="button"
                 onClick={() => this.handleJump()}
-                disabled
+                // disabled
               >
                 Jump
               </button>

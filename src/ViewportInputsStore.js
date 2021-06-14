@@ -33,7 +33,7 @@ class JSONCache {
         });
       } else {
         // console.error(`File ${url} does not exist`);
-        throw `File ${url} does not exist`;
+        throw `URL ${url} does not exist`;
       }
     } else {
       let res = fetch(new Request(url))
@@ -357,7 +357,7 @@ RootStore = types
     chunksProcessedFasta: types.optional(types.array(types.string), []),
 
     pathNucPos: types.optional(PathNucPos, { path: "path", nucPos: 0 }), // OR: types.maybe(PathNucPos)
-    pathIndexServerAddress: "http://localhost:3010", // "http://193.196.29.24:3010/",
+    pathIndexServerAddress: "http://localhost:3030", // "http://193.196.29.24:3010/",
 
     loading: true,
     copyNumberColorArray: types.optional(types.array(types.string), [
@@ -411,7 +411,7 @@ RootStore = types
     //   self.highlightedLink = link.key;
     // },
 
-    jumpLink(link) {},
+    // jumpLink(link) {},
 
     updateMouse(x, y) {
       self.mouseX = x;
@@ -783,6 +783,7 @@ RootStore = types
         return (curEnd - prevStart) * (prevEnd - curStart) > 0;
       };
 
+      self.maxArrowHeight = 0;
       for (let curLinkIdx = 1; curLinkIdx < visibleLinks.length; curLinkIdx++) {
         for (let prevLinkIdx = 0; prevLinkIdx < curLinkIdx; prevLinkIdx++) {
           if (isIntersecting(curLinkIdx, prevLinkIdx)) {
@@ -1105,6 +1106,7 @@ RootStore = types
       // debugger;
       // Sometimes, typing new bin, it arrives something that is not a valid integer
       self.updatingVisible = true;
+      self.updateHighlightedLink(null);
 
       if (!isInt(newBegin)) {
         newBegin = 1;
@@ -1125,7 +1127,7 @@ RootStore = types
           sortedKeys[sortedKeys.length - 1]
         ).lastBin;
 
-        if (lastBinInComponents <= newBegin) {
+        if (lastBinInComponents <= newBegin + self.columnsInView) {
           self.clearComponents();
           self.setBeginBin(newBegin);
           promiseArray = self.shiftComponentsRight(
@@ -1142,7 +1144,7 @@ RootStore = types
             self.shiftVisualisedComponents();
             promiseArray = undefined;
           });
-        } else if (firstBinInComponents >= newBegin + self.columnsInView) {
+        } else if (firstBinInComponents >= newBegin) {
           self.clearComponents();
           self.setBeginBin(newBegin);
           promiseArray = self.shiftComponentsRight(
@@ -1202,6 +1204,81 @@ RootStore = types
             self.last_bin_pangenome
           )
         );
+      }
+    },
+
+    jumpToCentre(
+      centreBin,
+      moveToRight,
+      highlightedLink = null,
+      marker = false
+    ) {
+      self.updatingVisible = true;
+      let promiseArray = [];
+
+      if (centreBin >= self.firstLoadedBin && centreBin <= self.lastLoadedBin) {
+        if (moveToRight === 1) {
+          //Arrow to the right
+          promiseArray = promiseArray.concat(
+            self.shiftComponentsRight(
+              Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
+              Math.min(
+                centreBin + Math.round(self.columnsInView * 1.5),
+                self.last_bin_pangenome
+              )
+            )
+          );
+        } else if (moveToRight === -1) {
+          //Arrow to the left
+          promiseArray = promiseArray.concat(
+            self.shiftComponentsLeft(
+              Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
+              Math.min(
+                centreBin + Math.round(self.columnsInView * 1.5),
+                self.last_bin_pangenome
+              )
+            )
+          );
+        } else {
+          // Self loop on single bin component
+          // do nothing with loaded components.
+        }
+      } else {
+        self.clearComponents();
+        promiseArray = promiseArray.concat(
+          self.shiftComponentsRight(
+            Math.max(1, centreBin + 1),
+            Math.min(
+              centreBin + Math.round(self.columnsInView * 1.5),
+              self.last_bin_pangenome
+            ),
+            false
+          )
+        );
+        promiseArray = promiseArray.concat(
+          self.shiftComponentsLeft(
+            Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
+            Math.min(centreBin, self.last_bin_pangenome),
+            false
+          )
+        );
+      }
+
+      self.updateHighlightedLink(highlightedLink);
+
+      Promise.all(promiseArray).then(() => {
+        self.clearVisualisedComponents();
+        self.shiftVisualisedComponentsCentre(centreBin);
+      });
+      setTimeout(() => {
+        self.updateHighlightedLink(null);
+      }, 5000);
+
+      if (marker) {
+        self.setZoomHighlightBoundaries(centreBin, centreBin);
+        setTimeout(() => {
+          self.clearZoomHighlightBoundaries();
+        }, 10000);
       }
     },
 
@@ -1350,6 +1427,9 @@ RootStore = types
       Promise.all(promiseArray).then(() => {
         self.shiftVisualisedComponentsCentre(centreBin);
         if (scaleFactor < 1) {
+          console.debug(
+            `[Store.setIndexSelectedZoomLevel] zoomHighlightBegin: ${scaledBegin} zoomHighlightEnd: ${scaledEnd}`
+          );
           self.setZoomHighlightBoundaries(scaledBegin, scaledEnd);
           setTimeout(() => {
             self.clearZoomHighlightBoundaries();
@@ -1504,7 +1584,9 @@ RootStore = types
     get getEndBin() {
       return self.endBin;
     },
-
+    get centreBin() {
+      return Math.round((self.getBeginBin + self.getEndBin) / 2);
+    },
     // Getter and setter for zoom info management
     get getBinWidth() {
       //Zoom level and BinWidth are actually the same thing

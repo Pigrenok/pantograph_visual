@@ -97,9 +97,9 @@ export const MatrixCell = observer(
     renderStart(color, startPos = 0) {
       return (
         <Rect
-          x={this.props.x + startPos * this.props.store.pixelsPerColumn}
+          x={this.props.x + startPos * this.props.store.pixelsPerColumn + 1}
           y={this.props.y}
-          width={this.props.store.pixelsPerColumn}
+          width={this.props.store.pixelsPerColumn - 2}
           height={this.props.height || 1}
           fill={color}
           stroke={"limegreen"}
@@ -112,9 +112,14 @@ export const MatrixCell = observer(
     }
 
     render() {
+      if (this.props.store.updatingVisible) {
+        return null;
+      }
+
       if (this.props.range === undefined || this.props.range.length === 0) {
         return null; //giving up
       }
+
       const rangeLength = this.props.range.length;
 
       const inverted =
@@ -201,9 +206,14 @@ export const SpanCell = observer(
     }
 
     render() {
+      if (this.props.store.updatingVisible) {
+        return null;
+      }
+
       if (!this.props.entry || !this.props.entry.occupiedBins.length) {
         return null;
       }
+
       // if (this.props.store.getBeginBin === 41196 && this.props.entry.pathID===26) {
       //   debugger;
       // }

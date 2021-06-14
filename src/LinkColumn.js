@@ -14,9 +14,17 @@ const LinkColumn = observer(
     }
 
     handleMouseOver(pathID) {
-      this.props.store.updateCellTooltipContent(
-        `Accession ${this.props.store.chunkIndex.pathNames[pathID]} \n From bin ${this.props.item.upstream}\nTo bin ${this.props.item.downstream}`
-      );
+      console.debug("[LinkColumn.handleMouseOver] pathID", pathID);
+      if (pathID) {
+        this.props.store.updateCellTooltipContent(
+          `Accession ${this.props.store.chunkIndex.pathNames[pathID]} \n From bin ${this.props.item.upstream}\nTo bin ${this.props.item.downstream}`
+        );
+      } else {
+        this.props.store.updateCellTooltipContent(
+          `From bin ${this.props.item.upstream}\nTo bin ${this.props.item.downstream}`
+        );
+      }
+
       this.props.store.updateHighlightedLink(this.props.item);
     }
 
@@ -48,76 +56,21 @@ const LinkColumn = observer(
         }
       }
 
-      let promiseArray = [];
+      let linkToRight;
 
-      if (
-        centreBin >= this.props.store.firstLoadedBin &&
-        centreBin <= this.props.store.lastLoadedBin
-      ) {
-        if (this.props.item.upstream < this.props.store.downstream) {
-          //Arrow to the right
-          promiseArray = promiseArray.concat(
-            this.props.store.shiftComponentsRight(
-              Math.max(
-                1,
-                centreBin - Math.round(this.props.store.columnsInView * 1.5)
-              ),
-              Math.min(
-                centreBin + Math.round(this.props.store.columnsInView * 1.5),
-                this.props.store.last_bin_pangenome
-              )
-            )
-          );
-        } else if (this.props.item.upstream < this.props.store.downstream) {
-          //Arrow to the left
-          promiseArray = promiseArray.concat(
-            this.props.store.shiftComponentsLeft(
-              Math.max(
-                1,
-                centreBin - Math.round(this.props.store.columnsInView * 1.5)
-              ),
-              Math.min(
-                centreBin + Math.round(this.props.store.columnsInView * 1.5),
-                this.props.store.last_bin_pangenome
-              )
-            )
-          );
-        } else {
-          // Self loop on single bin component
-          // do nothing with loaded components.
-        }
+      if (this.props.item.upstream < this.props.store.downstream) {
+        //Arrow to the right
+        linkToRight = 1;
+      } else if (this.props.item.upstream < this.props.store.downstream) {
+        //Arrow to the left
+        linkToRight = -1;
       } else {
-        this.props.store.clearComponents();
-        promiseArray = promiseArray.concat(
-          this.props.store.shiftComponentsRight(
-            Math.max(1, centreBin + 1),
-            Math.min(
-              centreBin + Math.round(this.props.store.columnsInView * 1.5),
-              this.props.store.last_bin_pangenome
-            ),
-            false
-          )
-        );
-        promiseArray = promiseArray.concat(
-          this.props.store.shiftComponentsLeft(
-            Math.max(
-              1,
-              centreBin - Math.round(this.props.store.columnsInView * 1.5)
-            ),
-            Math.min(centreBin, this.props.store.last_bin_pangenome),
-            false
-          )
-        );
+        // Self loop on single bin component
+        // do nothing with loaded components.
+        linkToRight = 0;
       }
 
-      this.props.store.updateHighlightedLink(highlightedLink);
-
-      Promise.all(promiseArray).then(() => {
-        this.props.store.shiftVisualisedComponentsCentre(centreBin);
-      });
-      setTimeout(() => {
-        this.props.store.updateHighlightedLink(null);
-      }, 5000);
+      this.props.store.jumpToCentre(centreBin, linkToRight, highlightedLink);
     }
 
     points() {
@@ -128,7 +81,12 @@ const LinkColumn = observer(
           return [];
         }
 
-        let arrowPoints = [5, this.props.store.pixelsPerColumn, 5, 0];
+        let arrowPoints = [
+          0.5 * this.props.store.pixelsPerColumn,
+          this.props.store.pixelsPerColumn,
+          0.5 * this.props.store.pixelsPerColumn,
+          0,
+        ];
         if (
           this.props.store.visualisedComponents.has(
             this.props.item.downstream
@@ -146,15 +104,15 @@ const LinkColumn = observer(
               dLink.order * this.props.store.pixelsPerColumn -
               this.props.x;
             arrowPoints = arrowPoints.concat([
-              5,
+              0.5 * this.props.store.pixelsPerColumn,
               -1 *
                 (this.props.item.elevation + 1) *
                 this.props.store.pixelsPerColumn,
-              dX + 5,
+              dX + 0.5 * this.props.store.pixelsPerColumn,
               -1 *
                 (this.props.item.elevation + 1) *
                 this.props.store.pixelsPerColumn,
-              dX + 5,
+              dX + 0.5 * this.props.store.pixelsPerColumn,
               0,
             ]);
           }
@@ -174,7 +132,12 @@ const LinkColumn = observer(
             return [];
           }
         }
-        return [5, -1 * this.props.store.pixelsPerColumn, 5, 0];
+        return [
+          0.5 * this.props.store.pixelsPerColumn,
+          -1 * this.props.store.pixelsPerColumn,
+          0.5 * this.props.store.pixelsPerColumn,
+          0,
+        ];
       }
 
       return [];
@@ -184,7 +147,7 @@ const LinkColumn = observer(
       return (
         <Arrow
           x={this.props.x}
-          y={this.props.y - this.props.store.pixelsPerRow}
+          y={this.props.y - this.props.store.pixelsPerColumn}
           // width={this.props.store.pixelsPerColumn}
           points={points}
           bezier={false}
@@ -196,7 +159,9 @@ const LinkColumn = observer(
           pointerLength={1}
           pointerWidth={1}
           tension={0}
-          onMouseOver={this.handleMouseOver}
+          onMouseOver={() => {
+            this.handleMouseOver();
+          }}
           onMouseOut={this.handleMouseOut}
           onClick={this.handleClick}
           // lineCap={'round'}
@@ -208,7 +173,7 @@ const LinkColumn = observer(
       //const contents = this.linkCells();
       // debugger;
 
-      if (this.props.store.visualisedComponents.size === 0) {
+      if (this.props.store.updatingVisible) {
         return null;
       }
 

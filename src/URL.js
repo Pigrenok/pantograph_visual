@@ -6,17 +6,27 @@ export function urlExists(dataName) {
   } else {
     //source: https://stackoverflow.com/a/22011478/3067894
     var http = new XMLHttpRequest();
-      http.open("HEAD", dataName, false);
-    http.send();
+    http.open("HEAD", dataName, false);
+    try {
+      http.send();
+    } catch (err) {
+      return false;
+    }
+
+    // http.send();
     return http.status !== 404;
   }
 }
 
 export async function httpGetAsync(theUrl, callback) {
+  debugger;
   var xmlHttp = new XMLHttpRequest();
   xmlHttp.onreadystatechange = function () {
-    if (xmlHttp.readyState === 4 && xmlHttp.status === 200)
+    if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
       callback(xmlHttp.responseText);
+    } else {
+      callback("0");
+    }
   };
   await xmlHttp.open("GET", theUrl, true); // true for asynchronous
   xmlHttp.send(null);

@@ -119,6 +119,10 @@ const ComponentRect = observer(
     }
 
     renderMatrix() {
+      if (this.props.store.updatingVisible) {
+        return null;
+      }
+
       let parts = values(this.props.item.matrix).map((entry) => {
         return this.renderMatrixRow(entry);
       });
@@ -134,6 +138,11 @@ const ComponentRect = observer(
       //   }
       //   this_y = this.props.compressed_row_mapping[uncompressed_y];
       // }
+
+      if (this.props.store.visualisedComponents.size === 0) {
+        return null;
+      }
+
       let this_y = entry.pathID;
 
       let this_x;
@@ -207,22 +216,21 @@ const ComponentRect = observer(
     }
 
     renderSeparators() {
+      if (this.props.store.updatingVisible) {
+        return null;
+      }
       const lines = [];
       // console.log("Departures:",this.props.item.departures)
       // console.log("Arrivals:",this.props.item.arrivals)
-      for (
-        let h = 0;
-        h <= this.props.height;
-        h += this.props.store.pixelsPerRow
-      ) {
+      for (let h = 0; h <= this.props.store.chunkIndex.pathNames.length; h++) {
         lines.push(
           <Line
             points={[
               this.props.item.relativePixelX,
-              this.props.y + h,
+              this.props.y + h * this.props.store.pixelsPerRow,
               this.props.item.relativePixelX +
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
-              this.props.y + h,
+              this.props.y + h * this.props.store.pixelsPerRow,
             ]}
             stroke={"black"}
             strokeWidth={1}
@@ -267,6 +275,132 @@ const ComponentRect = observer(
           />
         </>
       );
+    }
+
+    renderLinkBoundary() {
+      if (this.props.store.updatingVisible) {
+        return null;
+      }
+
+      let colour = "blue";
+      let lineWidth = 0;
+      let opacity = 0.1;
+
+      let lines = [];
+
+      if (
+        this.props.item.firstBin >= this.props.store.getBeginBin &&
+        this.props.item.arrivals.size > 0
+      ) {
+        // lines.push(
+        //   <>
+        //   <Line
+        //     points={[
+        //       this.props.item.relativePixelX,
+        //       this.props.y,
+        //       this.props.item.relativePixelX,
+        //       this.props.y + this.props.height - 1,
+        //     ]}
+        //     stroke={colour}
+        //     strokeWidth={lineWidth}
+        //     key={"LeftSelectionMarker"}
+        //   />
+        //   <Line
+        //     points={[
+        //       this.props.item.relativePixelX +
+        //         this.props.item.arrivals.size * this.props.store.pixelsPerColumn,
+        //       this.props.y,
+        //       this.props.item.relativePixelX +
+        //         this.props.item.arrivals.size * this.props.store.pixelsPerColumn,
+        //       this.props.y + this.props.height - 1,
+        //     ]}
+        //     stroke={colour}
+        //     strokeWidth={lineWidth}
+        //     key={"RightSelectionMarker"}
+        //   />
+        // </>
+        //   );
+        lines.push(
+          <Rect
+            x={this.props.item.relativePixelX}
+            y={this.props.y}
+            width={
+              this.props.item.arrivals.size * this.props.store.pixelsPerColumn
+            }
+            height={this.props.height - 1}
+            fill={colour}
+            opacity={opacity}
+            stroke={colour}
+            strokeWidth={lineWidth}
+            onClick={this.handleClick}
+            onMouseOver={this.onHover.bind(this)}
+            onMouseLeave={this.onLeave.bind(this)}
+          />
+        );
+      }
+
+      if (
+        this.props.item.departureVisible &&
+        this.props.item.departures.size > 1
+      ) {
+        // lines.push(
+        //   <>
+        //     <Line
+        //       points={[
+        //         this.props.item.relativePixelX +
+        //         (this.props.item.arrivals.size + this.props.item.numBins) *
+        //         this.props.store.pixelsPerColumn,
+        //         this.props.y,
+        //         this.props.item.relativePixelX +
+        //         (this.props.item.arrivals.size + this.props.item.numBins) *
+        //         this.props.store.pixelsPerColumn,
+        //         this.props.y + this.props.height - 1,
+        //       ]}
+        //       stroke={colour}
+        //       strokeWidth={lineWidth}
+        //       key={"LeftSelectionMarker"}
+        //     />
+        //     <Line
+        //       points={[
+        //         this.props.item.relativePixelX +
+        //           this.props.widthInColumns *
+        //           this.props.store.pixelsPerColumn,
+        //         this.props.y,
+        //         this.props.item.relativePixelX +
+        //           this.props.widthInColumns *
+        //           this.props.store.pixelsPerColumn,
+        //         this.props.y + this.props.height - 1,
+        //       ]}
+        //       stroke={colour}
+        //       strokeWidth={lineWidth}
+        //       key={"RightSelectionMarker"}
+        //     />
+        //   </>
+        // );
+        lines.push(
+          <Rect
+            x={
+              this.props.item.relativePixelX +
+              (this.props.item.arrivals.size + this.props.item.numBins) *
+                this.props.store.pixelsPerColumn
+            }
+            y={this.props.y}
+            width={
+              this.props.item.departures.size * this.props.store.pixelsPerColumn
+            }
+            height={this.props.height - 1}
+            fill={colour}
+            opacity={opacity}
+            stroke={colour}
+            strokeWidth={lineWidth}
+            onClick={this.handleClick}
+            onMouseOver={this.onHover.bind(this)}
+            onMouseLeave={this.onLeave.bind(this)}
+          />
+        );
+      }
+
+      return <>{lines}</>;
     }
 
     renderZoomBoundary() {
@@ -375,7 +509,7 @@ const ComponentRect = observer(
     // }
 
     render() {
-      if (this.props.store.visualisedComponents.size === 0) {
+      if (this.props.store.updatingVisible) {
         return null;
       }
 
@@ -402,6 +536,7 @@ const ComponentRect = observer(
             onMouseOver={this.onHover.bind(this)}
             onMouseLeave={this.onLeave.bind(this)}
           />
+          {this.renderLinkBoundary()}
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
           {this.props.store.useConnector ? this.renderAllConnectors() : null}
           {this.renderSeparators()}
@@ -409,6 +544,7 @@ const ComponentRect = observer(
           {this.props.store.zoomHighlightBoundaries.length === 2
             ? this.renderZoomBoundary()
             : null}
+          {this.renderLinkBoundary()}
         </>
       );
     }

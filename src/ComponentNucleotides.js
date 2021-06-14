@@ -6,7 +6,10 @@ import { observer } from "mobx-react";
 const ComponentNucleotides = observer(
   class extends React.Component {
     renderMatrixRow() {
-      if (this.props.store.components.size === 0) {
+      if (
+        this.props.store.components.size === 0 ||
+        this.props.store.updatingVisible
+      ) {
         return null;
       }
       const parent = this.props.item;
