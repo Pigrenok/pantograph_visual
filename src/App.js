@@ -183,9 +183,8 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[
-            schematizeComponent.index
-          ] = schematizeComponent;
+          index_to_component_to_visualize_dict[schematizeComponent.index] =
+            schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -261,9 +260,8 @@ const App = observer(
 
         // The updating will re-trigger openRelevantChunksFromIndex
       } else {
-        const newEndBin = this.prepareWhichComponentsToVisualize(
-          widthInColumns
-        );
+        const newEndBin =
+          this.prepareWhichComponentsToVisualize(widthInColumns);
         this.props.store.updateBeginEndBin(beginBin, newEndBin);
 
         //console.log([selZoomLev, endBin, fileArray, fileArrayFasta]);
@@ -351,9 +349,8 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
-              this.schematic.components
-            ); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents =
+              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -702,18 +699,18 @@ const App = observer(
         this.props.store.nucleotides.length > 0
       ) {
         //console.log('renderNucleotidesSchematic - START')
-        console.debug(
-          "[App.renderNucleotidesSchematic] components",
-          this.props.store.components
-        );
-        console.debug(
-          "[App.renderNucleotidesSchematic] visualisedComponents",
-          this.props.store.visualisedComponents
-        );
-        console.debug(
-          "[App.renderNucleotidesSchematic] nucleotides " +
-            this.props.store.nucleotides
-        );
+        // console.debug(
+        //   "[App.renderNucleotidesSchematic] components",
+        //   this.props.store.components
+        // );
+        // console.debug(
+        //   "[App.renderNucleotidesSchematic] visualisedComponents",
+        //   this.props.store.visualisedComponents
+        // );
+        // console.debug(
+        //   "[App.renderNucleotidesSchematic] nucleotides " +
+        //     this.props.store.nucleotides
+        // );
         return values(this.props.store.visualisedComponents).map(
           (component, i) => {
             // The dummy component (firstBin and lastBin equal to 0) is not loaded in this.schematic.components, but there is a nucleotide for it in the FASTA file.
@@ -732,14 +729,14 @@ const App = observer(
               component.lastBin - nt_shift + 1 // inclusive end
             );
 
-            console.debug(
-              "[App.renderNucleotidesSchematic] nt_shift",
-              nt_shift
-            );
-            console.debug(
-              "[App.renderNucleotidesSchematic] nucleotides_slice: " +
-                nucleotides_slice
-            );
+            // console.debug(
+            //   "[App.renderNucleotidesSchematic] nt_shift",
+            //   nt_shift
+            // );
+            // console.debug(
+            //   "[App.renderNucleotidesSchematic] nucleotides_slice: " +
+            //     nucleotides_slice
+            // );
 
             return (
               <React.Fragment key={"nt" + i}>
@@ -748,9 +745,9 @@ const App = observer(
                   item={component}
                   key={i}
                   y={
-                    this.props.store.topOffset +
-                    (this.props.store.maxArrowHeight + 1) *
-                      this.props.store.pixelsPerColumn
+                    // this.props.store.topOffset +
+                    this.props.store.maxArrowHeight *
+                    this.props.store.pixelsPerColumn
                   }
                   // They are passed only the nucleotides associated to the current component
                   nucleotides={nucleotides_slice}
@@ -856,14 +853,13 @@ const App = observer(
       }
       // console.log("[App.renderSchematic] component list", this.schematic.components)
       // console.log("[App.renderSchematic] index_to_component_to_visualize_dict", index_to_component_to_visualize_dict)
-      console.debug(
-        "[App.renderSchematic] visualisedComponents",
-        this.props.store.visualisedComponents
-      );
+      // console.debug(
+      //   "[App.renderSchematic] visualisedComponents",
+      //   this.props.store.visualisedComponents
+      // );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent = this.props.store.visualisedComponents.get(
-          index
-        );
+        let schematizeComponent =
+          this.props.store.visualisedComponents.get(index);
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}
@@ -959,11 +955,11 @@ const App = observer(
       /*console.log("navigation_bar_width " + navigation_bar_width);
       console.log("x_navigation " + x_navigation);
       console.log("width_navigation " + width_navigation);*/
-      console.debug("[App.render] store.topOffset", this.props.store.topOffset);
-      console.debug(
-        "[App.render] store.maxArrowHeight",
-        this.props.store.maxArrowHeight
-      );
+      // console.debug("[App.render] store.topOffset", this.props.store.topOffset);
+      // console.debug(
+      //   "[App.render] store.maxArrowHeight",
+      //   this.props.store.maxArrowHeight
+      // );
 
       return (
         <>

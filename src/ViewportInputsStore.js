@@ -328,6 +328,8 @@ RootStore = types
     chunkIndex: types.maybeNull(ChunkIndex),
     beginBin: types.optional(types.integer, 1),
     editingBeginBin: types.optional(types.integer, 1),
+    editingPixelsPerColumn: types.optional(types.integer, 10),
+    // editingPixelsPerRow: types.optional(types.integer, 1),
     endBin: types.optional(types.integer, 1),
     useVerticalCompression: false,
     useWidthCompression: false,
@@ -499,7 +501,7 @@ RootStore = types
     },
 
     addNucleotideSequence(sequence, fromRight) {
-      console.debug("[Store.addNucleotideSequence]");
+      // console.debug("[Store.addNucleotideSequence]");
       if (fromRight) {
         self.nucleotides.splice(self.nucleotides.length, 0, ...sequence);
       } else {
@@ -1332,16 +1334,25 @@ RootStore = types
       );
     },
 
-    updateWidth(event) {
-      let newPixInCol = checkAndForceMinOrMaxValue(
-        Number(event.target.value),
-        3,
-        30
-      );
+    // updateEditingHeight(event) {
+    //   self.editingPixelsPerRow = checkAndForceMinOrMaxValue(
+    //     Number(event.target.value),
+    //     1,
+    //     30
+    //   );
+    // },
+
+    updateWidth(value) {
+      let newPixInCol = checkAndForceMinOrMaxValue(Number(value), 3, 30);
       if (newPixInCol != self.pixelsPerColumn) {
         self.pixelsPerColumn = newPixInCol;
         self.updateBeginEndBin(self.getBeginBin);
       }
+      self.editingPixelsPerColumn = newPixInCol;
+    },
+
+    updateEditingWidth(value) {
+      self.editingPixelsPerColumn = Number(value);
     },
 
     tryJSONpath(file) {
@@ -1388,7 +1399,7 @@ RootStore = types
 
     setIndexSelectedZoomLevel(index) {
       // debugger;
-      self.updatingVisible = false;
+      self.updatingVisible = true;
       let scaleFactor =
         self.availableZoomLevels[self.indexSelectedZoomLevel] /
         self.availableZoomLevels[index];

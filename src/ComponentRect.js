@@ -246,7 +246,9 @@ const ComponentRect = observer(
     //   return true;
     // }
 
-    renderSelectedMarker() {
+    renderBlockMarker() {
+      let colour = this.isSelected ? "red" : "blue";
+
       return (
         <>
           <Line
@@ -256,7 +258,7 @@ const ComponentRect = observer(
               this.props.item.relativePixelX,
               this.props.y + this.props.height - 1,
             ]}
-            stroke={"red"}
+            stroke={colour}
             strokeWidth={2}
             key={"LeftSelectionMarker"}
           />
@@ -269,7 +271,7 @@ const ComponentRect = observer(
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.y + this.props.height - 1,
             ]}
-            stroke={"red"}
+            stroke={colour}
             strokeWidth={2}
             key={"RightSelectionMarker"}
           />
@@ -322,6 +324,7 @@ const ComponentRect = observer(
         //   );
         lines.push(
           <Rect
+            key={"a" + this.props.item.index}
             x={this.props.item.relativePixelX}
             y={this.props.y}
             width={
@@ -379,6 +382,7 @@ const ComponentRect = observer(
         // );
         lines.push(
           <Rect
+            key={"d" + this.props.item.index}
             x={
               this.props.item.relativePixelX +
               (this.props.item.arrivals.size + this.props.item.numBins) *
@@ -386,7 +390,8 @@ const ComponentRect = observer(
             }
             y={this.props.y}
             width={
-              this.props.item.departures.size * this.props.store.pixelsPerColumn
+              (this.props.item.departures.size - 1) *
+              this.props.store.pixelsPerColumn
             }
             height={this.props.height - 1}
             fill={colour}
@@ -513,15 +518,15 @@ const ComponentRect = observer(
         return null;
       }
 
-      console.debug(
-        "[ComponentRect.render] render component",
-        this.props.item.index
-      );
+      // console.debug(
+      //   "[ComponentRect.render] render component",
+      //   this.props.item.index
+      // );
 
-      console.debug("[ComponentRect.render] props.y", this.props.y);
-      // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
-      // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
-      // console.debug("[ComponentRect.render] height", this.props.height)
+      // console.debug("[ComponentRect.render] props.y", this.props.y);
+      // // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
+      // // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
+      // // console.debug("[ComponentRect.render] height", this.props.height)
 
       return (
         <>
@@ -540,7 +545,7 @@ const ComponentRect = observer(
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
           {this.props.store.useConnector ? this.renderAllConnectors() : null}
           {this.renderSeparators()}
-          {this.isSelected ? this.renderSelectedMarker() : null}
+          {this.renderBlockMarker()}
           {this.props.store.zoomHighlightBoundaries.length === 2
             ? this.renderZoomBoundary()
             : null}

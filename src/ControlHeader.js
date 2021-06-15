@@ -11,7 +11,8 @@ const ControlHeader = observer(
     constructor(props) {
       super(props);
 
-      this.timer = null;
+      this.posTimer = null;
+      this.widthTimer = null;
     }
 
     shift(percentage) {
@@ -123,13 +124,25 @@ const ControlHeader = observer(
 
     handleShift(event) {
       this.props.store.setEditingBeginBin(Number(event.target.value));
-      if (this.timer !== null) {
-        clearTimeout(this.timer);
+      if (this.posTimer !== null) {
+        clearTimeout(this.posTimer);
       }
 
-      this.timer = setTimeout(() => {
+      this.posTimer = setTimeout(() => {
         this.props.store.updateBeginEndBin(this.props.store.editingBeginBin);
-        this.timer = null;
+        this.posTimer = null;
+      }, 1000);
+    }
+
+    handleChangeWidth(event) {
+      this.props.store.updateEditingWidth(Number(event.target.value));
+      if (this.widthTimer !== null) {
+        clearTimeout(this.widthTimer);
+      }
+
+      this.widthTimer = setTimeout(() => {
+        this.props.store.updateWidth(this.props.store.editingPixelsPerColumn);
+        this.widthTimer = null;
       }, 1000);
     }
 
@@ -339,8 +352,8 @@ const ControlHeader = observer(
               <input
                 type="number"
                 min={1}
-                value={this.props.store.pixelsPerColumn}
-                onChange={this.props.store.updateWidth}
+                value={this.props.store.editingPixelsPerColumn}
+                onChange={this.handleChangeWidth.bind(this)}
                 style={{ width: "30px" }}
               />
             </span>

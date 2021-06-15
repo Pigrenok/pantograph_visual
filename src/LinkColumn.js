@@ -177,12 +177,12 @@ const LinkColumn = observer(
         return null;
       }
 
-      console.debug(
-        `[LinkColumn.render] render arrow from ${this.props.item.upstream} to ${this.props.item.downstream} in component ${this.props.parent.index}`
-      );
-      console.debug(
-        `[LinkColumn.render] render arrow with elevation ${this.props.item.elevation}`
-      );
+      // console.debug(
+      //   `[LinkColumn.render] render arrow from ${this.props.item.upstream} to ${this.props.item.downstream} in component ${this.props.parent.index}`
+      // );
+      // console.debug(
+      //   `[LinkColumn.render] render arrow with elevation ${this.props.item.elevation}`
+      // );
       const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
         this.props.item,
         this.props.store.highlightedLink
