@@ -453,7 +453,9 @@ RootStore = types
     },
 
     addComponents(compArray, nucleotides = [], fromRight = true) {
-      // debugger;
+      // console.debug("[Store.addComponents] compArray", compArray)
+      // console.debug("[Store.addComponents] nucleotides", nucleotides)
+      // console.debug("[Store.addComponents] fromRight", fromRight)
 
       let splicing = 0;
 
@@ -461,6 +463,11 @@ RootStore = types
         splicing = 1;
       }
       let offset = compArray[splicing].first_bin;
+
+      if (!fromRight) {
+        compArray.reverse();
+      }
+
       for (const component of compArray.splice(splicing)) {
         if (!self.components.has(component.first_bin)) {
           self.addComponent(component);
@@ -501,7 +508,9 @@ RootStore = types
     },
 
     addNucleotideSequence(sequence, fromRight) {
-      // console.debug("[Store.addNucleotideSequence]");
+      // console.debug("[Store.addNucleotideSequence] sequence", sequence);
+      // console.debug("[Store.addNucleotideSequence] fromRight", fromRight);
+
       if (fromRight) {
         self.nucleotides.splice(self.nucleotides.length, 0, ...sequence);
       } else {
@@ -510,6 +519,8 @@ RootStore = types
     },
 
     addNucleotidesFromFasta(url) {
+      // console.debug("[Store.addNucleotidesFromFasta] url", url);
+
       return jsonCache
         .getRaw(url)
         .then((data) => data.text())
