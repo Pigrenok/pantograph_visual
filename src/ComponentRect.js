@@ -284,7 +284,7 @@ const ComponentRect = observer(
         return null;
       }
 
-      let colour = "blue";
+      let colour = "white";
       let lineWidth = 0;
       let opacity = 0.1;
 
@@ -536,12 +536,12 @@ const ComponentRect = observer(
             key={this.props.item.index + "R"}
             width={this.props.widthInColumns * this.props.store.pixelsPerColumn}
             height={this.props.height - 2} //TODO: change to compressed height
-            fill={this.isSelected ? "lightblue" : "lightgray"}
+            fill={this.isSelected ? "lightblue" : "white"}
             onClick={this.handleClick}
             onMouseOver={this.onHover.bind(this)}
             onMouseLeave={this.onLeave.bind(this)}
           />
-          {this.renderLinkBoundary()}
+          {/*{this.renderLinkBoundary()}*/}
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
           {this.props.store.useConnector ? this.renderAllConnectors() : null}
           {this.renderSeparators()}
