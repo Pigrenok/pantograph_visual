@@ -160,8 +160,8 @@ const LinkColumn = types
 const Component = types
   .model({
     index: types.identifierNumber,
-    columnX: types.integer,
-    compressedColumnX: types.integer,
+    // columnX: types.integer,
+    // compressedColumnX: types.integer,
     firstBin: types.integer,
     lastBin: types.integer,
     firstCol: types.integer,
@@ -173,8 +173,12 @@ const Component = types
     occupants: types.array(types.integer),
     numBins: types.integer,
     matrix: types.map(ComponentMatrixElement),
+    ends: types.array(types.integer),
   })
   .actions((self) => ({
+    updateEnds(ends) {
+      self.ends = ends;
+    },
     addMatrixElement(matrixElement) {
       let mel = ComponentMatrixElement.create({
         pathID: matrixElement[0],
@@ -289,11 +293,11 @@ const Chunk = types.model({
   fasta: types.maybeNull(types.string),
   first_bin: types.integer,
   last_bin: types.integer,
-  x: types.integer,
-  compressedX: types.integer,
+  // x: types.integer,
+  // compressedX: types.integer,
 });
 const ZoomLevel = types.model({
-  bin_width: types.integer,
+  // bin_width: types.integer,
   last_bin: types.integer,
   files: types.array(Chunk),
 });
@@ -345,7 +349,11 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg", //"shorttest1_new.seg", //"small_test.v17", //"AT_Chr1_OGOnly_strandReversal.seg", //"SARS-CoV-2.genbank.small",
+    // jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg",
+    jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
+    // jsonName: "shorttest_seq",
+    // jsonName: "shorttest2_new",
+
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
 
@@ -428,8 +436,8 @@ RootStore = types
     addComponent(component) {
       // Component index by first zoom
       let curComp = Component.create({
-        columnX: component.x,
-        compressedColumnX: component.compressedX,
+        // columnX: component.x,
+        // compressedColumnX: component.compressedX,
 
         index: component.first_bin,
         firstBin: component.first_bin,
@@ -445,6 +453,7 @@ RootStore = types
         numBins: component.last_bin - component.first_bin + 1,
       });
       // console.debug("[Store.addComponent]",component )
+      curComp.updateEnds(component.ends);
       curComp.addMatrixElements(component.matrix);
       curComp.addArrivalLinks(component.arrivals);
       curComp.addDepartureLinks(component.departures);
@@ -453,9 +462,9 @@ RootStore = types
     },
 
     addComponents(compArray, nucleotides = [], fromRight = true) {
-      // console.debug("[Store.addComponents] compArray", compArray)
-      // console.debug("[Store.addComponents] nucleotides", nucleotides)
-      // console.debug("[Store.addComponents] fromRight", fromRight)
+      console.debug("[Store.addComponents] compArray", compArray);
+      console.debug("[Store.addComponents] nucleotides", nucleotides);
+      console.debug("[Store.addComponents] fromRight", fromRight);
 
       let splicing = 0;
 
@@ -539,8 +548,15 @@ RootStore = types
     },
 
     shiftComponentsRight(windowStart, windowEnd, doClean = true) {
-      // console.debug("[Store.shiftComponentsRight] component store before removal",self.components)
-      // console.debug("[Store.shiftComponentsRight] windowStart windowEnd",windowStart, windowEnd)
+      console.debug(
+        "[Store.shiftComponentsRight] component store before removal",
+        self.components
+      );
+      console.debug(
+        "[Store.shiftComponentsRight] windowStart windowEnd",
+        windowStart,
+        windowEnd
+      );
       // debugger;
       let lastBin = windowStart;
 
@@ -579,12 +595,12 @@ RootStore = types
         if (
           lastBin < chunkFile.last_bin &&
           (windowEnd - chunkFile.first_bin) *
-            (chunkFile.last_bin - windowStart) >
+            (chunkFile.last_bin - windowStart) >=
             0
         ) {
           if (
             (self.getEndBin - chunkFile.first_bin) *
-              (chunkFile.last_bin - self.getBeginBin) >
+              (chunkFile.last_bin - self.getBeginBin) >=
               0 &&
             self.getEndBin >= self.getBeginBin
           ) {
@@ -636,12 +652,12 @@ RootStore = types
         if (
           firstBin > chunkFile.first_bin &&
           (windowEnd - chunkFile.first_bin) *
-            (chunkFile.last_bin - windowStart) >
+            (chunkFile.last_bin - windowStart) >=
             0
         ) {
           if (
             (self.getEndBin - chunkFile.first_bin) *
-              (chunkFile.last_bin - self.getBeginBin) >
+              (chunkFile.last_bin - self.getBeginBin) >=
             0
           ) {
             doUpdateVisual = true;
@@ -721,6 +737,7 @@ RootStore = types
     loadIndexFile() {
       console.log("STEP #1: whenever jsonName changes, loadIndexFile");
       self.setLoading(true);
+      self.clearComponents();
       let indexPath =
         process.env.PUBLIC_URL +
         "/test_data/" +
@@ -1372,7 +1389,9 @@ RootStore = types
       if (urlExists(url)) {
         console.log("STEP#1: New Data Source: " + file);
         self.jsonName = file;
-        self.loadIndexFile();
+        self.loadIndexFile().then(() => {
+          self.updateBeginEndBin(1);
+        });
       }
     },
 
@@ -1495,6 +1514,7 @@ RootStore = types
 
     setLoading(val) {
       self.loading = val;
+      self.updatingVisible = val;
     },
 
     // setLastBinPangenome(val) {

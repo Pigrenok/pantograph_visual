@@ -476,25 +476,38 @@ const ComponentRect = observer(
     }
 
     renderComponentConnector(this_y) {
-      // debugger;
       let component = this.props.item;
-      // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
-      const x_val =
+
+      // if (component.firstBin==1 && this.props.store.getBeginBin==5) {
+      //   debugger;
+      // }
+
+      let depOffset = 0;
+      if (component.connectorLink) {
+        depOffset += 1;
+      }
+      let x_val =
         this.props.item.relativePixelX +
-        (component.arrivals.size +
-          (this.props.store.useWidthCompression
-            ? this.props.store.binScalingFactor
-            : component.numBins) +
-          component.departures.size -
-          1) *
+        (component.departures.size - depOffset) *
           this.props.store.pixelsPerColumn;
+      // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
+      if (component.firstBin < this.props.store.getBeginBin) {
+        x_val +=
+          (component.numBins -
+            (this.props.store.getBeginBin - component.firstBin)) *
+          this.props.store.pixelsPerColumn;
+      } else {
+        x_val +=
+          (component.arrivals.size + component.numBins) *
+          this.props.store.pixelsPerColumn;
+      }
 
       // if (!this.props.store.useVerticalCompression) {
       //   this_y = this.props.compressed_row_mapping[uncompressedRow];
       // }
       return (
         <ConnectorRect
-          key={"connector" + this_y}
+          key={"connector" + component.index + this_y}
           x={x_val}
           y={this.props.y + this_y * this.props.store.pixelsPerRow}
           width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9

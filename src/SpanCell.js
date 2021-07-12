@@ -17,9 +17,8 @@ export const MatrixCell = observer(
       );
       // console.log(event, this.props.range, relColumnX);
 
-      let item = this.props.range[
-        Math.min(this.props.range.length - 1, relColumnX)
-      ];
+      let item =
+        this.props.range[Math.min(this.props.range.length - 1, relColumnX)];
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
@@ -38,8 +37,8 @@ export const MatrixCell = observer(
         const end = ranges[j][1];
         let new_content = "";
 
-        if (start === 0) {
-          new_content = end + "+";
+        if (start === 0 || start === end) {
+          new_content = end;
         } else if (end === 0) {
           new_content = start; // + "-";
         } else {
@@ -94,12 +93,38 @@ export const MatrixCell = observer(
       }
     }
 
-    renderStart(color, startPos = 0) {
+    renderEnd(color, isSplit) {
+      // console.debug("[MatrixCell.renderEnd] isStart ",isStart)
       return (
         <Rect
-          x={this.props.x + startPos * this.props.store.pixelsPerColumn + 1}
+          x={
+            this.props.x +
+            this.props.width -
+            this.props.store.pixelsPerColumn * (1 - 0.5 * isSplit) -
+            1
+          }
           y={this.props.y}
-          width={this.props.store.pixelsPerColumn - 2}
+          width={this.props.store.pixelsPerColumn * (1 - 0.5 * isSplit) - 2}
+          height={this.props.height || 1}
+          fill={color}
+          stroke={"red"}
+          strokeWidth={2}
+          onMouseMove={this.onHover.bind(this)}
+          onMouseLeave={this.onLeave.bind(this)}
+          onClick={this.props.handleClickMethod}
+        />
+      );
+    }
+
+    renderStart(color, isSplit) {
+      // console.debug("[MatrixCell.renderStart] startPos ",startPos)
+      // console.debug("[MatrixCell.renderStart] isEnd ",isEnd)
+
+      return (
+        <Rect
+          x={this.props.x + 1}
+          y={this.props.y}
+          width={(this.props.store.pixelsPerColumn - 2) * (1 - 0.5 * isSplit)}
           height={this.props.height || 1}
           fill={color}
           stroke={"limegreen"}
@@ -110,7 +135,6 @@ export const MatrixCell = observer(
         />
       );
     }
-
     render() {
       if (this.props.store.updatingVisible) {
         return null;
@@ -133,9 +157,9 @@ export const MatrixCell = observer(
           return total + element.repeats;
         }, 0) / rangeLength
       );
-      const startBlock = this.props.range.findIndex((element) =>
-        this.isStartInRange(element.pos)
-      );
+      // const startBlock = this.props.range.findIndex((element) =>
+      //   this.isStartInRange(element.pos)
+      // );
 
       let color = this.props.color;
 
@@ -164,6 +188,11 @@ export const MatrixCell = observer(
       //               this.props.width,
       //               this.props.height)
       // TODO: if possible, use HTML/CSS to write the '<', avoiding the <Text />s rendering, therefore improving the performance
+      // console.debug("[MatrixCell.render] startPos ",startBlock)
+      // console.debug("[MatrixCell.render] isStart ",this.props.isStart)
+      // console.debug("[MatrixCell.render] isEnd ",this.props.isEnd)
+      // console.debug("[MatrixCell.render] isSplit ",this.props.isSplit)
+
       return (
         <>
           <Rect
@@ -177,7 +206,10 @@ export const MatrixCell = observer(
             onClick={this.props.handleClickMethod}
           />
           {this.inversionText(inverted)}
-          {startBlock > -1 ? this.renderStart(color, startBlock) : null}
+          {this.props.isStart
+            ? this.renderStart(color, this.props.isSplit)
+            : null}
+          {this.props.isEnd ? this.renderEnd(color, this.props.isSplit) : null}
         </>
       );
     }
@@ -239,9 +271,30 @@ export const SpanCell = observer(
         startPos < this.props.entry.occupiedBins.length
           ? this.props.entry.occupiedBins[startPos] - 1
           : 0;
+      // console.debug("[SpanCell.render] this.props.entry.binData[0]",
+      //   this.props.entry.binData[0].pos[0][0],this.props.entry.binData[0].pos[0][1])
+      // console.debug("[SpanCell.render] this.props.entry.binData[0].pos[0].includes(1)",
+      //   this.props.entry.binData[0].pos[0].includes(1))
+
+      let isStart = this.props.entry.binData[0].pos[0].includes(1);
+      // let isStart = false;
+
+      // console.debug("[SpanCell.render] isStart", isStart);
+
+      let isEnd = false;
+      if (this.props.parent.ends) {
+        isEnd = this.props.parent.ends.includes(this.props.rowNumber);
+      }
+
+      let isSplit = isStart && isEnd && this.props.parent.numBins == 1;
+
+      // console.debug("[SpanCell.render] this.props.parent",this.props.parent)
+      // console.debug("[SpanCell.render] this.props.rowNumber",this.props.rowNumber)
+      // console.debug("[SpanCell.render] isEnd",isEnd)
 
       let matrixCells = [];
       let newSpan = [];
+
       for (let i = startPos; i < this.props.entry.occupiedBins.length; i++) {
         let column = this.props.entry.occupiedBins[i];
         if (column === prev + 1) {
@@ -258,12 +311,15 @@ export const SpanCell = observer(
               color={this.props.color}
               x={this.props.x + x * this.props.store.pixelsPerColumn}
               y={this.props.y}
+              isStart={isStart}
+              isSplit={isSplit}
               rowNumber={this.props.entry.pathID}
               width={newSpan.length * this.props.store.pixelsPerColumn}
               height={this.props.store.pixelsPerRow}
               handleClickMethod={this.props.handleClickMethod}
             />
           );
+          isStart = false;
           x = column - startCompBin;
           //create new newSpan
           newSpan = [this.props.entry.binData[i]];
@@ -279,6 +335,9 @@ export const SpanCell = observer(
           color={this.props.color}
           x={this.props.x + x * this.props.store.pixelsPerColumn}
           y={this.props.y}
+          isStart={isStart}
+          isEnd={isEnd}
+          isSplit={isSplit}
           rowNumber={this.props.entry.pathID}
           width={newSpan.length * this.props.store.pixelsPerColumn}
           height={this.props.store.pixelsPerRow}

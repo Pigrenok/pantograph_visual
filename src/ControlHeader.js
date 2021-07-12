@@ -147,10 +147,6 @@ const ControlHeader = observer(
     }
 
     render() {
-      console.debug(
-        "[ControlHeader.render] editingBeginBin",
-        this.props.store.editingBeginBin
-      );
       return (
         <div id="button-container">
           {/*<button className="button" id="btn-download">*/}
