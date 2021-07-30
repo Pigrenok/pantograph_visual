@@ -14,6 +14,16 @@ export function arraysEqual(A, B) {
   );
 }
 
+export function argsort(arr, sortFunc) {
+  // Decorate-Sort-Undecorate argsort function
+  // Modified version from
+  // https://stackoverflow.com/questions/46622486/what-is-the-javascript-equivalent-of-numpy-argsort
+  return arr
+    .map((item, index) => [item, index])
+    .sort(([arg1], [arg2]) => sortFunc(arg1, arg2))
+    .map(([, item]) => item);
+}
+
 export function checkAndForceMinOrMaxValue(value, minValue, maxValue) {
   if (value < minValue) {
     value = minValue;
@@ -98,19 +108,17 @@ export function range(start, end) {
   return [...Array(1 + end - start).keys()].map((v) => start + v);
 }
 
-export function stringToColorAndOpacity(linkColumn, highlightedLinkColumn) {
+export function stringToColorAndOpacity(linkColumn, highlightedLink) {
   const colorKey = (linkColumn.downstream + 1) * (linkColumn.upstream + 1);
-  if (highlightedLinkColumn) {
+  if (highlightedLink) {
     // When the mouse in on a Link, all the other ones will become gray and fade out
-    let matchColor =
-      (highlightedLinkColumn.downstream + 1) *
-      (highlightedLinkColumn.upstream + 1);
+    let matchColor = (highlightedLink[0] + 1) * (highlightedLink[1] + 1);
     // Check if the mouse in on a Link (highlightedLinkColumn) or if a Link was clicked (selectedLink)
-    if (!highlightedLinkColumn || colorKey === matchColor) {
+    if (colorKey === matchColor) {
       return [
         stringToColourSave(colorKey),
         1.0,
-        highlightedLinkColumn ? "black" : null,
+        highlightedLink ? "black" : null,
       ];
     } else {
       return ["gray", 0.3, null];

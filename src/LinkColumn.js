@@ -36,24 +36,24 @@ const LinkColumn = observer(
     handleClick() {
       let centreBin;
       let highlightedLink = null;
-      if (this.props.store.highlightedLink) {
-        highlightedLink = this.props.store.highlightedLink.key;
-      }
+      // if (this.props.store.highlightedLink) {
+      //   highlightedLink = this.props.store.highlightedLink.key;
+      // }
 
-      if (this.props.item.upstream === this.props.parent.lastBin) {
+      if (this.props.item.key[0] === "d") {
         // departure
         centreBin = this.props.item.downstream;
-        if (highlightedLink) {
-          highlightedLink = "a" + highlightedLink.slice(1);
-        }
+        // if (highlightedLink) {
+        //   highlightedLink = "a" + highlightedLink.slice(1);
+        // }
       }
 
-      if (this.props.item.downstream === this.props.parent.firstBin) {
+      if (this.props.item.key[0] === "a") {
         //arrival
         centreBin = this.props.item.upstream;
-        if (highlightedLink) {
-          highlightedLink = "d" + highlightedLink.slice(1);
-        }
+        // if (highlightedLink) {
+        //   highlightedLink = "d" + highlightedLink.slice(1);
+        // }
       }
 
       let linkToRight;
@@ -69,17 +69,19 @@ const LinkColumn = observer(
         // do nothing with loaded components.
         linkToRight = 0;
       }
-
-      this.props.store.jumpToCentre(centreBin, linkToRight, highlightedLink);
+      this.props.store.jumpToCentre(
+        centreBin,
+        linkToRight,
+        this.props.store.highlightedLink
+      );
     }
 
     points() {
-      if (this.props.item.upstream === this.props.parent.lastBin) {
+      if (
+        this.props.item.key[0] === "d" &&
+        Math.abs(this.props.item.upstream - this.props.item.downstream) != 1
+      ) {
         // departure
-
-        if (!this.props.parent.departureVisible) {
-          return [];
-        }
 
         let arrowPoints = [
           0.5 * this.props.store.pixelsPerColumn,
@@ -87,43 +89,50 @@ const LinkColumn = observer(
           0.5 * this.props.store.pixelsPerColumn,
           0,
         ];
+
+        let dComp = this.props.store.linkInView(this.props.item.downstream);
         if (
-          this.props.store.visualisedComponents.has(
-            this.props.item.downstream
-          ) &&
-          this.props.parent.lastBin <= this.props.store.getEndBin
+          dComp &&
+          this.props.item.downstream >= this.props.store.getBeginBin &&
+          this.props.item.downstream <= this.props.store.getEndBin
         ) {
-          //upstream in view
-          let dComp = this.props.store.visualisedComponents.get(
-            this.props.item.downstream
-          );
-          if (dComp.firstBin >= this.props.store.getBeginBin) {
-            let dLink = dComp.arrivals.get("a" + this.props.item.key.slice(1));
-            let dX =
-              dComp.relativePixelX +
-              dLink.order * this.props.store.pixelsPerColumn -
-              this.props.x;
-            arrowPoints = arrowPoints.concat([
-              0.5 * this.props.store.pixelsPerColumn,
-              -1 *
-                (this.props.item.elevation + 1) *
-                this.props.store.pixelsPerColumn,
-              dX + 0.5 * this.props.store.pixelsPerColumn,
-              -1 *
-                (this.props.item.elevation + 1) *
-                this.props.store.pixelsPerColumn,
-              dX + 0.5 * this.props.store.pixelsPerColumn,
-              0,
-            ]);
+          //downstream in view
+          let arrivalKey = "a" + this.props.item.key.slice(1);
+          let dLink = dComp.larrivals.get(arrivalKey);
+          let dOffset = 0;
+          if (!dLink) {
+            dLink = dComp.rarrivals.get(arrivalKey);
+            if (dComp.firstBin >= this.props.store.getBeginBin) {
+              dOffset = dComp.leftLinkSize + dComp.numBins;
+            } else {
+              dOffset = dComp.lastBin - this.props.store.getBeginBin + 1;
+            }
           }
+
+          let dX =
+            dComp.relativePixelX +
+            (dLink.order + dOffset) * this.props.store.pixelsPerColumn -
+            this.props.x;
+          arrowPoints = arrowPoints.concat([
+            0.5 * this.props.store.pixelsPerColumn,
+            -1 *
+              (this.props.item.elevation + 1) *
+              this.props.store.pixelsPerColumn,
+            dX + 0.5 * this.props.store.pixelsPerColumn,
+            -1 *
+              (this.props.item.elevation + 1) *
+              this.props.store.pixelsPerColumn,
+            dX + 0.5 * this.props.store.pixelsPerColumn,
+            0,
+          ]);
         }
 
         return arrowPoints;
       }
 
-      if (this.props.item.downstream === this.props.parent.firstBin) {
+      if (this.props.item.key[0] === "a") {
         //arrival
-        let upstreamComp = this.props.store.upstreamInView(
+        let upstreamComp = this.props.store.linkInView(
           this.props.item.upstream
         );
         if (upstreamComp) {
@@ -190,7 +199,7 @@ const LinkColumn = observer(
       let points = this.points();
       // console.debug("[LinkColumn.render] x,y",this.props.x,this.props.store.topOffset - 2*this.props.store.pixelsPerColumn)
       // console.debug("[LinkColumn.render] points",points)
-      // console.debug("[LinkColumn.render] arrow condition",points.length>0)
+      console.debug("[LinkColumn.render] this.props.paths", this.props.paths);
       return (
         <>
           {points.length > 0

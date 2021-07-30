@@ -23,9 +23,27 @@ export const MatrixCell = observer(
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
       let tooltipContent = '"';
+      tooltipContent += this.props.pathName + '"';
+
+      if (this.props.isStart) {
+        if (
+          (!this.props.inverted && relColumnX === 0) ||
+          (this.props.inverted && relColumnX === this.props.range.length - 1)
+        ) {
+          tooltipContent += " [Start]";
+        }
+      }
+
+      if (this.props.isEnd) {
+        if (
+          (this.props.inverted && relColumnX === 0) ||
+          (!this.props.inverted && relColumnX === this.props.range.length - 1)
+        ) {
+          tooltipContent += " [End]";
+        }
+      }
       tooltipContent +=
-        this.props.pathName +
-        '"\nCoverage: ' +
+        "\nCoverage: " +
         item.repeats +
         "\nInversion: " +
         item.reversal +
@@ -95,19 +113,29 @@ export const MatrixCell = observer(
 
     renderEnd(color, isSplit) {
       // console.debug("[MatrixCell.renderEnd] isStart ",isStart)
+      let this_x = this.props.x;
+      if (this.props.inverted) {
+        this_x += 1;
+      } else {
+        this_x +=
+          this.props.width -
+          this.props.store.pixelsPerColumn * (1 - 0.5 * isSplit) +
+          1;
+      }
+
+      let stroke = "red";
+      if (this.props.inverted) {
+        stroke = "yellow";
+      }
+
       return (
         <Rect
-          x={
-            this.props.x +
-            this.props.width -
-            this.props.store.pixelsPerColumn * (1 - 0.5 * isSplit) -
-            1
-          }
+          x={this_x}
           y={this.props.y}
           width={this.props.store.pixelsPerColumn * (1 - 0.5 * isSplit) - 2}
           height={this.props.height || 1}
           fill={color}
-          stroke={"red"}
+          stroke={stroke}
           strokeWidth={2}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
@@ -119,10 +147,19 @@ export const MatrixCell = observer(
     renderStart(color, isSplit) {
       // console.debug("[MatrixCell.renderStart] startPos ",startPos)
       // console.debug("[MatrixCell.renderStart] isEnd ",isEnd)
+      let this_x = this.props.x;
+      if (this.props.inverted) {
+        this_x +=
+          this.props.width -
+          this.props.store.pixelsPerColumn * (1 - 0.5 * isSplit) +
+          1;
+      } else {
+        this_x += 1;
+      }
 
       return (
         <Rect
-          x={this.props.x + 1}
+          x={this_x}
           y={this.props.y}
           width={(this.props.store.pixelsPerColumn - 2) * (1 - 0.5 * isSplit)}
           height={this.props.height || 1}
@@ -237,6 +274,31 @@ export const SpanCell = observer(
       //Columns are not necessarily contiguous, but follow the same order as `row`
     }
 
+    adjustStart(adjustment, defaultValue) {
+      let startPos = this.props.entry.occupiedBins.findIndex((value) => {
+        return value >= adjustment;
+      });
+      let x = this.props.entry.occupiedBins[startPos] - adjustment;
+      if (startPos === -1) {
+        startPos = defaultValue;
+        x = 0;
+      }
+      return [adjustment, startPos, x]; //startCompBin,startPos,x
+    }
+
+    adjustEnd(adjustment, defaultValue) {
+      let endPos = this.props.entry.occupiedBins.findIndex((value) => {
+        return value > adjustment;
+      });
+      let x = this.props.entry.occupiedBins[endPos - 1] - adjustment;
+      if (endPos === -1) {
+        endPos = defaultValue;
+        x = 0;
+      }
+
+      return [adjustment, endPos, x];
+    }
+
     render() {
       if (this.props.store.updatingVisible) {
         return null;
@@ -251,39 +313,79 @@ export const SpanCell = observer(
       // }
       let startPos = 0;
       let x = 0;
-      let startCompBin = 0;
+      let xAdjustment = 0;
+      let endVisible = true;
+      let endPos = this.props.entry.occupiedBins.length;
+
+      let startVisible = true;
       if (this.props.store.getBeginBin > this.props.parent.firstBin) {
-        startCompBin =
-          this.props.store.getBeginBin - this.props.parent.firstBin;
-        startPos = this.props.entry.occupiedBins.findIndex((value) => {
-          return value >= startCompBin;
-        });
-        x = this.props.entry.occupiedBins[startPos] - startCompBin;
-        if (startPos === -1) {
-          startPos = this.props.entry.occupiedBins.length;
-          x = 0;
+        startVisible = false;
+        if (this.props.entry.inverted) {
+          [xAdjustment, endPos, x] = this.adjustEnd(
+            this.props.parent.numBins -
+              (this.props.store.getBeginBin - this.props.parent.firstBin) -
+              1,
+            this.props.entry.occupiedBins.length
+          );
+        } else {
+          [xAdjustment, startPos, x] = this.adjustStart(
+            this.props.store.getBeginBin - this.props.parent.firstBin,
+            this.props.entry.occupiedBins.length
+          );
         }
       } else {
-        x = this.props.entry.occupiedBins[startPos];
+        if (this.props.entry.inverted) {
+          x =
+            this.props.parent.numBins -
+            1 -
+            this.props.entry.occupiedBins[endPos - 1];
+        } else {
+          x = this.props.entry.occupiedBins[startPos];
+        }
       }
 
-      let prev =
-        startPos < this.props.entry.occupiedBins.length
-          ? this.props.entry.occupiedBins[startPos] - 1
-          : 0;
+      if (this.props.store.getEndBin < this.props.parent.lastBin) {
+        endVisible = false;
+        if (this.props.entry.inverted) {
+          [xAdjustment, startPos] = this.adjustStart(
+            this.props.parent.lastBin - this.props.store.getEndBin,
+            0
+          );
+        } else {
+          [xAdjustment, endPos] = this.adjustEnd(
+            this.props.parent.numBins -
+              (this.props.parent.lastBin - this.props.store.getEndBin) -
+              1,
+            0
+          );
+        }
+
+        endPos -= this.props.parent.lastBin - this.props.store.getEndBin;
+      }
+
       // console.debug("[SpanCell.render] this.props.entry.binData[0]",
       //   this.props.entry.binData[0].pos[0][0],this.props.entry.binData[0].pos[0][1])
       // console.debug("[SpanCell.render] this.props.entry.binData[0].pos[0].includes(1)",
       //   this.props.entry.binData[0].pos[0].includes(1))
 
-      let isStart = this.props.entry.binData[0].pos[0].includes(1);
-      // let isStart = false;
+      let startBeginningMarker = false;
+      let startEndMarker = false;
+      let endBeginningMarker = false;
+      let endEndMarker = false;
 
-      // console.debug("[SpanCell.render] isStart", isStart);
+      let isStart = this.props.entry.binData[0].pos[0].includes(1);
 
       let isEnd = false;
       if (this.props.parent.ends) {
         isEnd = this.props.parent.ends.includes(this.props.rowNumber);
+      }
+
+      if (this.props.entry.inverted) {
+        startEndMarker = isStart && endVisible;
+        endBeginningMarker = isEnd && startVisible;
+      } else {
+        startBeginningMarker = isStart && startVisible;
+        endEndMarker = isEnd && endVisible;
       }
 
       let isSplit = isStart && isEnd && this.props.parent.numBins == 1;
@@ -292,15 +394,44 @@ export const SpanCell = observer(
       // console.debug("[SpanCell.render] this.props.rowNumber",this.props.rowNumber)
       // console.debug("[SpanCell.render] isEnd",isEnd)
 
+      // console.debug("[SpanCell.render] Component index",this.props.parent.index)
+      // console.debug("[SpanCell.render] pathID",this.props.entry.pathID)
+
+      // console.debug("[SpanCell.render] startBeginningMarker",startBeginningMarker)
+      // console.debug("[SpanCell.render] startEndMarker",startEndMarker)
+      // console.debug("[SpanCell.render] endBeginningMarker",endBeginningMarker)
+      // console.debug("[SpanCell.render] endEndMarker",endEndMarker)
+
       let matrixCells = [];
       let newSpan = [];
 
-      for (let i = startPos; i < this.props.entry.occupiedBins.length; i++) {
-        let column = this.props.entry.occupiedBins[i];
-        if (column === prev + 1) {
+      let step;
+      let starti;
+      let endi;
+      let prev;
+      if (this.props.entry.inverted) {
+        step = -1;
+        starti = -1 * (endPos - 1);
+        endi = -1 * (startPos - 1);
+
+        // Check this!
+        prev =
+          startPos < endPos ? this.props.entry.occupiedBins[endPos - 1] + 1 : 0;
+      } else {
+        step = 1;
+        starti = startPos;
+        endi = endPos;
+        prev =
+          startPos < endPos ? this.props.entry.occupiedBins[startPos] - 1 : 0;
+      }
+      for (let i = starti; i < endi; i++) {
+        let column = this.props.entry.occupiedBins[step * i];
+        if (column === prev + step) {
           //contiguous
-          newSpan.push(this.props.entry.binData[i]);
+          newSpan.push(this.props.entry.binData[step * i]);
         } else {
+          // console.debug("[SpanCell.render] newSpan",newSpan)
+
           //non-contiguous
           matrixCells.push(
             <MatrixCell
@@ -311,39 +442,51 @@ export const SpanCell = observer(
               color={this.props.color}
               x={this.props.x + x * this.props.store.pixelsPerColumn}
               y={this.props.y}
-              isStart={isStart}
+              isStart={startBeginningMarker}
+              isEnd={endBeginningMarker}
               isSplit={isSplit}
+              inverted={this.props.entry.inverted}
               rowNumber={this.props.entry.pathID}
               width={newSpan.length * this.props.store.pixelsPerColumn}
               height={this.props.store.pixelsPerRow}
               handleClickMethod={this.props.handleClickMethod}
             />
           );
-          isStart = false;
-          x = column - startCompBin;
+          startBeginningMarker = false;
+          endBeginningMarker = false;
+          x = column - xAdjustment;
           //create new newSpan
-          newSpan = [this.props.entry.binData[i]];
+          newSpan = [this.props.entry.binData[step * i]];
         }
         prev = column;
       }
-      matrixCells.push(
-        <MatrixCell
-          key={"span" + this.props.entry.pathID + "," + x}
-          range={newSpan}
-          store={this.props.store}
-          pathName={this.props.pathName}
-          color={this.props.color}
-          x={this.props.x + x * this.props.store.pixelsPerColumn}
-          y={this.props.y}
-          isStart={isStart}
-          isEnd={isEnd}
-          isSplit={isSplit}
-          rowNumber={this.props.entry.pathID}
-          width={newSpan.length * this.props.store.pixelsPerColumn}
-          height={this.props.store.pixelsPerRow}
-          handleClickMethod={this.props.handleClickMethod}
-        />
-      );
+
+      if (matrixCells.length === 0) {
+        startEndMarker = startBeginningMarker || startEndMarker;
+        endEndMarker = endBeginningMarker || endEndMarker;
+      }
+      if (newSpan.length > 0) {
+        matrixCells.push(
+          <MatrixCell
+            key={"span" + this.props.entry.pathID + "," + x}
+            range={newSpan}
+            store={this.props.store}
+            pathName={this.props.pathName}
+            color={this.props.color}
+            x={this.props.x + x * this.props.store.pixelsPerColumn}
+            y={this.props.y}
+            isStart={startEndMarker}
+            isEnd={endEndMarker}
+            isSplit={isSplit}
+            inverted={this.props.entry.inverted}
+            rowNumber={this.props.entry.pathID}
+            width={newSpan.length * this.props.store.pixelsPerColumn}
+            height={this.props.store.pixelsPerRow}
+            handleClickMethod={this.props.handleClickMethod}
+          />
+        );
+      }
+
       return <>{matrixCells}</>;
     }
   }

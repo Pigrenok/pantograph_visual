@@ -1,7 +1,12 @@
 import { types } from "mobx-state-tree";
 import { entries, keys, values } from "mobx";
 import { urlExists } from "./URL";
-import { arraysEqual, checkAndForceMinOrMaxValue, isInt } from "./utilities";
+import {
+  arraysEqual,
+  checkAndForceMinOrMaxValue,
+  isInt,
+  argsort,
+} from "./utilities";
 
 class JSONCache {
   constructor() {
@@ -119,6 +124,7 @@ const BinData = types.model({
 const ComponentMatrixElement = types
   .model({
     pathID: types.identifierNumber,
+    inverted: types.optional(types.boolean, false),
     occupiedBins: types.array(types.integer),
     binData: types.array(BinData),
   })
@@ -166,8 +172,10 @@ const Component = types
     lastBin: types.integer,
     firstCol: types.integer,
     lastCol: types.integer,
-    arrivals: types.map(LinkColumn),
-    departures: types.map(LinkColumn),
+    larrivals: types.map(LinkColumn),
+    rarrivals: types.map(LinkColumn),
+    ldepartures: types.map(LinkColumn),
+    rdepartures: types.map(LinkColumn),
     relativePixelX: types.optional(types.integer, -1),
     departureVisible: types.optional(types.boolean, true),
     occupants: types.array(types.integer),
@@ -180,11 +188,13 @@ const Component = types
       self.ends = ends;
     },
     addMatrixElement(matrixElement) {
+      // CHANGE for INVERSION!!!
       let mel = ComponentMatrixElement.create({
         pathID: matrixElement[0],
-        occupiedBins: matrixElement[1][0],
+        inverted: matrixElement[1] > 0,
+        occupiedBins: matrixElement[2][0],
       });
-      mel.addBinData(matrixElement[1][1]);
+      mel.addBinData(matrixElement[2][1]);
       self.matrix.set(mel.pathID, mel);
     },
 
@@ -194,8 +204,12 @@ const Component = types
       }
     },
 
-    addArrivalLinks(linkArray) {
-      linkArray.sort((a, b) => {
+    addLeftLinks(departures, arrivals) {
+      const arrThreshold = departures.length;
+
+      let linkArray = departures.concat(arrivals);
+
+      const sortFunc = (a, b) => {
         let ad = a.downstream - a.upstream;
         let bd = b.downstream - b.upstream;
         if (ad * bd > 0) {
@@ -209,47 +223,102 @@ const Component = types
             return -1;
           }
         }
-      });
+      };
+
+      let sortedIds = argsort(linkArray, sortFunc);
 
       let i = 0;
-      for (const link of linkArray) {
+      for (const id of sortedIds) {
         // console.debug("[Component.addArrivalLinks]", link)
+
+        let keyPrefix;
+        let mapToUse;
+        let link;
+        if (id < arrThreshold) {
+          keyPrefix = "d";
+          mapToUse = self.ldepartures;
+          link = departures[id];
+        } else {
+          keyPrefix = "a";
+          mapToUse = self.larrivals;
+          link = arrivals[id - arrThreshold];
+        }
+
         let linkCol = LinkColumn.create({
           key:
-            "a" +
+            keyPrefix +
             String(link.downstream).padStart(13, "0") +
             String(link.upstream).padStart(13, "0"),
           order: i,
           ...link,
         });
-        self.arrivals.set(linkCol.key, linkCol);
+        mapToUse.set(linkCol.key, linkCol);
         i++;
       }
     },
 
-    addDepartureLinks(linkArray) {
-      linkArray.sort((a, b) => {
+    addRightLinks(departures, arrivals) {
+      const arrThreshold = departures.length;
+
+      let linkArray = departures.concat(arrivals);
+
+      const sortFunc = (a, b) => {
         let ad = a.downstream - a.upstream;
         let bd = b.downstream - b.upstream;
         if (ad * bd > 0) {
           return bd - ad;
-        } else {
+        } else if (ad * bd < 0) {
           return ad - bd;
+        } else {
+          if (ad === bd) {
+            return 0;
+          } else {
+            return -1;
+          }
         }
-      });
+      };
+
+      let sortedIds = argsort(linkArray, sortFunc);
+
       let i = 0;
-      for (const link of linkArray) {
+      for (const id of sortedIds) {
+        // console.debug("[Component.addArrivalLinks]", link)
+        let keyPrefix;
+        let mapToUse;
+        let link;
+        let order;
+        if (id < arrThreshold) {
+          keyPrefix = "d";
+          mapToUse = self.rdepartures;
+          link = departures[id];
+          if (link.upstream + 1 != link.downstream) {
+            order = i;
+            i++;
+          } else {
+            order = -1;
+          }
+        } else {
+          keyPrefix = "a";
+          mapToUse = self.rarrivals;
+          link = arrivals[id - arrThreshold];
+          if (link.upstream - 1 != link.downstream) {
+            order = i;
+            i++;
+          } else {
+            order = -1;
+          }
+        }
+
         let linkCol = LinkColumn.create({
           key:
-            "d" +
+            keyPrefix +
             String(link.downstream).padStart(13, "0") +
             String(link.upstream).padStart(13, "0"),
-          order: i,
+          order: order,
           ...link,
         });
-
-        self.departures.set(linkCol.key, linkCol);
-        i++;
+        mapToUse.set(linkCol.key, linkCol);
+        // i++;
       }
     },
 
@@ -260,7 +329,7 @@ const Component = types
         if (
           windowWidth <
           self.relativePixelX +
-            (self.arrivals.size + self.numBins + self.departures.size) *
+            (self.leftLinkSize + self.numBins + self.rightLinkSize) *
               pixelsPerColumn
         ) {
           self.departureVisible = false;
@@ -277,6 +346,57 @@ const Component = types
       for (let link of values(self.departures)) {
         if (Number(link.upstream) + 1 === Number(link.downstream)) {
           return link;
+        }
+      }
+
+      return null;
+    },
+    get leftLinkSize() {
+      return self.ldepartures.size + self.larrivals.size;
+    },
+
+    get rightLinkSize() {
+      return self.farRightDepartures.size + self.farRightArrivals.size + 1;
+
+      // Calculate all far links on the right + 1 for connector column
+    },
+
+    get farRightDepartures() {
+      let links = new Map();
+      for (let linkColumn of values(self.rdepartures)) {
+        if (linkColumn.upstream + 1 != linkColumn.downstream) {
+          links.set(linkColumn.key, linkColumn);
+        }
+      }
+
+      return links;
+    },
+
+    get farRightArrivals() {
+      let links = new Map();
+      for (let linkColumn of values(self.rarrivals)) {
+        if (linkColumn.downstream + 1 != linkColumn.upstream) {
+          links.set(linkColumn.key, linkColumn);
+        }
+      }
+
+      return links;
+    },
+
+    get connectorDepartures() {
+      for (let linkColumn of values(self.rdepartures)) {
+        if (linkColumn.upstream + 1 === linkColumn.downstream) {
+          return linkColumn;
+        }
+      }
+
+      return null;
+    },
+
+    get connectorArrivals() {
+      for (let linkColumn of values(self.rarrivals)) {
+        if (linkColumn.downstream + 1 === linkColumn.upstream) {
+          return linkColumn;
         }
       }
 
@@ -332,27 +452,29 @@ RootStore = types
     chunkIndex: types.maybeNull(ChunkIndex),
     beginBin: types.optional(types.integer, 1),
     editingBeginBin: types.optional(types.integer, 1),
-    editingPixelsPerColumn: types.optional(types.integer, 10),
+    editingPixelsPerColumn: types.optional(types.integer, 30),
     // editingPixelsPerRow: types.optional(types.integer, 1),
     endBin: types.optional(types.integer, 1),
     useVerticalCompression: false,
     useWidthCompression: false,
     binScalingFactor: 3,
     useConnector: true,
-    pixelsPerColumn: 10,
+    pixelsPerColumn: 30,
     pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
     maxArrowHeight: types.optional(types.integer, 0),
-    highlightedLink: types.maybeNull(types.reference(LinkColumn)), // we will compare linkColumns
+    highlightedLink: types.maybeNull(types.array(types.integer)), // we will compare linkColumns
     // selectedLink: types.maybeNull(types.reference(LinkColumn)),
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg",
-    jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
+    // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
+    // jsonName: "shorttest2_new_reverseBlock",
+    jsonName: "shorttest2_new_reverseBlockDouble",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -455,8 +577,8 @@ RootStore = types
       // console.debug("[Store.addComponent]",component )
       curComp.updateEnds(component.ends);
       curComp.addMatrixElements(component.matrix);
-      curComp.addArrivalLinks(component.arrivals);
-      curComp.addDepartureLinks(component.departures);
+      curComp.addLeftLinks(component.ldepartures, component.larrivals);
+      curComp.addRightLinks(component.rdepartures, component.rarrivals);
       // console.debug("[Store.addComponent]",curComp);
       self.components.set(curComp.index, curComp);
     },
@@ -779,8 +901,17 @@ RootStore = types
 
       for (let comp of values(self.visualisedComponents)) {
         if (comp.lastBin <= self.getEndBin && comp.departureVisible) {
-          for (let link of values(comp.departures)) {
-            if (self.visualisedComponents.has(link.downstream)) {
+          for (let link of values(comp.rdepartures)) {
+            if (self.linkInView(link.downstream)) {
+              visibleLinks.push({ compIndex: comp.index, link: link });
+              link.elevation = 0;
+            }
+          }
+        }
+
+        if (comp.firstBin >= self.getBeginBin) {
+          for (let link of values(comp.ldepartures)) {
+            if (self.linkInView(link.downstream)) {
               visibleLinks.push({ compIndex: comp.index, link: link });
               link.elevation = 0;
             }
@@ -833,7 +964,6 @@ RootStore = types
     shiftVisualisedComponentsCentre(centreBin) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
       // console.debug("[Store.shiftVisualisedComponentsCentre] components", self.components)
-
       let visComps = [];
       self.maxArrowHeight = 0;
 
@@ -842,7 +972,7 @@ RootStore = types
 
       let sortedKeys = self.sortedComponentsKeys;
 
-      let centreCompIndex = 1; // = sortedKeys.length>0 ? self.components.get(sortedKeys[Math.round(sortedKeys.length/2)]).index : 1;
+      let centreCompIndex = sortedKeys.length - 1; // = sortedKeys.length>0 ? self.components.get(sortedKeys[Math.round(sortedKeys.length/2)]).index : 1;
 
       for (let i = 0; i < sortedKeys.length; i++) {
         if (sortedKeys[i] > centreBin) {
@@ -854,9 +984,9 @@ RootStore = types
       let curComp = self.components.get(sortedKeys[centreCompIndex]);
 
       let leftSpaceInCols =
-        curComp.arrivals.size + (centreBin - curComp.firstBin + 1);
+        curComp.leftLinkSize + (centreBin - curComp.firstBin + 1);
       let rightSpaceInCols =
-        curComp.departures.size + (curComp.lastBin - centreBin);
+        curComp.rightLinkSize + (curComp.lastBin - centreBin);
 
       visComps.push(curComp.index);
 
@@ -868,24 +998,20 @@ RootStore = types
       ) {
         curComp = self.components.get(sortedKeys[centreCompIndex - counter]);
 
-        if (
-          leftSpaceInCols + curComp.departures.size <
-          self.columnsInView / 2
-        ) {
+        if (leftSpaceInCols + curComp.rightLinkSize < self.columnsInView / 2) {
           if (
-            leftSpaceInCols + curComp.departures.size + curComp.numBins <=
+            leftSpaceInCols + curComp.rightLinkSize + curComp.numBins <=
             self.columnsInView / 2
           ) {
             leftSpaceInCols +=
-              curComp.arrivals.size + curComp.numBins + curComp.departures.size;
+              curComp.leftLinkSize + curComp.numBins + curComp.rightLinkSize;
           } else {
             let offset =
               leftSpaceInCols +
-              curComp.departures.size +
+              curComp.rightLinkSize +
               curComp.numBins -
               Math.round(self.columnsInView / 2);
-            leftSpaceInCols +=
-              curComp.numBins - offset + curComp.departures.size;
+            leftSpaceInCols += curComp.numBins - offset + curComp.rightLinkSize;
           }
 
           visComps.splice(0, 0, curComp.index);
@@ -905,14 +1031,14 @@ RootStore = types
         );
         begin = curComp.firstBin;
       } else if (leftSpaceInCols > self.columnsInView / 2) {
-        if (leftSpaceInCols - curComp.arrivals.size < self.columnsInView / 2) {
+        if (leftSpaceInCols - curComp.leftLinkSize < self.columnsInView / 2) {
           begin = curComp.firstBin;
         } else {
           begin =
             curComp.firstBin +
             (leftSpaceInCols -
               Math.round(self.columnsInView / 2) -
-              curComp.arrivals.size);
+              curComp.leftLinkSize);
         }
       } else {
         begin = curComp.firstBin;
@@ -920,15 +1046,18 @@ RootStore = types
 
       counter = 1;
 
+      let rightFilled = false;
+
       while (
         rightSpaceInCols < self.columnsInView / 2 &&
         centreCompIndex + counter < sortedKeys.length
       ) {
+        rightFilled = true;
         curComp = self.components.get(sortedKeys[centreCompIndex + counter]);
 
-        if (rightSpaceInCols + curComp.arrivals.size < self.columnsInView / 2) {
+        if (rightSpaceInCols + curComp.leftLinkSize < self.columnsInView / 2) {
           rightSpaceInCols +=
-            curComp.arrivals.size + curComp.numBins + curComp.departures.size;
+            curComp.leftLinkSize + curComp.numBins + curComp.rightLinkSize;
 
           visComps.push(curComp.index);
         } else {
@@ -941,21 +1070,20 @@ RootStore = types
         counter++;
       }
 
+      if (!rightFilled) {
+        curComp = self.components.get(sortedKeys[centreCompIndex]);
+      }
+
       if (rightSpaceInCols < self.columnsInView / 2) {
         end = curComp.lastBin;
       } else if (rightSpaceInCols > self.columnsInView / 2) {
-        if (
-          rightSpaceInCols - curComp.departures.size <
-          self.columnsInView / 2
-        ) {
+        if (rightSpaceInCols - curComp.rightLinkSize < self.columnsInView / 2) {
           end = curComp.lastBin;
         } else {
           end =
             curComp.lastBin +
             Math.ceil(
-              rightSpaceInCols -
-                self.columnsInView / 2 -
-                curComp.departures.size
+              rightSpaceInCols - self.columnsInView / 2 - curComp.rightLinkSize
             );
         }
       } else {
@@ -971,14 +1099,14 @@ RootStore = types
           self.windowWidth,
           self.pixelsPerColumn
         );
-        let arrivalSize = curComp.arrivals.size;
+        let leftSize = curComp.leftLinkSize;
         let bodySize = curComp.numBins;
 
         if (relativePos == 0 && curComp.firstBin < begin) {
-          arrivalSize = 0;
+          leftSize = 0;
           bodySize = Math.round(curComp.lastBin - begin + 1);
         }
-        relativePos += arrivalSize + bodySize + curComp.departures.size;
+        relativePos += leftSize + bodySize + curComp.rightLinkSize;
         self.visualisedComponents.set(item, item);
       });
 
@@ -1018,7 +1146,7 @@ RootStore = types
             let comp = self.components.get(index);
 
             if (
-              visibleLengthInCols + comp.departures.size < self.columnsInView &&
+              visibleLengthInCols + comp.rightLinkSize < self.columnsInView &&
               comp.lastBin >= begin
             ) {
               self.visualisedComponents.set(comp.index, comp.index);
@@ -1028,13 +1156,13 @@ RootStore = types
                 self.windowWidth,
                 self.pixelsPerColumn
               );
-              lastCompDepartureSize = comp.departures.size;
+              lastCompDepartureSize = comp.rightLinkSize;
               if (visibleLengthInCols === 0 && begin > comp.firstBin) {
                 visibleLengthInCols +=
-                  comp.lastBin - begin + 1 + comp.departures.size;
+                  comp.lastBin - begin + 1 + comp.rightLinkSize;
               } else {
                 visibleLengthInCols +=
-                  comp.arrivals.size + comp.numBins + comp.departures.size;
+                  comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
               }
             }
 
@@ -1052,10 +1180,10 @@ RootStore = types
         let vComp = self.components.get(index);
         if (
           vComp.lastBin < begin ||
-          visibleLengthInCols + vComp.arrivals.size >= self.columnsInView ||
+          visibleLengthInCols + vComp.leftLinkSize >= self.columnsInView ||
           deleteTheRest
         ) {
-          if (visibleLengthInCols + vComp.arrivals.size >= self.columnsInView) {
+          if (visibleLengthInCols + vComp.leftLinkSize >= self.columnsInView) {
             deleteTheRest = true;
           }
           self.components.get(index).moveTo(-1);
@@ -1066,13 +1194,13 @@ RootStore = types
             self.windowWidth,
             self.pixelsPerColumn
           );
-          lastCompDepartureSize = vComp.departures.size;
+          lastCompDepartureSize = vComp.rightLinkSize;
           if (vComp.firstBin < begin && vComp.lastBin >= begin) {
             visibleLengthInCols +=
-              vComp.lastBin - begin + 1 + vComp.departures.size;
+              vComp.lastBin - begin + 1 + vComp.rightLinkSize;
           } else {
             visibleLengthInCols +=
-              vComp.arrivals.size + vComp.numBins + vComp.departures.size;
+              vComp.leftLinkSize + vComp.numBins + vComp.rightLinkSize;
           }
         }
         // console.debug("[Store.shiftVisualisedComponents] deletion visibleLengthInCols", visibleLengthInCols);
@@ -1083,7 +1211,7 @@ RootStore = types
           let comp = self.components.get(index);
 
           if (
-            visibleLengthInCols + comp.arrivals.size < self.columnsInView &&
+            visibleLengthInCols + comp.leftLinkSize < self.columnsInView &&
             comp.lastBin >= begin &&
             !self.visualisedComponents.has(comp.index)
           ) {
@@ -1093,16 +1221,16 @@ RootStore = types
               self.windowWidth,
               self.pixelsPerColumn
             );
-            lastCompDepartureSize = comp.departures.size;
+            lastCompDepartureSize = comp.rightLinkSize;
             if (visibleLengthInCols === 0 && begin > comp.firstBin) {
               visibleLengthInCols +=
-                comp.lastBin - begin + 1 + comp.departures.size;
+                comp.lastBin - begin + 1 + comp.rightLinkSize;
             } else {
               visibleLengthInCols +=
-                comp.arrivals.size + comp.numBins + comp.departures.size;
+                comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
             }
           } else if (
-            visibleLengthInCols + comp.arrivals.size >=
+            visibleLengthInCols + comp.leftLinkSize >=
             self.columnsInView
           ) {
             break;
@@ -1324,7 +1452,15 @@ RootStore = types
     },
 
     updateHighlightedLink(linkRect) {
-      self.highlightedLink = linkRect;
+      if (linkRect) {
+        if (linkRect instanceof Array) {
+          self.highlightedLink = linkRect;
+        } else {
+          self.highlightedLink = [linkRect.upstream, linkRect.downstream];
+        }
+      } else {
+        self.highlightedLink = null;
+      }
     },
 
     updateMaxHeight(latestHeight) {
@@ -1514,7 +1650,7 @@ RootStore = types
 
     setLoading(val) {
       self.loading = val;
-      self.updatingVisible = val;
+      self.updatingVisible = true;
     },
 
     // setLastBinPangenome(val) {
@@ -1736,9 +1872,12 @@ RootStore = types
       return res;
     },
 
-    upstreamInView(upstreamBin) {
+    linkInView(bin) {
       return values(self.visualisedComponents).find((comp) => {
-        return comp.lastBin === upstreamBin;
+        return (
+          (comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
+          (comp.firstBin == bin && self.getBeginBin <= comp.firstBin)
+        );
       });
     },
     // get arrowHeight() {

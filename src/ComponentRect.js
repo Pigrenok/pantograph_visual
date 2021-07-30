@@ -139,7 +139,7 @@ const ComponentRect = observer(
       //   this_y = this.props.compressed_row_mapping[uncompressed_y];
       // }
 
-      if (this.props.store.visualisedComponents.size === 0) {
+      if (this.props.store.updatingVisible) {
         return null;
       }
 
@@ -152,7 +152,7 @@ const ComponentRect = observer(
       } else {
         this_x =
           this.props.item.relativePixelX +
-          this.props.item.arrivals.size * this.props.store.pixelsPerColumn;
+          this.props.item.leftLinkSize * this.props.store.pixelsPerColumn;
       }
 
       let pathName = this.props.store.chunkIndex.pathNames[entry.pathID];
@@ -188,9 +188,13 @@ const ComponentRect = observer(
     renderAllConnectors() {
       // debugger;
 
-      let connectorsColumn = this.props.item.connectorLink;
+      let connectorDeparturesColumn = this.props.item.connectorDepartures;
+      let connectorArrivalsColumn = this.props.item.connectorArrivals;
 
-      if (connectorsColumn === null) {
+      if (
+        connectorDeparturesColumn === null &&
+        connectorArrivalsColumn === null
+      ) {
         return null;
       }
 
@@ -205,12 +209,23 @@ const ComponentRect = observer(
       //   .reduce(sum, 0); // sum of trues in all columns
       return (
         <>
-          {connectorsColumn.participants.map((uncompressed_row) => {
-            {
-              /*yOffset++; // only used in vertical compression*/
-            }
-            return this.renderComponentConnector(uncompressed_row);
-          })}
+          {connectorDeparturesColumn
+            ? connectorDeparturesColumn.participants.map((uncompressed_row) => {
+                {
+                  /*yOffset++; // only used in vertical compression*/
+                }
+                return this.renderComponentConnector(uncompressed_row, true);
+              })
+            : null}
+
+          {connectorArrivalsColumn
+            ? connectorArrivalsColumn.participants.map((uncompressed_row) => {
+                {
+                  /*yOffset++; // only used in vertical compression*/
+                }
+                return this.renderComponentConnector(uncompressed_row, false);
+              })
+            : null}
         </>
       );
     }
@@ -292,7 +307,7 @@ const ComponentRect = observer(
 
       if (
         this.props.item.firstBin >= this.props.store.getBeginBin &&
-        this.props.item.arrivals.size > 0
+        this.props.item.leftLinkSize > 0
       ) {
         // lines.push(
         //   <>
@@ -328,7 +343,7 @@ const ComponentRect = observer(
             x={this.props.item.relativePixelX}
             y={this.props.y}
             width={
-              this.props.item.arrivals.size * this.props.store.pixelsPerColumn
+              this.props.item.leftLinkSize * this.props.store.pixelsPerColumn
             }
             height={this.props.height - 1}
             fill={colour}
@@ -344,7 +359,7 @@ const ComponentRect = observer(
 
       if (
         this.props.item.departureVisible &&
-        this.props.item.departures.size > 1
+        this.props.item.rightLinkSize > 1
       ) {
         // lines.push(
         //   <>
@@ -385,12 +400,12 @@ const ComponentRect = observer(
             key={"d" + this.props.item.index}
             x={
               this.props.item.relativePixelX +
-              (this.props.item.arrivals.size + this.props.item.numBins) *
+              (this.props.item.leftLinkSize + this.props.item.numBins) *
                 this.props.store.pixelsPerColumn
             }
             y={this.props.y}
             width={
-              (this.props.item.departures.size - 1) *
+              (this.props.item.rightLinkSize - 1) *
               this.props.store.pixelsPerColumn
             }
             height={this.props.height - 1}
@@ -422,7 +437,7 @@ const ComponentRect = observer(
           // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
           let xPos =
             this.props.item.relativePixelX +
-            (this.props.item.arrivals.size +
+            (this.props.item.leftLinkSize +
               (this.props.store.zoomHighlightBoundaries[0] -
                 this.props.item.firstBin)) *
               this.props.store.pixelsPerColumn;
@@ -449,7 +464,7 @@ const ComponentRect = observer(
           // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
           let xPos =
             this.props.item.relativePixelX +
-            (this.props.item.arrivals.size +
+            (this.props.item.leftLinkSize +
               (this.props.store.zoomHighlightBoundaries[1] -
                 this.props.item.firstBin +
                 1)) *
@@ -475,21 +490,20 @@ const ComponentRect = observer(
       return <>{lines}</>;
     }
 
-    renderComponentConnector(this_y) {
+    renderComponentConnector(this_y, isToRight) {
       let component = this.props.item;
 
       // if (component.firstBin==1 && this.props.store.getBeginBin==5) {
       //   debugger;
       // }
 
-      let depOffset = 0;
-      if (component.connectorLink) {
-        depOffset += 1;
-      }
+      // let depOffset = 0;
+      // if (component.connectorLink) {
+      //   depOffset += 1;
+      // }
       let x_val =
         this.props.item.relativePixelX +
-        (component.departures.size - depOffset) *
-          this.props.store.pixelsPerColumn;
+        (component.rightLinkSize - 1) * this.props.store.pixelsPerColumn;
       // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
       if (component.firstBin < this.props.store.getBeginBin) {
         x_val +=
@@ -498,7 +512,7 @@ const ComponentRect = observer(
           this.props.store.pixelsPerColumn;
       } else {
         x_val +=
-          (component.arrivals.size + component.numBins) *
+          (component.leftLinkSize + component.numBins) *
           this.props.store.pixelsPerColumn;
       }
 
@@ -512,7 +526,7 @@ const ComponentRect = observer(
           y={this.props.y + this_y * this.props.store.pixelsPerRow}
           width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
           height={this.props.store.pixelsPerRow}
-          color={"#AAAABE"}
+          isToRight={isToRight}
         />
       );
     }

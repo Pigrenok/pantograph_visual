@@ -357,281 +357,283 @@ const App = observer(
       }
     }
 
-    recalcXLayout() {
-      console.log("recalcXLayout");
+    // recalcXLayout() {
+    //   console.log("recalcXLayout");
 
-      // In this way the updated relativePixelX information is available everywhere for the rendering
-      for (const [
-        i,
-        schematizeComponent,
-      ] of this.schematic.components.entries()) {
-        schematizeComponent.relativePixelX = this.leftXStart(
-          schematizeComponent,
-          i,
-          0,
-          0
-        );
-      }
-      // console.log("[App.recalcXLayout] Component List", this.schematic.components)
-      let actualWidth = 0;
-      if (Object.values(index_to_component_to_visualize_dict).length > 0) {
-        // The actualWidth is calculated on the visualized components
-
-        const first_visualized_component = Object.values(
-          index_to_component_to_visualize_dict
-        )[0];
-        const last_visualized_component = Object.values(
-          index_to_component_to_visualize_dict
-        )[Object.values(index_to_component_to_visualize_dict).length - 1];
-
-        const columnsInComponents =
-          last_visualized_component.getColumnX(
-            this.props.store.useWidthCompression
-          ) -
-          first_visualized_component.getColumnX(
-            this.props.store.useWidthCompression
-          ) +
-          last_visualized_component.arrivals.length +
-          last_visualized_component.departures.length +
-          (this.props.store.useWidthCompression
-            ? this.props.store.binScalingFactor
-            : last_visualized_component.num_bin) -
-          this._column_shift(first_visualized_component);
-
-        actualWidth = columnsInComponents * this.props.store.pixelsPerColumn;
-        //+ paddingBetweenComponents;
-      }
-
-      this.setState({
-        actualWidth: actualWidth,
-      });
-
-      const [links, top] = calculateLinkCoordinates(
-        this.props.store.components,
-        this.props.store.pixelsPerColumn,
-        this.props.store.topOffset,
-        this.props.store.useWidthCompression,
-        this.props.store.binScalingFactor,
-        this.leftXStart.bind(this),
-        index_to_component_to_visualize_dict
-      );
-      this.distanceSortedLinks = links;
-      this.props.store.updateTopOffset(parseInt(top));
-    }
-
-    recalcY() {
-      // forceUpdate() doesn't work with callback function
-      this.setState({ highlightedLink: null }); // nothing code to force update.
-    }
-
-    calcMaxNumRowsAcrossComponents(components) {
-      let lengths = components.map((x) => {
-        return x.occupants.length;
-      });
-      return Math.max(...lengths); //this should likely be faster than doing a search for true values
-    }
-
-    // visibleHeightPixels() {
-    //   if (index_to_component_to_visualize_dict === undefined) {
-    //     return 0;
-    //   }
-
-    //   if (
-    //     this.props.store.useVerticalCompression ||
-    //     !this.compressed_row_mapping
-    //   ) {
-    //     // this.state.schematize.forEach(value => Math.max(value.occupants.filter(Boolean).length, maxNumberRowsInOneComponent));
-    //     if (this.maxNumRowsAcrossComponents === undefined) {
-    //       this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
-    //         Object.values(index_to_component_to_visualize_dict)
-    //       );
-    //       // TODO: This is part where the height of the component is defined. To make it equal for all views this needs to be modified
-    //       // but also the top position of filled cell should also be modified.
-    //     }
-    //     /*console.log(
-    //       "maxNumRowsAcrossComponents",
-    //       this.maxNumRowsAcrossComponents
-    //     );*/
-
-    //     return (
-    //       (this.maxNumRowsAcrossComponents + 1) * this.props.store.pixelsPerRow
-    //     );
-    //   } else {
-    //     return (
-    //       //TODO: NOTE that Object.keys is wrong if you change compressed_row_mapping to a mobx object
-    //       (Object.keys(this.compressed_row_mapping).length + 0.25) *
-    //       this.props.store.pixelsPerRow
+    //   // In this way the updated relativePixelX information is available everywhere for the rendering
+    //   for (const [
+    //     i,
+    //     schematizeComponent,
+    //   ] of this.schematic.components.entries()) {
+    //     schematizeComponent.relativePixelX = this.leftXStart(
+    //       schematizeComponent,
+    //       i,
+    //       0,
+    //       0
     //     );
     //   }
+    //   // console.log("[App.recalcXLayout] Component List", this.schematic.components)
+    //   let actualWidth = 0;
+    //   if (Object.values(index_to_component_to_visualize_dict).length > 0) {
+    //     // The actualWidth is calculated on the visualized components
+
+    //     const first_visualized_component = Object.values(
+    //       index_to_component_to_visualize_dict
+    //     )[0];
+    //     const last_visualized_component = Object.values(
+    //       index_to_component_to_visualize_dict
+    //     )[Object.values(index_to_component_to_visualize_dict).length - 1];
+
+    //     const columnsInComponents =
+    //       last_visualized_component.getColumnX(
+    //         this.props.store.useWidthCompression
+    //       ) -
+    //       first_visualized_component.getColumnX(
+    //         this.props.store.useWidthCompression
+    //       ) +
+    //       last_visualized_component.arrivals.length +
+    //       last_visualized_component.departures.length +
+    //       (this.props.store.useWidthCompression
+    //         ? this.props.store.binScalingFactor
+    //         : last_visualized_component.num_bin) -
+    //       this._column_shift(first_visualized_component);
+
+    //     actualWidth = columnsInComponents * this.props.store.pixelsPerColumn;
+    //     //+ paddingBetweenComponents;
+    //   }
+
+    //   this.setState({
+    //     actualWidth: actualWidth,
+    //   });
+
+    //   const [links, top] = calculateLinkCoordinates(
+    //     this.props.store.components,
+    //     this.props.store.pixelsPerColumn,
+    //     this.props.store.topOffset,
+    //     this.props.store.useWidthCompression,
+    //     this.props.store.binScalingFactor,
+    //     this.leftXStart.bind(this),
+    //     index_to_component_to_visualize_dict
+    //   );
+    //   this.distanceSortedLinks = links;
+    //   this.props.store.updateTopOffset(parseInt(top));
     // }
 
-    // Now it is wrapped in the updateHighlightedNode() function
-    _updateHighlightedNode(linkRect) {
-      this.setState({ highlightedLink: linkRect });
-    }
+    // recalcY() {
+    //   // forceUpdate() doesn't work with callback function
+    //   this.setState({ highlightedLink: null }); // nothing code to force update.
+    // }
 
-    // Wrapper function to wrap the logic (no link selected and time delay)
-    updateHighlightedNode = (linkRect) => {
-      // The highlighting has to work only if there isn't any selected link
-      if (!this.state.selectedLink) {
-        if (linkRect != null) {
-          // It comes from an handleMouseOver event
+    // calcMaxNumRowsAcrossComponents(components) {
+    //   let lengths = components.map((x) => {
+    //     return x.occupants.length;
+    //   });
+    //   return Math.max(...lengths); //this should likely be faster than doing a search for true values
+    // }
 
-          clearTimeout(this.timerHighlightingLink);
+    // // visibleHeightPixels() {
+    // //   if (index_to_component_to_visualize_dict === undefined) {
+    // //     return 0;
+    // //   }
 
-          // To avoid unnecessary rendering when linkRect is still the this.state.highlightedLink link.
-          if (this.state.highlightedLink !== linkRect) {
-            // This ES6 syntaxt avoid to pass the result of the callback to setTimeoutwork.
-            // It works because the ES6 arrow function does not change the context of this.
-            this.timerHighlightingLink = setTimeout(
-              () => {
-                this._updateHighlightedNode(linkRect);
-              },
-              600 // TODO: value to tune. Create a config file where all these hard-coded settings will be
-            );
-          }
-        } else {
-          // It comes from an handleMouseOut event
+    // //   if (
+    // //     this.props.store.useVerticalCompression ||
+    // //     !this.compressed_row_mapping
+    // //   ) {
+    // //     // this.state.schematize.forEach(value => Math.max(value.occupants.filter(Boolean).length, maxNumberRowsInOneComponent));
+    // //     if (this.maxNumRowsAcrossComponents === undefined) {
+    // //       this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
+    // //         Object.values(index_to_component_to_visualize_dict)
+    // //       );
+    // //       // TODO: This is part where the height of the component is defined. To make it equal for all views this needs to be modified
+    // //       // but also the top position of filled cell should also be modified.
+    // //     }
+    // //     /*console.log(
+    // //       "maxNumRowsAcrossComponents",
+    // //       this.maxNumRowsAcrossComponents
+    // //     );*/
 
-          clearTimeout(this.timerHighlightingLink);
+    // //     return (
+    // //       (this.maxNumRowsAcrossComponents + 1) * this.props.store.pixelsPerRow
+    // //     );
+    // //   } else {
+    // //     return (
+    // //       //TODO: NOTE that Object.keys is wrong if you change compressed_row_mapping to a mobx object
+    // //       (Object.keys(this.compressed_row_mapping).length + 0.25) *
+    // //       this.props.store.pixelsPerRow
+    // //     );
+    // //   }
+    // // }
 
-          // To avoid unnecessary rendering when linkRect == null and this.state.highlightedLink is already null for any reason.
-          if (this.state.highlightedLink != null) {
-            this.timerHighlightingLink = setTimeout(
-              () => {
-                this._updateHighlightedNode(linkRect);
-              },
-              600 // TODO: value to tune. Create a config file where all these hard-coded settings will be
-            );
-          }
-        }
-      }
-    };
+    // // Now it is wrapped in the updateHighlightedNode() function
+    // _updateHighlightedNode(linkRect) {
+    //   this.setState({ highlightedLink: linkRect });
+    // }
 
-    updateSelectedLink = (linkRect) => {
-      console.log("updateSelectedLink");
+    // // Wrapper function to wrap the logic (no link selected and time delay)
+    // updateHighlightedNode = (linkRect) => {
+    //   // The highlighting has to work only if there isn't any selected link
+    //   if (!this.state.selectedLink) {
+    //     if (linkRect != null) {
+    //       // It comes from an handleMouseOver event
 
-      let update_state = false;
+    //       clearTimeout(this.timerHighlightingLink);
 
-      if (linkRect) {
-        //TO_DO: lift down this logic when it will be visualized partial chunks (or
-        // pass info about the visualized chunks to the LinkArrow tags)
-        const [binLeft, binRight] = [
-          linkRect.upstream,
-          linkRect.downstream,
-        ].sort(function (a, b) {
-          return a - b;
-        });
+    //       // To avoid unnecessary rendering when linkRect is still the this.state.highlightedLink link.
+    //       if (this.state.highlightedLink !== linkRect) {
+    //         // This ES6 syntaxt avoid to pass the result of the callback to setTimeoutwork.
+    //         // It works because the ES6 arrow function does not change the context of this.
+    //         this.timerHighlightingLink = setTimeout(
+    //           () => {
+    //             this._updateHighlightedNode(linkRect);
+    //           },
+    //           600 // TODO: value to tune. Create a config file where all these hard-coded settings will be
+    //         );
+    //       }
+    //     } else {
+    //       // It comes from an handleMouseOut event
 
-        /*console.log([linkRect.upstream, linkRect.downstream])
-        console.log(binLeft, binRight)*/
-        if (Object.values(index_to_component_to_visualize_dict).length === 0) {
-          return; //bug: inconsistent state, just cancel the click event
-        }
-        const last_bin_last_visualized_component = Object.values(
-          index_to_component_to_visualize_dict
-        ).slice(-1)[0].lastBin;
-        // if (linkRect !== this.state.selectedLink) //else it is a re-clik on the same link, so do nothing here
+    //       clearTimeout(this.timerHighlightingLink);
 
-        const [beginBin, endBin] = this.props.store.beginEndBin;
-        if (
-          binLeft < beginBin ||
-          binRight > last_bin_last_visualized_component
-        ) {
-          console.log("updateSelectedLink - NewBeginEndBin");
+    //       // To avoid unnecessary rendering when linkRect == null and this.state.highlightedLink is already null for any reason.
+    //       if (this.state.highlightedLink != null) {
+    //         this.timerHighlightingLink = setTimeout(
+    //           () => {
+    //             this._updateHighlightedNode(linkRect);
+    //           },
+    //           600 // TODO: value to tune. Create a config file where all these hard-coded settings will be
+    //         );
+    //       }
+    //     }
+    //   }
+    // };
 
-          const end_closer =
-            Math.abs(beginBin - binLeft) > Math.abs(endBin - binRight);
+    // updateSelectedLink = (linkRect) => {
+    //   console.log("updateSelectedLink");
 
-          let [newBeginBin, newEndBin] = this.props.store.beginEndBin;
-          let screenWidth = endBin - beginBin;
-          let half = Math.floor(screenWidth / 2);
-          if (end_closer) {
-            [newBeginBin, newEndBin] = [binLeft - half, binLeft + half];
-          } else {
-            [newBeginBin, newEndBin] = [binRight - half, binRight + half];
-          }
+    //   let update_state = false;
 
-          this.props.store.updateBeginEndBin(newBeginBin, newEndBin);
-          update_state = true;
-        }
-      }
+    //   if (linkRect) {
+    //     //TO_DO: lift down this logic when it will be visualized partial chunks (or
+    //     // pass info about the visualized chunks to the LinkArrow tags)
+    //     const [binLeft, binRight] = [
+    //       linkRect.upstream,
+    //       linkRect.downstream,
+    //     ].sort(function (a, b) {
+    //       return a - b;
+    //     });
 
-      clearTimeout(this.timerHighlightingLink);
+    //     /*console.log([linkRect.upstream, linkRect.downstream])
+    //     console.log(binLeft, binRight)*/
+    //     if (Object.values(index_to_component_to_visualize_dict).length === 0) {
+    //       return; //bug: inconsistent state, just cancel the click event
+    //     }
+    //     const last_bin_last_visualized_component = Object.values(
+    //       index_to_component_to_visualize_dict
+    //     ).slice(-1)[0].lastBin;
+    //     // if (linkRect !== this.state.selectedLink) //else it is a re-clik on the same link, so do nothing here
 
-      // Update the rendering if it is selected a new arrow (or deselected the last one) or
-      // if the range in changed (clicking on a new arrow or recliking on the same one)
-      if (linkRect !== this.selectedLink || update_state) {
-        console.log("updateSelectedLink - NewSelection");
+    //     const [beginBin, endBin] = this.props.store.beginEndBin;
+    //     if (
+    //       binLeft < beginBin ||
+    //       binRight > last_bin_last_visualized_component
+    //     ) {
+    //       console.log("updateSelectedLink - NewBeginEndBin");
 
-        this.setState({
-          highlightedLink: linkRect,
-          selectedLink: linkRect,
-        });
-      }
+    //       const end_closer =
+    //         Math.abs(beginBin - binLeft) > Math.abs(endBin - binRight);
 
-      // Auto de-selection after a delay
-      if (linkRect) {
-        console.log("Timer deselection");
+    //       let [newBeginBin, newEndBin] = this.props.store.beginEndBin;
+    //       let screenWidth = endBin - beginBin;
+    //       let half = Math.floor(screenWidth / 2);
+    //       if (end_closer) {
+    //         [newBeginBin, newEndBin] = [binLeft - half, binLeft + half];
+    //       } else {
+    //         [newBeginBin, newEndBin] = [binRight - half, binRight + half];
+    //       }
 
-        // Eventually restart the timer if it was already ongoing
-        clearTimeout(this.timerSelectionLink);
+    //       this.props.store.updateBeginEndBin(newBeginBin, newEndBin);
+    //       update_state = true;
+    //     }
+    //   }
 
-        this.timerSelectionLink = setTimeout(
-          () => {
-            this.updateSelectedLink(null);
-          },
-          5000 // TODO: to tune. Create a config file where all these hard-coded settings will be
-        );
-      }
-    };
+    //   clearTimeout(this.timerHighlightingLink);
 
-    // Specific utility function to calculate the visualization shift for the first partial visualized component
-    _column_shift(first_visualized_component) {
-      return !this.props.store.useWidthCompression
-        ? first_visualized_component.firstBin === this.props.store.getBeginBin
-          ? 0
-          : first_visualized_component.arrivals.length +
-            (this.props.store.getBeginBin - first_visualized_component.firstBin)
-        : 0; // When only rearrangements are shown, the width does not correspond to the number of bin, so for now we avoid any shifting
-    }
+    //   // Update the rendering if it is selected a new arrow (or deselected the last one) or
+    //   // if the range in changed (clicking on a new arrow or recliking on the same one)
+    //   if (linkRect !== this.selectedLink || update_state) {
+    //     console.log("updateSelectedLink - NewSelection");
 
-    leftXStart(schematizeComponent, i, firstDepartureColumn, j) {
-      // Avoid calling the function too early or for not visualized components
-      if (
-        !(schematizeComponent.index in index_to_component_to_visualize_dict)
-      ) {
-        return -1;
-      }
+    //     this.setState({
+    //       highlightedLink: linkRect,
+    //       selectedLink: linkRect,
+    //     });
+    //   }
 
-      //Return the x coordinate pixel that starts the LinkColumn at i, j
+    //   // Auto de-selection after a delay
+    //   if (linkRect) {
+    //     console.log("Timer deselection");
 
-      const first_visualized_component = Object.values(
-        index_to_component_to_visualize_dict
-      )[0];
+    //     // Eventually restart the timer if it was already ongoing
+    //     clearTimeout(this.timerSelectionLink);
 
-      /*
-      - "schematizeComponent.getColumnX(...) - first_visualized_component.getColumnX(..)": offset of the current component respect to the first visualized one
-      - "this._column_shift(first_visualized_component)"": to hide the arrow on the left
-      - "(schematizeComponent.index - this.schematic.components[0].index": number of padding white columns
-      */
-      const previousColumns =
-        schematizeComponent.getColumnX(this.props.store.useWidthCompression) -
-        first_visualized_component.getColumnX(
-          this.props.store.useWidthCompression
-        ) -
-        this._column_shift(first_visualized_component) -
-        (schematizeComponent.index - this.schematic.components[0].index);
+    //     this.timerSelectionLink = setTimeout(
+    //       () => {
+    //         this.updateSelectedLink(null);
+    //       },
+    //       5000 // TODO: to tune. Create a config file where all these hard-coded settings will be
+    //     );
+    //   }
+    // };
 
-      const pixelsFromColumns =
-        (previousColumns + firstDepartureColumn + j) *
-        this.props.store.pixelsPerColumn;
+    // // Specific utility function to calculate the visualization shift for the first partial visualized component
+    // _column_shift(first_visualized_component) {
+    //   return !this.props.store.useWidthCompression
+    //     ? first_visualized_component.firstBin === this.props.store.getBeginBin
+    //       ? 0
+    //       : first_visualized_component.arrivals.length +
+    //         (this.props.store.getBeginBin - first_visualized_component.firstBin)
+    //     : 0; // When only rearrangements are shown, the width does not correspond to the number of bin, so for now we avoid any shifting
+    // }
 
-      return pixelsFromColumns + i * this.props.store.pixelsPerColumn;
-    }
+    // leftXStart(schematizeComponent, i, firstDepartureColumn, j) {
+    //   // Avoid calling the function too early or for not visualized components
+    //   if (
+    //     !(schematizeComponent.index in index_to_component_to_visualize_dict)
+    //   ) {
+    //     return -1;
+    //   }
+
+    //   //Return the x coordinate pixel that starts the LinkColumn at i, j
+
+    //   const first_visualized_component = Object.values(
+    //     index_to_component_to_visualize_dict
+    //   )[0];
+
+    //   /*
+    //   - "schematizeComponent.getColumnX(...) - first_visualized_component.getColumnX(..)": offset of the current component respect to the first visualized one
+    //   - "this._column_shift(first_visualized_component)"": to hide the arrow on the left
+    //   - "(schematizeComponent.index - this.schematic.components[0].index": number of padding white columns
+    //   */
+    //   const previousColumns =
+    //     schematizeComponent.getColumnX(this.props.store.useWidthCompression) -
+    //     first_visualized_component.getColumnX(
+    //       this.props.store.useWidthCompression
+    //     ) -
+    //     this._column_shift(first_visualized_component) -
+    //     (schematizeComponent.index - this.schematic.components[0].index);
+
+    //   const pixelsFromColumns =
+    //     (previousColumns + firstDepartureColumn + j) *
+    //     this.props.store.pixelsPerColumn;
+
+    //   return pixelsFromColumns + i * this.props.store.pixelsPerColumn;
+    // }
 
     renderLinkColumn(schematizeComponent, firstColumn, linkColumn) {
-      const name = firstColumn === 0 ? "arrival" : "departure";
+      let name = firstColumn === 0 ? "left_" : "right_";
+
+      name += linkColumn.key[0];
 
       let offset = 0;
       // if (linkColumn.key[0]==="d" && linkColumn.downstream-linkColumn.upstream>0) {
@@ -759,6 +761,93 @@ const App = observer(
       }
     };
 
+    // STOPPED HERE!!!!
+    renderComponentLinks(schematizeComponent, leftCut, rightCut) {
+      let resArray = [];
+      console.debug(
+        "[App.renderComponentLinks] component",
+        schematizeComponent.index
+      );
+      console.debug(
+        "[App.renderComponentLinks] leftCut, rightCut",
+        leftCut,
+        rightCut
+      );
+
+      if (!leftCut) {
+        resArray = resArray.concat(
+          values(schematizeComponent.larrivals).map((linkColumn) => {
+            if (linkColumn.upstream - 1 == linkColumn.downstream) {
+              return null;
+            }
+            return this.renderLinkColumn(schematizeComponent, 0, linkColumn);
+          })
+        );
+
+        resArray = resArray.concat(
+          values(schematizeComponent.ldepartures).map((linkColumn) => {
+            return this.renderLinkColumn(schematizeComponent, 0, linkColumn);
+          })
+        );
+      }
+
+      if (!rightCut) {
+        resArray = resArray.concat(
+          values(schematizeComponent.rdepartures).map((linkColumn, j) => {
+            if (linkColumn.upstream + 1 == linkColumn.downstream) {
+              return null;
+            }
+            let leftPad;
+
+            if (leftCut) {
+              leftPad =
+                schematizeComponent.lastBin - this.props.store.getBeginBin + 1;
+            } else {
+              leftPad =
+                schematizeComponent.leftLinkSize +
+                (this.props.store.useWidthCompression
+                  ? this.props.store.binScalingFactor
+                  : schematizeComponent.numBins);
+            }
+
+            return this.renderLinkColumn(
+              schematizeComponent,
+              leftPad,
+              linkColumn
+            );
+          })
+        );
+
+        resArray = resArray.concat(
+          values(schematizeComponent.rarrivals).map((linkColumn, j) => {
+            if (linkColumn.downstream + 1 == linkColumn.upstream) {
+              return null;
+            }
+            let leftPad;
+
+            if (leftCut) {
+              leftPad =
+                schematizeComponent.lastBin - this.props.store.getBeginBin + 1;
+            } else {
+              leftPad =
+                schematizeComponent.leftLinkSize +
+                (this.props.store.useWidthCompression
+                  ? this.props.store.binScalingFactor
+                  : schematizeComponent.numBins);
+            }
+
+            return this.renderLinkColumn(
+              schematizeComponent,
+              leftPad,
+              linkColumn
+            );
+          })
+        );
+      }
+
+      return resArray;
+    }
+
     renderComponent(schematizeComponent, i) {
       // console.log("[App.renderComponent] rendering component",schematizeComponent)
       let width;
@@ -769,14 +858,14 @@ const App = observer(
           schematizeComponent.lastBin -
           this.props.store.getBeginBin +
           1 +
-          schematizeComponent.departures.size -
+          schematizeComponent.rightLinkSize -
           1;
         leftCut = true;
       } else {
         width =
-          schematizeComponent.arrivals.size +
+          schematizeComponent.leftLinkSize +
           schematizeComponent.numBins +
-          schematizeComponent.departures.size -
+          schematizeComponent.rightLinkSize -
           1;
       }
 
@@ -806,41 +895,7 @@ const App = observer(
             }
             widthInColumns={width}
           />
-          {!leftCut
-            ? values(schematizeComponent.arrivals).map((linkColumn) => {
-                return this.renderLinkColumn(
-                  schematizeComponent,
-                  0,
-                  linkColumn
-                );
-              })
-            : null}
-          {!rightCut
-            ? values(schematizeComponent.departures).map((linkColumn, j) => {
-                if (linkColumn.upstream + 1 == linkColumn.downstream) {
-                  return null;
-                }
-                let leftPad;
-
-                if (leftCut) {
-                  leftPad =
-                    schematizeComponent.lastBin -
-                    this.props.store.getBeginBin +
-                    1;
-                } else {
-                  leftPad =
-                    schematizeComponent.arrivals.size +
-                    (this.props.store.useWidthCompression
-                      ? this.props.store.binScalingFactor
-                      : schematizeComponent.numBins);
-                }
-                return this.renderLinkColumn(
-                  schematizeComponent,
-                  leftPad,
-                  linkColumn
-                );
-              })
-            : null}
+          {this.renderComponentLinks(schematizeComponent, leftCut, rightCut)}
         </>
       );
     }
@@ -848,7 +903,7 @@ const App = observer(
     renderSchematic() {
       // console.debug("[App.renderSchematic]");
 
-      if (this.props.store.loading) {
+      if (this.props.store.loading || this.props.store.updatingVisible) {
         return null;
       }
       // console.log("[App.renderSchematic] component list", this.schematic.components)
@@ -1014,8 +1069,8 @@ const App = observer(
             ) : null}
           </div>
 
-          {this.props.store.loading &&
-          this.props.store.visualisedComponents.size === 0 ? null : (
+          {this.props.store.loading ||
+          this.props.store.updatingVisible ? null : (
             <Stage
               x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
               y={2 * this.props.store.pixelsPerColumn * 2} // For some reason, I have to put this, but I'd like to put 0
