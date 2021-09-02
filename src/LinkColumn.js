@@ -77,9 +77,13 @@ const LinkColumn = observer(
     }
 
     points() {
+      // if (this.props.parent.firstBin === 2) {
+      //   debugger;
+      // }
+
       if (
         this.props.item.key[0] === "d" &&
-        Math.abs(this.props.item.upstream - this.props.item.downstream) != 1
+        this.props.item.downstream - this.props.item.upstream != 1
       ) {
         // departure
 
@@ -116,11 +120,11 @@ const LinkColumn = observer(
           arrowPoints = arrowPoints.concat([
             0.5 * this.props.store.pixelsPerColumn,
             -1 *
-              (this.props.item.elevation + 1) *
+              (this.props.item.elevation + 1.5) *
               this.props.store.pixelsPerColumn,
             dX + 0.5 * this.props.store.pixelsPerColumn,
             -1 *
-              (this.props.item.elevation + 1) *
+              (this.props.item.elevation + 1.5) *
               this.props.store.pixelsPerColumn,
             dX + 0.5 * this.props.store.pixelsPerColumn,
             0,
@@ -185,6 +189,11 @@ const LinkColumn = observer(
       if (this.props.store.updatingVisible) {
         return null;
       }
+      // if (this.props.store.selectedZoomLevel === '4' &&
+      //     this.props.parent.firstBin === 2) {
+      //   debugger;
+
+      // }
 
       // console.debug(
       //   `[LinkColumn.render] render arrow from ${this.props.item.upstream} to ${this.props.item.downstream} in component ${this.props.parent.index}`
@@ -199,7 +208,6 @@ const LinkColumn = observer(
       let points = this.points();
       // console.debug("[LinkColumn.render] x,y",this.props.x,this.props.store.topOffset - 2*this.props.store.pixelsPerColumn)
       // console.debug("[LinkColumn.render] points",points)
-      console.debug("[LinkColumn.render] this.props.paths", this.props.paths);
       return (
         <>
           {points.length > 0

@@ -24,6 +24,99 @@ export function argsort(arr, sortFunc) {
     .map(([, item]) => item);
 }
 
+export function findEqualBins(arr) {
+  let sameIdx = [];
+  let numPairs = 0;
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < i; j++) {
+      if (arr[i] === arr[j]) {
+        sameIdx.push([i, j]);
+        numPairs++;
+      }
+    }
+  }
+
+  let diffIdx = [];
+  for (let i = 0; i < arr.len; i++) {
+    if (!sameIdx.includes(i)) {
+      diffIdx.push(i);
+    }
+  }
+  return [sameIdx, diffIdx, numPairs];
+}
+
+export function determineAdjacentIntersection(curLink, prevLink, same) {
+  let prevLinkLeft; // Is previous link adjacent side is on the left
+  let curLinkLeft; // Is curent link adjacent side is on the left
+
+  let prevOtherSide;
+
+  if (same.includes(0)) {
+    // Previous link adjacent side is departure;
+    prevOtherSide = prevLink.link.downstream;
+    if (prevLink.invertedDeparture) {
+      prevLinkLeft = true; // adjacent on the left
+    } else {
+      prevLinkLeft = false; // adjacent on the right
+    }
+  } else if (same.includes(1)) {
+    // Previous link adjacent side is arrival;
+    prevOtherSide = prevLink.link.upstream;
+    if (prevLink.invertedDeparture) {
+      prevLinkLeft = false; // adjacent on the left
+    } else {
+      prevLinkLeft = true; // adjacent on the right
+    }
+  } else {
+    // If none of prev link bins is not in adjacent pair,
+    // then there is some weird loop and it should be marked as intersecting
+    // Although, this is impossible situation but just in case. :-)
+    return true;
+  }
+
+  let curOtherSide;
+  if (same.includes(2)) {
+    // Current link adjacent side is departure;
+    curOtherSide = curLink.link.downstream;
+    if (curLink.invertedDeparture) {
+      curLinkLeft = true; // adjacent on the left
+    } else {
+      curLinkLeft = false; // adjacent on the right
+    }
+  } else if (same.includes(3)) {
+    // Current link adjacent side is arrival;
+    curOtherSide = curLink.link.upstream;
+    if (curLink.invertedDeparture) {
+      curLinkLeft = false; // adjacent on the left
+    } else {
+      curLinkLeft = true; // adjacent on the right
+    }
+  } else {
+    // If none of prev link bins is not in adjacent pair,
+    // then there is some weird loop and it should be marked as intersecting
+    // Although, this is impossible situation but just in case. :-)
+    return true;
+  }
+  // XOR - if one is left and another is right
+  // !! - convert to boolean
+  if (!!(prevLinkLeft ^ curLinkLeft)) {
+    if (
+      (prevLinkLeft && curOtherSide < prevOtherSide) ||
+      (curLinkLeft && curOtherSide > prevOtherSide)
+    ) {
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+
+  // Just in case I missed some unusual edge case,
+  // it is better to consider arrows to intersect than not.
+  return true;
+}
+
 export function checkAndForceMinOrMaxValue(value, minValue, maxValue) {
   if (value < minValue) {
     value = minValue;

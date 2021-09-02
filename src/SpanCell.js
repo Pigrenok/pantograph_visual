@@ -287,9 +287,12 @@ export const SpanCell = observer(
     }
 
     adjustEnd(adjustment, defaultValue) {
+      console.debug("[SpanCell.adjustEnd] adjustment", adjustment);
       let endPos = this.props.entry.occupiedBins.findIndex((value) => {
         return value > adjustment;
       });
+      console.debug("[SpanCell.adjustEnd] endPos", endPos);
+
       let x = this.props.entry.occupiedBins[endPos - 1] - adjustment;
       if (endPos === -1) {
         endPos = defaultValue;
@@ -352,7 +355,7 @@ export const SpanCell = observer(
             0
           );
         } else {
-          [xAdjustment, endPos] = this.adjustEnd(
+          [, endPos] = this.adjustEnd(
             this.props.parent.numBins -
               (this.props.parent.lastBin - this.props.store.getEndBin) -
               1,
@@ -360,7 +363,7 @@ export const SpanCell = observer(
           );
         }
 
-        endPos -= this.props.parent.lastBin - this.props.store.getEndBin;
+        // endPos -= this.props.parent.lastBin - this.props.store.getEndBin;
       }
 
       // console.debug("[SpanCell.render] this.props.entry.binData[0]",
@@ -424,6 +427,15 @@ export const SpanCell = observer(
         prev =
           startPos < endPos ? this.props.entry.occupiedBins[startPos] - 1 : 0;
       }
+
+      console.debug("[SpanCell.render] component", this.props.parent);
+      console.debug("[SpanCell.render] pathName", this.props.pathName);
+      console.debug("[SpanCell.render] xAdjustment", xAdjustment);
+      console.debug("[SpanCell.render] x", x);
+      console.debug("[SpanCell.render] props.x", this.props.x);
+      console.debug("[SpanCell.render] starti", starti);
+      console.debug("[SpanCell.render] endi", endi);
+
       for (let i = starti; i < endi; i++) {
         let column = this.props.entry.occupiedBins[step * i];
         if (column === prev + step) {

@@ -6,6 +6,8 @@ import {
   checkAndForceMinOrMaxValue,
   isInt,
   argsort,
+  findEqualBins,
+  determineAdjacentIntersection,
 } from "./utilities";
 
 class JSONCache {
@@ -452,14 +454,14 @@ RootStore = types
     chunkIndex: types.maybeNull(ChunkIndex),
     beginBin: types.optional(types.integer, 1),
     editingBeginBin: types.optional(types.integer, 1),
-    editingPixelsPerColumn: types.optional(types.integer, 30),
-    // editingPixelsPerRow: types.optional(types.integer, 1),
+    editingPixelsPerColumn: types.optional(types.integer, 10),
+    editingPixelsPerRow: types.optional(types.integer, 1),
     endBin: types.optional(types.integer, 1),
     useVerticalCompression: false,
     useWidthCompression: false,
     binScalingFactor: 3,
     useConnector: true,
-    pixelsPerColumn: 30,
+    pixelsPerColumn: 10,
     pixelsPerRow: 10,
     heightNavigationBar: 25,
     leftOffset: 1,
@@ -469,12 +471,13 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    // jsonName: "AT_Chr1_OGOnly_strandReversal_new.seg",
+    jsonName: "AT_Chr1_OGOnly_strandReversal_new",
     // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
     // jsonName: "shorttest2_new_reverseBlock",
-    jsonName: "shorttest2_new_reverseBlockDouble",
+    // jsonName: "shorttest2_new_reverseBlockDouble",
+    // jsonName: "coreGraph_new",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -882,7 +885,7 @@ RootStore = types
       console.log("STEP #2: chunkIndex contents loaded");
       //console.log("Index updated with content:", json);
 
-      // self.chunkIndex = null; // TODO: TEMPORARY HACK before understanding more in depth mobx-state or change approach
+      self.chunkIndex = null; // TODO: TEMPORARY HACK before understanding more in depth mobx-state or change approach
 
       self.chunkIndex = { ...json };
     },
@@ -902,8 +905,22 @@ RootStore = types
       for (let comp of values(self.visualisedComponents)) {
         if (comp.lastBin <= self.getEndBin && comp.departureVisible) {
           for (let link of values(comp.rdepartures)) {
-            if (self.linkInView(link.downstream)) {
-              visibleLinks.push({ compIndex: comp.index, link: link });
+            let dComp = self.linkInView(link.downstream);
+            if (dComp && link.upstream + 1 != link.downstream) {
+              let invertedArrival;
+              if (dComp.larrivals.has("a" + link.key.slice(1))) {
+                invertedArrival = false;
+              } else {
+                invertedArrival = true;
+              }
+
+              visibleLinks.push({
+                compIndex: comp.index,
+                link: link,
+                wideComp: comp.numBins > 1,
+                invertedDeparture: false,
+                invertedArrival,
+              });
               link.elevation = 0;
             }
           }
@@ -911,8 +928,21 @@ RootStore = types
 
         if (comp.firstBin >= self.getBeginBin) {
           for (let link of values(comp.ldepartures)) {
-            if (self.linkInView(link.downstream)) {
-              visibleLinks.push({ compIndex: comp.index, link: link });
+            let dComp = self.linkInView(link.downstream);
+            if (dComp) {
+              let invertedArrival;
+              if (dComp.larrivals.has("a" + link.key.slice(1))) {
+                invertedArrival = false;
+              } else {
+                invertedArrival = true;
+              }
+              visibleLinks.push({
+                compIndex: comp.index,
+                link: link,
+                wideComp: comp.numBins > 1,
+                invertedDeparture: true,
+                invertedArrival,
+              });
               link.elevation = 0;
             }
           }
@@ -924,41 +954,85 @@ RootStore = types
       });
 
       const isIntersecting = (curLinkIdx, prevLinkIdx) => {
-        let curStart = Math.min(
-          visibleLinks[curLinkIdx].link.upstream,
-          visibleLinks[curLinkIdx].link.downstream
-        );
-        let curEnd = Math.max(
-          visibleLinks[curLinkIdx].link.upstream,
-          visibleLinks[curLinkIdx].link.downstream
-        );
+        let curLink = visibleLinks[curLinkIdx];
+        let prevLink = visibleLinks[prevLinkIdx];
+
+        let curStart = Math.min(curLink.link.upstream, curLink.link.downstream);
+
+        let curEnd = Math.max(curLink.link.upstream, curLink.link.downstream);
+
         let prevStart = Math.min(
-          visibleLinks[prevLinkIdx].link.upstream,
-          visibleLinks[prevLinkIdx].link.downstream
-        );
-        let prevEnd = Math.max(
-          visibleLinks[prevLinkIdx].link.upstream,
-          visibleLinks[prevLinkIdx].link.downstream
+          prevLink.link.upstream,
+          prevLink.link.downstream
         );
 
-        return (curEnd - prevStart) * (prevEnd - curStart) > 0;
+        let prevEnd = Math.max(
+          prevLink.link.upstream,
+          prevLink.link.downstream
+        );
+
+        let intersection = (curEnd - prevStart) * (prevEnd - curStart) > 0;
+        let nonintersection = (curEnd - prevStart) * (prevEnd - curStart) < 0;
+
+        if (intersection) {
+          return true;
+        } else if (nonintersection) {
+          return false;
+        }
+
+        if (!curLink.wideComp || !prevLink.wideComp) {
+          let [equalIdx, diffIdx, numPairs] = findEqualBins([
+            prevLink.link.upstream,
+            prevLink.link.downstream,
+            curLink.link.upstream,
+            curLink.link.downstream,
+          ]);
+          if (numPairs > 1) {
+            return true;
+          }
+
+          return determineAdjacentIntersection(curLink, prevLink, equalIdx[0]);
+          // analysis of intersection on at least one single bin component.
+        } else {
+          return false;
+        }
       };
 
       self.maxArrowHeight = 0;
       for (let curLinkIdx = 1; curLinkIdx < visibleLinks.length; curLinkIdx++) {
+        let existingElevations = new Set();
         for (let prevLinkIdx = 0; prevLinkIdx < curLinkIdx; prevLinkIdx++) {
           if (isIntersecting(curLinkIdx, prevLinkIdx)) {
-            visibleLinks[curLinkIdx].link.elevation = Math.max(
-              visibleLinks[curLinkIdx].link.elevation,
-              visibleLinks[prevLinkIdx].link.elevation + 1
-            );
+            existingElevations.add(visibleLinks[prevLinkIdx].link.elevation);
+            // visibleLinks[curLinkIdx].link.elevation = Math.max(
+            //   visibleLinks[curLinkIdx].link.elevation,
+            //   visibleLinks[prevLinkIdx].link.elevation+ 1
+            // );
             // if (visibleLinks[curLinkIdx].link.elevation>3) {debugger;}
-            if (self.maxArrowHeight < visibleLinks[curLinkIdx].link.elevation) {
-              self.maxArrowHeight = visibleLinks[curLinkIdx].link.elevation;
-            }
           }
         }
+        existingElevations = Array.from(existingElevations).sort(
+          (a, b) => a - b
+        );
+        let foundElevation = false;
+        for (let i = 0; i < existingElevations.length; i++) {
+          if (i < existingElevations[i]) {
+            visibleLinks[curLinkIdx].link.elevation = i;
+            foundElevation = true;
+            break;
+          }
+        }
+        if (!foundElevation) {
+          visibleLinks[curLinkIdx].link.elevation = existingElevations.length;
+        }
+        // Go through exisitingElevations and find the first case where
+        // index is not equal value (set should be converted to array and sorted)
+
+        if (self.maxArrowHeight < visibleLinks[curLinkIdx].link.elevation) {
+          self.maxArrowHeight = visibleLinks[curLinkIdx].link.elevation;
+        }
       }
+      // debugger;
     },
 
     shiftVisualisedComponentsCentre(centreBin) {
@@ -1876,7 +1950,7 @@ RootStore = types
       return values(self.visualisedComponents).find((comp) => {
         return (
           (comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
-          (comp.firstBin == bin && self.getBeginBin <= comp.firstBin)
+          (comp.firstBin === bin && self.getBeginBin <= comp.firstBin)
         );
       });
     },

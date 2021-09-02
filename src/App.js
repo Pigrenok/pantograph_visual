@@ -761,7 +761,6 @@ const App = observer(
       }
     };
 
-    // STOPPED HERE!!!!
     renderComponentLinks(schematizeComponent, leftCut, rightCut) {
       let resArray = [];
       console.debug(
@@ -777,9 +776,9 @@ const App = observer(
       if (!leftCut) {
         resArray = resArray.concat(
           values(schematizeComponent.larrivals).map((linkColumn) => {
-            if (linkColumn.upstream - 1 == linkColumn.downstream) {
-              return null;
-            }
+            // if (linkColumn.upstream - 1 == linkColumn.downstream) {
+            //   return null;
+            // }
             return this.renderLinkColumn(schematizeComponent, 0, linkColumn);
           })
         );
@@ -1015,6 +1014,11 @@ const App = observer(
       //   "[App.render] store.maxArrowHeight",
       //   this.props.store.maxArrowHeight
       // );
+
+      console.debug(
+        "[App.render] visualisedComponents",
+        this.props.store.visualisedComponents
+      );
 
       return (
         <>
