@@ -14,7 +14,7 @@ const LinkColumn = observer(
     }
 
     handleMouseOver(pathID) {
-      console.debug("[LinkColumn.handleMouseOver] pathID", pathID);
+      // console.debug("[LinkColumn.handleMouseOver] pathID", pathID);
       if (pathID) {
         this.props.store.updateCellTooltipContent(
           `Accession ${this.props.store.chunkIndex.pathNames[pathID]} \n From bin ${this.props.item.upstream}\nTo bin ${this.props.item.downstream}`

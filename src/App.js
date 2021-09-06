@@ -763,15 +763,15 @@ const App = observer(
 
     renderComponentLinks(schematizeComponent, leftCut, rightCut) {
       let resArray = [];
-      console.debug(
-        "[App.renderComponentLinks] component",
-        schematizeComponent.index
-      );
-      console.debug(
-        "[App.renderComponentLinks] leftCut, rightCut",
-        leftCut,
-        rightCut
-      );
+      // console.debug(
+      //   "[App.renderComponentLinks] component",
+      //   schematizeComponent.index
+      // );
+      // console.debug(
+      //   "[App.renderComponentLinks] leftCut, rightCut",
+      //   leftCut,
+      //   rightCut
+      // );
 
       if (!leftCut) {
         resArray = resArray.concat(
@@ -1015,10 +1015,10 @@ const App = observer(
       //   this.props.store.maxArrowHeight
       // );
 
-      console.debug(
-        "[App.render] visualisedComponents",
-        this.props.store.visualisedComponents
-      );
+      // console.debug(
+      //   "[App.render] visualisedComponents",
+      //   this.props.store.visualisedComponents
+      // );
 
       return (
         <>

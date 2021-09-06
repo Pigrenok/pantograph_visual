@@ -587,9 +587,9 @@ RootStore = types
     },
 
     addComponents(compArray, nucleotides = [], fromRight = true) {
-      console.debug("[Store.addComponents] compArray", compArray);
-      console.debug("[Store.addComponents] nucleotides", nucleotides);
-      console.debug("[Store.addComponents] fromRight", fromRight);
+      // console.debug("[Store.addComponents] compArray", compArray);
+      // console.debug("[Store.addComponents] nucleotides", nucleotides);
+      // console.debug("[Store.addComponents] fromRight", fromRight);
 
       let splicing = 0;
 
@@ -673,15 +673,15 @@ RootStore = types
     },
 
     shiftComponentsRight(windowStart, windowEnd, doClean = true) {
-      console.debug(
-        "[Store.shiftComponentsRight] component store before removal",
-        self.components
-      );
-      console.debug(
-        "[Store.shiftComponentsRight] windowStart windowEnd",
-        windowStart,
-        windowEnd
-      );
+      // console.debug(
+      //   "[Store.shiftComponentsRight] component store before removal",
+      //   self.components
+      // );
+      // console.debug(
+      //   "[Store.shiftComponentsRight] windowStart windowEnd",
+      //   windowStart,
+      //   windowEnd
+      // );
       // debugger;
       let lastBin = windowStart;
 
@@ -845,7 +845,7 @@ RootStore = types
     },
 
     clearComponents() {
-      console.debug("[Store.clearComponents]");
+      // console.debug("[Store.clearComponents]");
       self.visualisedComponents.clear();
       self.nucleotides = [];
       self.components.clear();
@@ -1038,6 +1038,7 @@ RootStore = types
     shiftVisualisedComponentsCentre(centreBin) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
       // console.debug("[Store.shiftVisualisedComponentsCentre] components", self.components)
+      debugger;
       let visComps = [];
       self.maxArrowHeight = 0;
 
@@ -1073,20 +1074,20 @@ RootStore = types
         curComp = self.components.get(sortedKeys[centreCompIndex - counter]);
 
         if (leftSpaceInCols + curComp.rightLinkSize < self.columnsInView / 2) {
-          if (
-            leftSpaceInCols + curComp.rightLinkSize + curComp.numBins <=
-            self.columnsInView / 2
-          ) {
-            leftSpaceInCols +=
-              curComp.leftLinkSize + curComp.numBins + curComp.rightLinkSize;
-          } else {
-            let offset =
-              leftSpaceInCols +
-              curComp.rightLinkSize +
-              curComp.numBins -
-              Math.round(self.columnsInView / 2);
-            leftSpaceInCols += curComp.numBins - offset + curComp.rightLinkSize;
-          }
+          // if (
+          //   leftSpaceInCols + curComp.rightLinkSize + curComp.numBins <=
+          //   self.columnsInView / 2
+          // ) {
+          leftSpaceInCols +=
+            curComp.leftLinkSize + curComp.numBins + curComp.rightLinkSize;
+          // } else {
+          //   let offset =
+          //     leftSpaceInCols +
+          //     curComp.rightLinkSize +
+          //     curComp.numBins -
+          //     Math.round(self.columnsInView / 2);
+          //   leftSpaceInCols += curComp.numBins - offset + curComp.rightLinkSize;
+          // }
 
           visComps.splice(0, 0, curComp.index);
         } else {
@@ -1105,17 +1106,15 @@ RootStore = types
         );
         begin = curComp.firstBin;
       } else if (leftSpaceInCols > self.columnsInView / 2) {
-        if (leftSpaceInCols - curComp.leftLinkSize < self.columnsInView / 2) {
-          begin = curComp.firstBin;
-        } else {
-          begin =
-            curComp.firstBin +
-            (leftSpaceInCols -
-              Math.round(self.columnsInView / 2) -
-              curComp.leftLinkSize);
-        }
+        begin =
+          curComp.firstBin +
+          Math.ceil(leftSpaceInCols - self.columnsInView / 2);
       } else {
         begin = curComp.firstBin;
+      }
+
+      if (leftSpaceInCols > self.columnsInView / 2) {
+        leftSpaceInCols = self.columnsInView / 2;
       }
 
       counter = 1;
@@ -1150,19 +1149,18 @@ RootStore = types
 
       if (rightSpaceInCols < self.columnsInView / 2) {
         end = curComp.lastBin;
-      } else if (rightSpaceInCols > self.columnsInView / 2) {
+      } else {
         if (rightSpaceInCols - curComp.rightLinkSize < self.columnsInView / 2) {
           end = curComp.lastBin;
         } else {
           end =
-            curComp.lastBin +
-            Math.ceil(
-              rightSpaceInCols - self.columnsInView / 2 - curComp.rightLinkSize
-            );
+            curComp.lastBin -
+            Math.ceil(rightSpaceInCols - self.columnsInView / 2);
         }
-      } else {
-        end = curComp.lastBin;
       }
+      // } else {
+      //   end = curComp.lastBin;
+      // }
 
       let relativePos = 0;
 
@@ -1445,6 +1443,8 @@ RootStore = types
       highlightedLink = null,
       marker = false
     ) {
+      debugger;
+
       self.updatingVisible = true;
       let promiseArray = [];
 
@@ -1528,7 +1528,8 @@ RootStore = types
     updateHighlightedLink(linkRect) {
       if (linkRect) {
         if (linkRect instanceof Array) {
-          self.highlightedLink = linkRect;
+          debugger;
+          self.highlightedLink = [linkRect[0], linkRect[1]];
         } else {
           self.highlightedLink = [linkRect.upstream, linkRect.downstream];
         }
