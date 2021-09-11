@@ -14,13 +14,15 @@ export function arraysEqual(A, B) {
   );
 }
 
-export function argsort(arr, sortFunc) {
+export function argsort(arr, sortFunc, threshold) {
   // Decorate-Sort-Undecorate argsort function
   // Modified version from
   // https://stackoverflow.com/questions/46622486/what-is-the-javascript-equivalent-of-numpy-argsort
   return arr
     .map((item, index) => [item, index])
-    .sort(([arg1], [arg2]) => sortFunc(arg1, arg2))
+    .sort(([arg1, ind1], [arg2, ind2]) =>
+      sortFunc(arg1, ind1 < threshold, arg2, ind2 < threshold)
+    )
     .map(([, item]) => item);
 }
 
@@ -46,8 +48,11 @@ export function findEqualBins(arr) {
 }
 
 export function determineAdjacentIntersection(curLink, prevLink, same) {
+  // if (curLink.link.downstream===123 && prevLink.link.downstream===122) {
+  //   debugger;
+  // }
   let prevLinkLeft; // Is previous link adjacent side is on the left
-  let curLinkLeft; // Is curent link adjacent side is on the left
+  let curLinkLeft; // Is current link adjacent side is on the left
 
   let prevOtherSide;
 
@@ -62,7 +67,7 @@ export function determineAdjacentIntersection(curLink, prevLink, same) {
   } else if (same.includes(1)) {
     // Previous link adjacent side is arrival;
     prevOtherSide = prevLink.link.upstream;
-    if (prevLink.invertedDeparture) {
+    if (prevLink.invertedArrival) {
       prevLinkLeft = false; // adjacent on the left
     } else {
       prevLinkLeft = true; // adjacent on the right
@@ -86,7 +91,7 @@ export function determineAdjacentIntersection(curLink, prevLink, same) {
   } else if (same.includes(3)) {
     // Current link adjacent side is arrival;
     curOtherSide = curLink.link.upstream;
-    if (curLink.invertedDeparture) {
+    if (curLink.invertedArrival) {
       curLinkLeft = false; // adjacent on the left
     } else {
       curLinkLeft = true; // adjacent on the right

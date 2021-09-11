@@ -82,10 +82,17 @@ const LinkColumn = observer(
       // }
 
       if (
-        this.props.item.key[0] === "d" &&
-        this.props.item.downstream - this.props.item.upstream != 1
+        this.props.item.key[0] === "d"
+        //  &&
+        // this.props.item.downstream - this.props.item.upstream != 1 //This condition correct only for both forward blocks.
+        // Remove it from here
+        //Some of the info can be obtained from above (App.renderComponentLinks)
       ) {
         // departure
+
+        // if (this.props.parent.firstBin==64 || this.props.parent.firstBin==122 || this.props.parent.firstBin==123) {
+        //   debugger;
+        // }
 
         let arrowPoints = [
           0.5 * this.props.store.pixelsPerColumn,
@@ -95,21 +102,42 @@ const LinkColumn = observer(
         ];
 
         let dComp = this.props.store.linkInView(this.props.item.downstream);
+        //Check directionality of both upstream and downstream and then decide where to put arrows or not.
+        console.debug("[LinkColumn.points] this.props.item", this.props.item);
+        console.debug("[LinkColumn.points] this.props", this.props);
+        console.debug("[LinkColumn.points] dComp", dComp);
         if (
           dComp &&
           this.props.item.downstream >= this.props.store.getBeginBin &&
           this.props.item.downstream <= this.props.store.getEndBin
         ) {
           //downstream in view
-          let arrivalKey = "a" + this.props.item.key.slice(1);
+          let arrivalKey =
+            "a" +
+            this.props.item.key.slice(1, this.props.item.key.length - 3) +
+            (this.props.side === "right" ? "osr" : "osl");
+          console.debug("[LinkColumn.points] arrivalKey", arrivalKey);
           let dLink = dComp.larrivals.get(arrivalKey);
           let dOffset = 0;
-          if (!dLink) {
+          if (dLink) {
+            if (
+              this.props.side === "right" &&
+              this.props.item.downstream - this.props.item.upstream === 1
+            ) {
+              return [];
+            }
+          } else {
             dLink = dComp.rarrivals.get(arrivalKey);
             if (dComp.firstBin >= this.props.store.getBeginBin) {
               dOffset = dComp.leftLinkSize + dComp.numBins;
             } else {
               dOffset = dComp.lastBin - this.props.store.getBeginBin + 1;
+            }
+            if (
+              this.props.side === "left" &&
+              this.props.item.upstream - this.props.item.downstream === 1
+            ) {
+              return [];
             }
           }
 
@@ -136,10 +164,14 @@ const LinkColumn = observer(
 
       if (this.props.item.key[0] === "a") {
         //arrival
+        // if (this.props.item.downstream === 492) {
+        //   debugger;
+        // }
         let upstreamComp = this.props.store.linkInView(
           this.props.item.upstream
         );
         if (upstreamComp) {
+          // Check here if the other side is forward ir reverse and check if right or left edge is visible then!!!
           if (upstreamComp.departureVisible) {
             //upstream in view
             return [];

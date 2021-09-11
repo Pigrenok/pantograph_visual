@@ -183,8 +183,9 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[schematizeComponent.index] =
-            schematizeComponent;
+          index_to_component_to_visualize_dict[
+            schematizeComponent.index
+          ] = schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -260,8 +261,9 @@ const App = observer(
 
         // The updating will re-trigger openRelevantChunksFromIndex
       } else {
-        const newEndBin =
-          this.prepareWhichComponentsToVisualize(widthInColumns);
+        const newEndBin = this.prepareWhichComponentsToVisualize(
+          widthInColumns
+        );
         this.props.store.updateBeginEndBin(beginBin, newEndBin);
 
         //console.log([selZoomLev, endBin, fileArray, fileArrayFasta]);
@@ -349,8 +351,9 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents =
-              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
+              this.schematic.components
+            ); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -631,7 +634,13 @@ const App = observer(
     // }
 
     renderLinkColumn(schematizeComponent, firstColumn, linkColumn) {
-      let name = firstColumn === 0 ? "left_" : "right_";
+      // if (schematizeComponent.firstBin === 123) {
+      //   debugger;
+      // }
+
+      let side = firstColumn === 0 ? "left" : "right";
+
+      let name = side + "_";
 
       name += linkColumn.key[0];
 
@@ -653,6 +662,7 @@ const App = observer(
           store={this.props.store}
           key={name + schematizeComponent.index + linkColumn.order}
           item={linkColumn}
+          side={side}
           parent={schematizeComponent}
           // pathNames={this.props.store.chunkIndex.pathNames}
           x={xCoordArrival}
@@ -793,7 +803,13 @@ const App = observer(
       if (!rightCut) {
         resArray = resArray.concat(
           values(schematizeComponent.rdepartures).map((linkColumn, j) => {
-            if (linkColumn.upstream + 1 == linkColumn.downstream) {
+            // Check each pathID if the other side is right arrival.
+            // If any exist, list paths with that true and pass it to this.renderLinkColumn
+            if (
+              linkColumn.upstream + 1 == linkColumn.downstream &&
+              !linkColumn.otherSideRight
+            ) {
+              //Check that the created list of pathIDs is empty.
               return null;
             }
             let leftPad;
@@ -819,7 +835,13 @@ const App = observer(
 
         resArray = resArray.concat(
           values(schematizeComponent.rarrivals).map((linkColumn, j) => {
-            if (linkColumn.downstream + 1 == linkColumn.upstream) {
+            // Check each pathID if the other side is right departure.
+            // If any exist, list paths with that true and pass it to this.renderLinkColumn
+            if (
+              linkColumn.downstream + 1 == linkColumn.upstream &&
+              !linkColumn.otherSideRight
+            ) {
+              //Check that the created list of pathIDs is empty.
               return null;
             }
             let leftPad;
@@ -849,6 +871,7 @@ const App = observer(
 
     renderComponent(schematizeComponent, i) {
       // console.log("[App.renderComponent] rendering component",schematizeComponent)
+
       let width;
       let leftCut = false;
       let rightCut = false;
@@ -912,8 +935,9 @@ const App = observer(
       //   this.props.store.visualisedComponents
       // );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent =
-          this.props.store.visualisedComponents.get(index);
+        let schematizeComponent = this.props.store.visualisedComponents.get(
+          index
+        );
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}

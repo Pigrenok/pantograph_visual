@@ -148,6 +148,7 @@ const LinkColumn = types
     order: types.integer,
     upstream: types.integer,
     downstream: types.integer,
+    otherSideRight: types.boolean,
     elevation: types.optional(types.integer, 0),
     participants: types.array(types.integer),
   })
@@ -206,14 +207,29 @@ const Component = types
       }
     },
 
-    addLeftLinks(departures, arrivals) {
+    addLeftLinks(departures, arrivals, debug) {
+      if (debug) {
+        debugger;
+      }
+
       const arrThreshold = departures.length;
 
       let linkArray = departures.concat(arrivals);
 
-      const sortFunc = (a, b) => {
-        let ad = a.downstream - a.upstream;
-        let bd = b.downstream - b.upstream;
+      const sortFunc = (a, isad, b, isbd) => {
+        let ad;
+        if (!isad) {
+          ad = a.downstream - a.upstream;
+        } else {
+          ad = a.upstream - a.downstream;
+        }
+
+        let bd;
+        if (!isbd) {
+          bd = b.downstream - b.upstream;
+        } else {
+          bd = b.upstream - b.downstream;
+        }
         if (ad * bd > 0) {
           return ad - bd;
         } else if (ad * bd < 0) {
@@ -227,7 +243,7 @@ const Component = types
         }
       };
 
-      let sortedIds = argsort(linkArray, sortFunc);
+      let sortedIds = argsort(linkArray, sortFunc, arrThreshold);
 
       let i = 0;
       for (const id of sortedIds) {
@@ -250,7 +266,8 @@ const Component = types
           key:
             keyPrefix +
             String(link.downstream).padStart(13, "0") +
-            String(link.upstream).padStart(13, "0"),
+            String(link.upstream).padStart(13, "0") +
+            (link.otherSideRight ? "osr" : "osl"),
           order: i,
           ...link,
         });
@@ -259,14 +276,29 @@ const Component = types
       }
     },
 
-    addRightLinks(departures, arrivals) {
+    addRightLinks(departures, arrivals, debug) {
+      if (debug) {
+        debugger;
+      }
+
       const arrThreshold = departures.length;
 
       let linkArray = departures.concat(arrivals);
 
-      const sortFunc = (a, b) => {
-        let ad = a.downstream - a.upstream;
-        let bd = b.downstream - b.upstream;
+      const sortFunc = (a, isad, b, isbd) => {
+        let ad;
+        if (isad) {
+          ad = a.downstream - a.upstream;
+        } else {
+          ad = a.upstream - a.downstream;
+        }
+
+        let bd;
+        if (isbd) {
+          bd = b.downstream - b.upstream;
+        } else {
+          bd = b.upstream - b.downstream;
+        }
         if (ad * bd > 0) {
           return bd - ad;
         } else if (ad * bd < 0) {
@@ -280,7 +312,7 @@ const Component = types
         }
       };
 
-      let sortedIds = argsort(linkArray, sortFunc);
+      let sortedIds = argsort(linkArray, sortFunc, arrThreshold);
 
       let i = 0;
       for (const id of sortedIds) {
@@ -293,7 +325,7 @@ const Component = types
           keyPrefix = "d";
           mapToUse = self.rdepartures;
           link = departures[id];
-          if (link.upstream + 1 != link.downstream) {
+          if (link.upstream + 1 != link.downstream || link.otherSideRight) {
             order = i;
             i++;
           } else {
@@ -303,7 +335,7 @@ const Component = types
           keyPrefix = "a";
           mapToUse = self.rarrivals;
           link = arrivals[id - arrThreshold];
-          if (link.upstream - 1 != link.downstream) {
+          if (link.upstream - 1 != link.downstream || link.otherSideRight) {
             order = i;
             i++;
           } else {
@@ -315,7 +347,8 @@ const Component = types
           key:
             keyPrefix +
             String(link.downstream).padStart(13, "0") +
-            String(link.upstream).padStart(13, "0"),
+            String(link.upstream).padStart(13, "0") +
+            (link.otherSideRight ? "osr" : "osl"),
           order: order,
           ...link,
         });
@@ -344,15 +377,15 @@ const Component = types
     },
   }))
   .views((self) => ({
-    get connectorLink() {
-      for (let link of values(self.departures)) {
-        if (Number(link.upstream) + 1 === Number(link.downstream)) {
-          return link;
-        }
-      }
+    // get connectorLink() {
+    //   for (let link of values(self.departures)) {
+    //     if (Number(link.upstream) + 1 === Number(link.downstream)) {
+    //       return link;
+    //     }
+    //   }
 
-      return null;
-    },
+    //   return null;
+    // },
     get leftLinkSize() {
       return self.ldepartures.size + self.larrivals.size;
     },
@@ -366,7 +399,10 @@ const Component = types
     get farRightDepartures() {
       let links = new Map();
       for (let linkColumn of values(self.rdepartures)) {
-        if (linkColumn.upstream + 1 != linkColumn.downstream) {
+        if (
+          linkColumn.upstream + 1 != linkColumn.downstream ||
+          linkColumn.otherSideRight
+        ) {
           links.set(linkColumn.key, linkColumn);
         }
       }
@@ -377,7 +413,10 @@ const Component = types
     get farRightArrivals() {
       let links = new Map();
       for (let linkColumn of values(self.rarrivals)) {
-        if (linkColumn.downstream + 1 != linkColumn.upstream) {
+        if (
+          linkColumn.downstream + 1 != linkColumn.upstream ||
+          linkColumn.otherSideRight
+        ) {
           links.set(linkColumn.key, linkColumn);
         }
       }
@@ -387,7 +426,10 @@ const Component = types
 
     get connectorDepartures() {
       for (let linkColumn of values(self.rdepartures)) {
-        if (linkColumn.upstream + 1 === linkColumn.downstream) {
+        if (
+          linkColumn.upstream + 1 === linkColumn.downstream &&
+          !linkColumn.otherSideRight
+        ) {
           return linkColumn;
         }
       }
@@ -397,7 +439,10 @@ const Component = types
 
     get connectorArrivals() {
       for (let linkColumn of values(self.rarrivals)) {
-        if (linkColumn.downstream + 1 === linkColumn.upstream) {
+        if (
+          linkColumn.downstream + 1 === linkColumn.upstream &&
+          !linkColumn.otherSideRight
+        ) {
           return linkColumn;
         }
       }
@@ -471,13 +516,14 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    jsonName: "AT_Chr1_OGOnly_strandReversal_new",
+    // jsonName: "AT_Chr1_OGOnly_strandReversal_new",
     // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
     // jsonName: "shorttest2_new_reverseBlock",
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
+    jsonName: "coreGraph_inv_new",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -580,8 +626,13 @@ RootStore = types
       // console.debug("[Store.addComponent]",component )
       curComp.updateEnds(component.ends);
       curComp.addMatrixElements(component.matrix);
-      curComp.addLeftLinks(component.ldepartures, component.larrivals);
-      curComp.addRightLinks(component.rdepartures, component.rarrivals);
+      let dbg = false;
+      // if (curComp.firstBin === 123) {
+      //   dbg = true;
+      // }
+
+      curComp.addLeftLinks(component.ldepartures, component.larrivals, dbg);
+      curComp.addRightLinks(component.rdepartures, component.rarrivals, dbg);
       // console.debug("[Store.addComponent]",curComp);
       self.components.set(curComp.index, curComp);
     },
@@ -903,16 +954,23 @@ RootStore = types
       let visibleLinks = [];
 
       for (let comp of values(self.visualisedComponents)) {
+        // if (comp.lastBin===121 || comp.lastBin===122) {
+        //   debugger;
+        // }
         if (comp.lastBin <= self.getEndBin && comp.departureVisible) {
           for (let link of values(comp.rdepartures)) {
             let dComp = self.linkInView(link.downstream);
-            if (dComp && link.upstream + 1 != link.downstream) {
-              let invertedArrival;
-              if (dComp.larrivals.has("a" + link.key.slice(1))) {
-                invertedArrival = false;
-              } else {
-                invertedArrival = true;
-              }
+            let invertedArrival = link.key.slice(link.key.length - 3) === "osr";
+            if (
+              dComp &&
+              (link.upstream + 1 != link.downstream || invertedArrival)
+            ) {
+              // let invertedArrival;
+              // if (dComp.larrivals.has("a" + link.key.slice(1,link.key.length-3) + (link.side=='right'?'osr':'osl'))) {
+              //   invertedArrival = false;
+              // } else {
+              //   invertedArrival = true;
+              // }
 
               visibleLinks.push({
                 compIndex: comp.index,
@@ -929,13 +987,14 @@ RootStore = types
         if (comp.firstBin >= self.getBeginBin) {
           for (let link of values(comp.ldepartures)) {
             let dComp = self.linkInView(link.downstream);
+            let invertedArrival = link.key.slice(link.key.length - 3) === "osr";
             if (dComp) {
-              let invertedArrival;
-              if (dComp.larrivals.has("a" + link.key.slice(1))) {
-                invertedArrival = false;
-              } else {
-                invertedArrival = true;
-              }
+              // let invertedArrival;
+              // if (dComp.larrivals.has("a" + link.key.slice(1,link.key.length-3) + (link.side=='right'?'osr':'osl'))) {
+              //   invertedArrival = false;
+              // } else {
+              //   invertedArrival = true;
+              // }
               visibleLinks.push({
                 compIndex: comp.index,
                 link: link,
@@ -956,6 +1015,14 @@ RootStore = types
       const isIntersecting = (curLinkIdx, prevLinkIdx) => {
         let curLink = visibleLinks[curLinkIdx];
         let prevLink = visibleLinks[prevLinkIdx];
+
+        // if (curLinkIdx == 2) {
+        //   debugger;
+        // }
+
+        // if (curLink.downstream===123 || prevLink.downstream==123) {
+        //   debugger;
+        // }
 
         let curStart = Math.min(curLink.link.upstream, curLink.link.downstream);
 
@@ -1000,6 +1067,9 @@ RootStore = types
 
       self.maxArrowHeight = 0;
       for (let curLinkIdx = 1; curLinkIdx < visibleLinks.length; curLinkIdx++) {
+        // if (visibleLinks[curLinkIdx].link.upstream===121 || visibleLinks[curLinkIdx].link.upstream === 122) {
+        //   debugger;
+        // }
         let existingElevations = new Set();
         for (let prevLinkIdx = 0; prevLinkIdx < curLinkIdx; prevLinkIdx++) {
           if (isIntersecting(curLinkIdx, prevLinkIdx)) {
@@ -1038,7 +1108,9 @@ RootStore = types
     shiftVisualisedComponentsCentre(centreBin) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
       // console.debug("[Store.shiftVisualisedComponentsCentre] components", self.components)
-      debugger;
+
+      // debugger;
+
       let visComps = [];
       self.maxArrowHeight = 0;
 
@@ -1155,7 +1227,9 @@ RootStore = types
         } else {
           end =
             curComp.lastBin -
-            Math.ceil(rightSpaceInCols - self.columnsInView / 2);
+            Math.ceil(
+              rightSpaceInCols - curComp.rightLinkSize - self.columnsInView / 2
+            );
         }
       }
       // } else {
@@ -1443,8 +1517,6 @@ RootStore = types
       highlightedLink = null,
       marker = false
     ) {
-      debugger;
-
       self.updatingVisible = true;
       let promiseArray = [];
 
@@ -1528,7 +1600,6 @@ RootStore = types
     updateHighlightedLink(linkRect) {
       if (linkRect) {
         if (linkRect instanceof Array) {
-          debugger;
           self.highlightedLink = [linkRect[0], linkRect[1]];
         } else {
           self.highlightedLink = [linkRect.upstream, linkRect.downstream];
