@@ -122,6 +122,14 @@ export function determineAdjacentIntersection(curLink, prevLink, same) {
   return true;
 }
 
+export function binFromCol(comp, col) {
+  let distRatio = (col - comp.firstCol) / (comp.lastCol - comp.firstCol);
+  let bin =
+    comp.firstBin + Math.round(distRatio * (comp.lastBin - comp.firstBin));
+
+  return bin;
+}
+
 export function checkAndForceMinOrMaxValue(value, minValue, maxValue) {
   if (value < minValue) {
     value = minValue;

@@ -302,10 +302,14 @@ const ControlHeader = observer(
           <div className={"row"}>
             <span>
               {" "}
-              Allele Frequency Histogram:
-              <VerticalCompressedViewSwitch store={this.props.store} />
+              Hide inversion links:
+              <input
+                type="checkbox"
+                checked={this.props.store.hideInversionLinks}
+                onChange={this.props.store.toggleHideInversionLinks}
+              />
             </span>
-            <span>
+            {/*<span>
               {" "}
               Show Only Rearrangements:
               <WidthCompressedViewSwitch store={this.props.store} />
@@ -329,8 +333,8 @@ const ControlHeader = observer(
                   {() => <ColorGeoSwitch store={this.props.store} />}
                 </Observer>
               </span>
-              */
-            )}
+              
+            )}*/}
             <span>
               {" "}
               Row Height:

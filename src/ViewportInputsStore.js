@@ -516,14 +516,15 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    // jsonName: "AT_Chr1_OGOnly_strandReversal_new",
+    // jsonName: "AT_Chr1_OGOnly_new",
     // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
     // jsonName: "shorttest2_new_reverseBlock",
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
-    jsonName: "coreGraph_inv_new",
+    // jsonName: "coreGraph_inv_new",
+    jsonName: "coregraph_genes",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -586,6 +587,7 @@ RootStore = types
     mouseX: types.optional(types.integer, 0),
     mouseY: types.optional(types.integer, 0),
     updatingVisible: false,
+    hideInversionLinks: true,
   })
   .actions((self) => ({
     // updateHighlightedLink(link) {
@@ -593,6 +595,10 @@ RootStore = types
     // },
 
     // jumpLink(link) {},
+
+    toggleHideInversionLinks() {
+      self.hideInversionLinks = !self.hideInversionLinks;
+    },
 
     updateMouse(x, y) {
       self.mouseX = x;
@@ -935,7 +941,7 @@ RootStore = types
     setChunkIndex(json) {
       console.log("STEP #2: chunkIndex contents loaded");
       //console.log("Index updated with content:", json);
-
+      self.indexSelectedZoomLevel = 0;
       self.chunkIndex = null; // TODO: TEMPORARY HACK before understanding more in depth mobx-state or change approach
 
       self.chunkIndex = { ...json };
@@ -1105,7 +1111,7 @@ RootStore = types
       // debugger;
     },
 
-    shiftVisualisedComponentsCentre(centreBin) {
+    shiftVisualisedComponentsCentre(centreBin, centreCol) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
       // console.debug("[Store.shiftVisualisedComponentsCentre] components", self.components)
 
@@ -1121,13 +1127,28 @@ RootStore = types
 
       let centreCompIndex = sortedKeys.length - 1; // = sortedKeys.length>0 ? self.components.get(sortedKeys[Math.round(sortedKeys.length/2)]).index : 1;
 
-      for (let i = 0; i < sortedKeys.length; i++) {
-        if (sortedKeys[i] > centreBin) {
-          centreCompIndex = i - 1;
-          break;
+      if (centreCol) {
+        // debugger;
+        for (let i = 0; i < sortedKeys.length; i++) {
+          let tComp = self.components.get(sortedKeys[i]);
+          if (tComp.firstCol <= centreCol && tComp.lastCol >= centreCol) {
+            centreCompIndex = i;
+            let distRatio =
+              (centreCol - tComp.firstCol) / (tComp.lastCol - tComp.firstCol);
+            centreBin =
+              tComp.firstBin +
+              Math.floor(distRatio * (tComp.lastBin - tComp.firstBin));
+            break;
+          }
+        }
+      } else {
+        for (let i = 0; i < sortedKeys.length; i++) {
+          if (sortedKeys[i] > centreBin) {
+            centreCompIndex = i - 1;
+            break;
+          }
         }
       }
-
       let curComp = self.components.get(sortedKeys[centreCompIndex]);
 
       let leftSpaceInCols =
@@ -1227,8 +1248,13 @@ RootStore = types
         } else {
           end =
             curComp.lastBin -
-            Math.ceil(
-              rightSpaceInCols - curComp.rightLinkSize - self.columnsInView / 2
+            Math.max(
+              0,
+              Math.ceil(
+                rightSpaceInCols -
+                  curComp.rightLinkSize -
+                  self.columnsInView / 2
+              )
             );
         }
       }
@@ -1392,8 +1418,10 @@ RootStore = types
         let end = self.lastVisualBin;
 
         if (visibleLengthInCols > self.columnsInView) {
-          end -=
-            visibleLengthInCols - self.columnsInView - lastCompDepartureSize;
+          end -= Math.max(
+            0,
+            visibleLengthInCols - self.columnsInView - lastCompDepartureSize
+          );
         }
 
         self.setEndBin(end);
@@ -1579,7 +1607,10 @@ RootStore = types
       }, 5000);
 
       if (marker) {
-        self.setZoomHighlightBoundaries(centreBin, centreBin);
+        self.setZoomHighlightBoundaries(
+          self.visibleColFromBin(centreBin),
+          self.visibleColFromBin(centreBin)
+        );
         setTimeout(() => {
           self.clearZoomHighlightBoundaries();
         }, 10000);
@@ -1718,6 +1749,13 @@ RootStore = types
 
       // console.debug("[Store.setIndexSelectedZoomLevel] scaleFactor ",scaleFactor)
 
+      // Calculating the first column of the begin, central and end bin.
+      // It will make it easier to find proper centre and edges on the other zoom level.
+
+      let centralColumn = self.visibleColFromBin(self.centreBin);
+      let leftColumn = self.visibleColFromBin(self.beginBin);
+      let rightColumn = self.visibleColFromBin(self.endBin);
+
       let scaledBegin = Math.round((self.getBeginBin - 1) * scaleFactor) + 1;
       let scaledEnd = Math.round(self.getEndBin * scaleFactor);
 
@@ -1748,12 +1786,12 @@ RootStore = types
       );
 
       Promise.all(promiseArray).then(() => {
-        self.shiftVisualisedComponentsCentre(centreBin);
+        self.shiftVisualisedComponentsCentre(centreBin, centralColumn);
         if (scaleFactor < 1) {
-          console.debug(
-            `[Store.setIndexSelectedZoomLevel] zoomHighlightBegin: ${scaledBegin} zoomHighlightEnd: ${scaledEnd}`
-          );
-          self.setZoomHighlightBoundaries(scaledBegin, scaledEnd);
+          // console.debug(
+          //   `[Store.setIndexSelectedZoomLevel] zoomHighlightBegin: ${scaledBegin} zoomHighlightEnd: ${scaledEnd}`
+          // );
+          self.setZoomHighlightBoundaries(leftColumn, rightColumn);
           setTimeout(() => {
             self.clearZoomHighlightBoundaries();
           }, 10000);
@@ -2025,6 +2063,19 @@ RootStore = types
           (comp.firstBin === bin && self.getBeginBin <= comp.firstBin)
         );
       });
+    },
+    visibleCompByBin(bin) {
+      return values(self.visualisedComponents).find((comp) => {
+        return comp.lastBin >= bin && comp.firstBin <= bin;
+      });
+    },
+    visibleColFromBin(bin) {
+      let comp = self.visibleCompByBin(bin);
+      let distRatio = (bin - comp.firstBin) / (comp.lastBin - comp.firstBin);
+      let col =
+        comp.firstCol + Math.round(distRatio * (comp.lastCol - comp.firstCol));
+
+      return col;
     },
     // get arrowHeight() {
     //   let res = 5;

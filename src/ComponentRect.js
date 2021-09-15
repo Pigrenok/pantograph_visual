@@ -6,7 +6,7 @@ import { values } from "mobx";
 import { ConnectorRect } from "./ComponentConnectorRect";
 import { SpanCell } from "./SpanCell";
 import PropTypes from "prop-types";
-import { sum } from "./utilities";
+import { sum, binFromCol } from "./utilities";
 
 function colorFromStr(colorKey) {
   colorKey = colorKey.toString();
@@ -430,15 +430,18 @@ const ComponentRect = observer(
         // console.log("[ComponentRect.renderZoomBoundary] right zoom boundary",this.props.store.zoomHighlightBoundaries[1])
         // debugger;
         if (
-          this.props.item.firstBin <=
+          this.props.item.firstCol <=
             this.props.store.zoomHighlightBoundaries[0] &&
-          this.props.item.lastBin >= this.props.store.zoomHighlightBoundaries[0]
+          this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[0]
         ) {
           // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
           let xPos =
             this.props.item.relativePixelX +
             (this.props.item.leftLinkSize +
-              (this.props.store.zoomHighlightBoundaries[0] -
+              (binFromCol(
+                this.props.item,
+                this.props.store.zoomHighlightBoundaries[0]
+              ) -
                 this.props.item.firstBin)) *
               this.props.store.pixelsPerColumn;
           lines.push(
@@ -457,15 +460,18 @@ const ComponentRect = observer(
         }
 
         if (
-          this.props.item.firstBin <=
+          this.props.item.firstCol <=
             this.props.store.zoomHighlightBoundaries[1] &&
-          this.props.item.lastBin >= this.props.store.zoomHighlightBoundaries[1]
+          this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[1]
         ) {
           // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
           let xPos =
             this.props.item.relativePixelX +
             (this.props.item.leftLinkSize +
-              (this.props.store.zoomHighlightBoundaries[1] -
+              (binFromCol(
+                this.props.item,
+                this.props.store.zoomHighlightBoundaries[1]
+              ) -
                 this.props.item.firstBin +
                 1)) *
               this.props.store.pixelsPerColumn;

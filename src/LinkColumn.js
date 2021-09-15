@@ -2,7 +2,9 @@ import React from "react";
 import { Rect, Arrow } from "react-konva";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import { range, stringToColorAndOpacity } from "./utilities";
+import { range, stringToColorAndOpacity, arraysEqual } from "./utilities";
+import { values } from "mobx";
+import { ConnectorRect } from "./ComponentConnectorRect";
 
 const LinkColumn = observer(
   class extends React.Component {
@@ -80,7 +82,9 @@ const LinkColumn = observer(
       // if (this.props.parent.firstBin === 2) {
       //   debugger;
       // }
-
+      // if (this.props.item.upstream==214 && this.props.item.downstream==169) {
+      //   debugger;
+      // }
       if (
         this.props.item.key[0] === "d"
         //  &&
@@ -103,9 +107,9 @@ const LinkColumn = observer(
 
         let dComp = this.props.store.linkInView(this.props.item.downstream);
         //Check directionality of both upstream and downstream and then decide where to put arrows or not.
-        console.debug("[LinkColumn.points] this.props.item", this.props.item);
-        console.debug("[LinkColumn.points] this.props", this.props);
-        console.debug("[LinkColumn.points] dComp", dComp);
+        // console.debug("[LinkColumn.points] this.props.item", this.props.item);
+        // console.debug("[LinkColumn.points] this.props", this.props);
+        // console.debug("[LinkColumn.points] dComp", dComp);
         if (
           dComp &&
           this.props.item.downstream >= this.props.store.getBeginBin &&
@@ -116,17 +120,10 @@ const LinkColumn = observer(
             "a" +
             this.props.item.key.slice(1, this.props.item.key.length - 3) +
             (this.props.side === "right" ? "osr" : "osl");
-          console.debug("[LinkColumn.points] arrivalKey", arrivalKey);
-          let dLink = dComp.larrivals.get(arrivalKey);
+          // console.debug("[LinkColumn.points] arrivalKey", arrivalKey);
+          let dLink;
           let dOffset = 0;
-          if (dLink) {
-            if (
-              this.props.side === "right" &&
-              this.props.item.downstream - this.props.item.upstream === 1
-            ) {
-              return [];
-            }
-          } else {
+          if (this.props.item.otherSideRight) {
             dLink = dComp.rarrivals.get(arrivalKey);
             if (dComp.firstBin >= this.props.store.getBeginBin) {
               dOffset = dComp.leftLinkSize + dComp.numBins;
@@ -136,6 +133,14 @@ const LinkColumn = observer(
             if (
               this.props.side === "left" &&
               this.props.item.upstream - this.props.item.downstream === 1
+            ) {
+              return [];
+            }
+          } else {
+            dLink = dComp.larrivals.get(arrivalKey);
+            if (
+              this.props.side === "right" &&
+              this.props.item.downstream - this.props.item.upstream === 1
             ) {
               return [];
             }
@@ -221,18 +226,144 @@ const LinkColumn = observer(
       if (this.props.store.updatingVisible) {
         return null;
       }
-      // if (this.props.store.selectedZoomLevel === '4' &&
-      //     this.props.parent.firstBin === 2) {
-      //   debugger;
 
-      // }
+      if (this.props.store.hideInversionLinks) {
+        //Link from first component to second component (departure)
+        if (
+          this.props.side === "right" &&
+          this.props.item.key.slice(this.props.item.key.length - 3) === "osr" &&
+          this.props.item.key.slice(0, 1) === "d"
+        ) {
+          // debugger;
 
-      // console.debug(
-      //   `[LinkColumn.render] render arrow from ${this.props.item.upstream} to ${this.props.item.downstream} in component ${this.props.parent.index}`
-      // );
-      // console.debug(
-      //   `[LinkColumn.render] render arrow with elevation ${this.props.item.elevation}`
-      // );
+          let dComp = this.props.store.linkInView(this.props.item.downstream);
+
+          if (dComp && dComp.firstBin - 1 === this.props.parent.lastBin) {
+            // If the other side is in view.
+
+            for (let link of values(dComp.ldepartures)) {
+              if (
+                arraysEqual(link.participants, this.props.item.participants) &&
+                link.downstream - 1 === dComp.lastBin
+              ) {
+                return null;
+              }
+            }
+          }
+
+          // Check if there is a link in view and from next component to after next component the link is from left to left,
+          //then do not draw this arrow.
+        }
+
+        //Link from first component to second component (arrival)
+        if (
+          this.props.side === "right" &&
+          this.props.item.key.slice(this.props.item.key.length - 3) === "osr" &&
+          this.props.item.key.slice(0, 1) === "a"
+        ) {
+          // debugger;
+
+          let dComp = this.props.store.linkInView(this.props.item.upstream);
+
+          if (dComp && dComp.lastBin + 1 === this.props.parent.firstBin) {
+            // If the other side is in view.
+
+            for (let link of values(this.props.parent.ldepartures)) {
+              if (
+                arraysEqual(link.participants, this.props.item.participants) &&
+                link.downstream - 1 === this.props.parent.lastBin
+              ) {
+                return this.props.item.participants.map((item) => (
+                  <ConnectorRect
+                    key={"connector" + this.props.item.index + item}
+                    x={
+                      this.props.parent.relativePixelX -
+                      this.props.store.pixelsPerColumn
+                    }
+                    y={this.props.y + item * this.props.store.pixelsPerRow}
+                    width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
+                    height={this.props.store.pixelsPerRow}
+                    isToRight={true}
+                  />
+                ));
+
+                //Add connector here
+                // return null;
+              }
+            }
+          }
+
+          // Check if there is a link in view and from next component to after next component the link is from left to left,
+          //then do not draw this arrow.
+        }
+
+        //link from second component to third component. (departure)
+        if (
+          this.props.side === "left" &&
+          this.props.item.key.slice(0, 1) === "d" &&
+          this.props.item.key.slice(this.props.item.key.length - 3) === "osl"
+        ) {
+          // debugger;
+
+          let dComp = this.props.store.linkInView(this.props.item.downstream);
+
+          if (dComp && dComp.firstBin - 1 === this.props.parent.lastBin) {
+            // If the other side is in view.
+
+            for (let link of values(this.props.parent.rarrivals)) {
+              if (
+                arraysEqual(link.participants, this.props.item.participants) &&
+                link.upstream + 1 === this.props.parent.firstBin
+              ) {
+                return null;
+              }
+            }
+          }
+
+          // Check if the link is in view and if the previously linked component has departure from right to right, then do not draw this arrow.
+        }
+
+        //link from second component to third component. (arrival)
+        if (
+          this.props.side === "left" &&
+          this.props.item.key.slice(0, 1) === "a" &&
+          this.props.item.key.slice(this.props.item.key.length - 3) === "osl"
+        ) {
+          let dComp = this.props.store.linkInView(this.props.item.upstream);
+
+          if (dComp && dComp.lastBin + 1 === this.props.parent.firstBin) {
+            // If the other side is in view.
+
+            for (let link of values(dComp.rarrivals)) {
+              if (
+                arraysEqual(link.participants, this.props.item.participants) &&
+                link.upstream + 1 === dComp.firstBin
+              ) {
+                return this.props.item.participants.map((item) => (
+                  <ConnectorRect
+                    key={"connector" + this.props.item.index + item}
+                    x={
+                      this.props.parent.relativePixelX -
+                      this.props.store.pixelsPerColumn +
+                      1
+                    }
+                    y={this.props.y + item * this.props.store.pixelsPerRow}
+                    width={this.props.store.pixelsPerColumn - 2} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
+                    height={this.props.store.pixelsPerRow}
+                    isToRight={true}
+                  />
+                ));
+
+                // Add connector here
+                // return null;
+              }
+            }
+          }
+
+          // Check if the link is in view and if the previously linked component has departure from right to right, then do not draw this arrow.
+        }
+      }
+
       const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
         this.props.item,
         this.props.store.highlightedLink

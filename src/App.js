@@ -183,9 +183,8 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[
-            schematizeComponent.index
-          ] = schematizeComponent;
+          index_to_component_to_visualize_dict[schematizeComponent.index] =
+            schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -203,92 +202,92 @@ const App = observer(
     /** Compares bin2file @param indexContents with the beginBin and EndBin.
      * It finds the appropriate chunk URLS from the index and updates
      * switchChunkURLs which trigger json fetches for the new chunks. **/
-    openRelevantChunksFromIndex() {
-      console.log(
-        "STEP #3: with new chunkIndex, this.openRelevantChunksFromIndex()"
-      );
+    // openRelevantChunksFromIndex() {
+    //   console.log(
+    //     "STEP #3: with new chunkIndex, this.openRelevantChunksFromIndex()"
+    //   );
 
-      if (
-        this.props.store.chunkIndex === null ||
-        !this.props.store.chunkIndex.zoom_levels.keys()
-      ) {
-        return; //before the class is fully initialized
-      }
-      const beginBin = this.props.store.getBeginBin;
+    //   if (
+    //     this.props.store.chunkIndex === null ||
+    //     !this.props.store.chunkIndex.zoom_levels.keys()
+    //   ) {
+    //     return; //before the class is fully initialized
+    //   }
+    //   const beginBin = this.props.store.getBeginBin;
 
-      // With new chunkIndex, it sets the available zoom levels
-      this.props.store.setAvailableZoomLevels(
-        this.props.store.chunkIndex["zoom_levels"].keys()
-      );
+    //   // With new chunkIndex, it sets the available zoom levels
+    //   this.props.store.setAvailableZoomLevels(
+    //     this.props.store.chunkIndex["zoom_levels"].keys()
+    //   );
 
-      const widthInColumns =
-        window.innerWidth / this.props.store.pixelsPerColumn;
+    //   const widthInColumns =
+    //     window.innerWidth / this.props.store.pixelsPerColumn;
 
-      const selZoomLev = this.props.store.getSelectedZoomLevel();
-      let [fileArray, fileArrayFasta] = calculateEndBinFromScreen(
-        beginBin,
-        selZoomLev,
-        this.props.store,
-        widthInColumns
-      );
-      this.props.store.setLastBinPangenome(
-        this.props.store.chunkIndex.zoom_levels.get(selZoomLev)["last_bin"]
-      );
+    //   const selZoomLev = this.props.store.getSelectedZoomLevel();
+    //   let [fileArray, fileArrayFasta] = calculateEndBinFromScreen(
+    //     beginBin,
+    //     selZoomLev,
+    //     this.props.store,
+    //     widthInColumns
+    //   );
+    //   this.props.store.setLastBinPangenome(
+    //     this.props.store.chunkIndex.zoom_levels.get(selZoomLev)["last_bin"]
+    //   );
 
-      const scaling_factor =
-        this.props.store.getSelectedZoomLevel(true) /
-        this.props.store.getSelectedZoomLevel();
+    //   const scaling_factor =
+    //     this.props.store.getSelectedZoomLevel(true) /
+    //     this.props.store.getSelectedZoomLevel();
 
-      //console.log("scaling_factor: " + scaling_factor);
+    //   //console.log("scaling_factor: " + scaling_factor);
 
-      if (scaling_factor !== 1) {
-        if (scaling_factor < 1) {
-          console.log(
-            "[App.openRelevantChunksFromIndex] Zoom Highlight Boundaries set",
-            Math.round(beginBin * scaling_factor),
-            Math.round(this.props.store.getEndBin * scaling_factor)
-          );
-          this.props.store.setZoomHighlightBoundaries(
-            Math.ceil(beginBin * scaling_factor),
-            Math.ceil(this.props.store.getEndBin * scaling_factor)
-          );
-        }
+    //   if (scaling_factor !== 1) {
+    //     if (scaling_factor < 1) {
+    //       console.log(
+    //         "[App.openRelevantChunksFromIndex] Zoom Highlight Boundaries set",
+    //         Math.round(beginBin * scaling_factor),
+    //         Math.round(this.props.store.getEndBin * scaling_factor)
+    //       );
+    //       this.props.store.setZoomHighlightBoundaries(
+    //         Math.ceil(beginBin * scaling_factor),
+    //         Math.ceil(this.props.store.getEndBin * scaling_factor)
+    //       );
+    //     }
 
-        this.props.store.updateBeginEndBin(
-          Math.round((beginBin - 1) * scaling_factor),
-          Math.round((this.props.store.getEndBin - 1) * scaling_factor)
-        );
+    //     this.props.store.updateBeginEndBin(
+    //       Math.round((beginBin - 1) * scaling_factor),
+    //       Math.round((this.props.store.getEndBin - 1) * scaling_factor)
+    //     );
 
-        // The updating will re-trigger openRelevantChunksFromIndex
-      } else {
-        const newEndBin = this.prepareWhichComponentsToVisualize(
-          widthInColumns
-        );
-        this.props.store.updateBeginEndBin(beginBin, newEndBin);
+    //     // The updating will re-trigger openRelevantChunksFromIndex
+    //   } else {
+    //     const newEndBin = this.prepareWhichComponentsToVisualize(
+    //       widthInColumns
+    //     );
+    //     this.props.store.updateBeginEndBin(beginBin, newEndBin);
 
-        //console.log([selZoomLev, endBin, fileArray, fileArrayFasta]);
-        let URLprefix =
-          process.env.PUBLIC_URL +
-          "/test_data/" +
-          this.props.store.jsonName +
-          "/" +
-          selZoomLev +
-          "/";
-        fileArray = fileArray.map((filename) => {
-          return URLprefix + filename;
-        });
-        fileArrayFasta = fileArrayFasta.map((filename) => {
-          return URLprefix + filename;
-        });
+    //     //console.log([selZoomLev, endBin, fileArray, fileArrayFasta]);
+    //     let URLprefix =
+    //       process.env.PUBLIC_URL +
+    //       "/test_data/" +
+    //       this.props.store.jsonName +
+    //       "/" +
+    //       selZoomLev +
+    //       "/";
+    //     fileArray = fileArray.map((filename) => {
+    //       return URLprefix + filename;
+    //     });
+    //     fileArrayFasta = fileArrayFasta.map((filename) => {
+    //       return URLprefix + filename;
+    //     });
 
-        this.props.store.switchChunkFastaURLs(fileArrayFasta);
+    //     this.props.store.switchChunkFastaURLs(fileArrayFasta);
 
-        // If there are no new chunck, it has only to recalculate the X layout
-        if (!this.props.store.switchChunkURLs(fileArray)) {
-          this.recalcXLayout();
-        }
-      }
-    }
+    //     // If there are no new chunck, it has only to recalculate the X layout
+    //     if (!this.props.store.switchChunkURLs(fileArray)) {
+    //       this.recalcXLayout();
+    //     }
+    //   }
+    // }
 
     fetchAllChunks() {
       /*Dispatches fetches for all chunk files
@@ -351,9 +350,8 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
-              this.schematic.components
-            ); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents =
+              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -935,9 +933,8 @@ const App = observer(
       //   this.props.store.visualisedComponents
       // );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent = this.props.store.visualisedComponents.get(
-          index
-        );
+        let schematizeComponent =
+          this.props.store.visualisedComponents.get(index);
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}
