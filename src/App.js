@@ -890,12 +890,17 @@ const App = observer(
       }
 
       if (this.props.store.getEndBin < schematizeComponent.lastBin) {
-        width -= schematizeComponent.lastBin - this.props.store.getEndBin;
+        width -=
+          schematizeComponent.lastBin -
+          this.props.store.getEndBin +
+          schematizeComponent.rightLinkSize -
+          1;
         rightCut = true;
       } else if (
         this.props.store.getEndBin === schematizeComponent.lastBin &&
         !schematizeComponent.departureVisible
       ) {
+        width -= schematizeComponent.rightLinkSize - 1;
         rightCut = true;
       }
 
@@ -1099,7 +1104,7 @@ const App = observer(
             <Stage
               x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
               y={2 * this.props.store.pixelsPerColumn * 2} // For some reason, I have to put this, but I'd like to put 0
-              width={this.props.store.actualWidth}
+              width={this.props.store.windowWidth}
               height={
                 this.props.store.chunkIndex.pathNames.length *
                   this.props.store.pixelsPerRow +

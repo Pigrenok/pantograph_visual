@@ -1,7 +1,8 @@
 ## Schematise issues
 
-- Full gene graph, zoom level 9, begin bin 156, link 214->169 is drawn incorrectly.
-- Last nucleotide is not shown. Why? Is it in the data or how it is being read?
+- Going from 153 to 156 right components are not added. Check it.
+- Last nucleotide is not shown. Why? Is it in the data or how it is being read? 
+- At the same time extra nucleotide is drawn on the very right.
 - When jumping from one dir to another, zoom level is preserved, should be reset!
 
 - Joining should happen in terms of components and not nodes.

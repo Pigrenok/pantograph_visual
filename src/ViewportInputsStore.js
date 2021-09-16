@@ -364,7 +364,7 @@ const Component = types
         if (
           windowWidth <
           self.relativePixelX +
-            (self.leftLinkSize + self.numBins + self.rightLinkSize) *
+            (self.leftLinkSize + self.numBins + self.rightLinkSize - 1) *
               pixelsPerColumn
         ) {
           self.departureVisible = false;
@@ -516,7 +516,7 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    // jsonName: "AT_Chr1_OGOnly_new",
+    jsonName: "AT_Chr1_OGOnly_new",
     // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
@@ -524,7 +524,7 @@ RootStore = types
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
     // jsonName: "coreGraph_inv_new",
-    jsonName: "coregraph_genes",
+    // jsonName: "coregraph_genes",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -1962,7 +1962,7 @@ RootStore = types
       }
     },
     get actualWidth() {
-      return self.columnsInView * self.pixelsPerColumn;
+      return self.columnsInView * self.pixelsPerColumn + 2;
     },
     get selectedZoomLevel() {
       //This is a genuinely useful getter

@@ -188,6 +188,14 @@ const ComponentRect = observer(
     renderAllConnectors() {
       // debugger;
 
+      let sortedVisualKeys = this.props.store.sortedVisualComponentsKeys;
+      if (
+        Number(sortedVisualKeys[sortedVisualKeys.length - 1]) ===
+        this.props.item.index
+      ) {
+        return null;
+      }
+
       let connectorDeparturesColumn = this.props.item.connectorDepartures;
       let connectorArrivalsColumn = this.props.item.connectorArrivals;
 
@@ -277,19 +285,21 @@ const ComponentRect = observer(
             strokeWidth={2}
             key={"LeftSelectionMarker"}
           />
-          <Line
-            points={[
-              this.props.item.relativePixelX +
-                this.props.widthInColumns * this.props.store.pixelsPerColumn,
-              this.props.y,
-              this.props.item.relativePixelX +
-                this.props.widthInColumns * this.props.store.pixelsPerColumn,
-              this.props.y + this.props.height - 1,
-            ]}
-            stroke={colour}
-            strokeWidth={2}
-            key={"RightSelectionMarker"}
-          />
+          {this.props.item.departureVisible ? (
+            <Line
+              points={[
+                this.props.item.relativePixelX +
+                  this.props.widthInColumns * this.props.store.pixelsPerColumn,
+                this.props.y,
+                this.props.item.relativePixelX +
+                  this.props.widthInColumns * this.props.store.pixelsPerColumn,
+                this.props.y + this.props.height - 1,
+              ]}
+              stroke={colour}
+              strokeWidth={2}
+              key={"RightSelectionMarker"}
+            />
+          ) : null}
         </>
       );
     }
@@ -582,7 +592,7 @@ const ComponentRect = observer(
           {this.props.store.zoomHighlightBoundaries.length === 2
             ? this.renderZoomBoundary()
             : null}
-          {this.renderLinkBoundary()}
+          {/*{this.renderLinkBoundary()}*/}
         </>
       );
     }
