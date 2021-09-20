@@ -1,15 +1,12 @@
 ## Schematise issues
 
-- Going from 153 to 156 right components are not added. Check it.
-- Last nucleotide is not shown. Why? Is it in the data or how it is being read? 
-- At the same time extra nucleotide is drawn on the very right.
-- When jumping from one dir to another, zoom level is preserved, should be reset!
-
+- coregraph_inv_new, zoom level 1, begin bin 406, arrows (hidden) in the middle is incorrect.
 - Joining should happen in terms of components and not nodes.
 
 ?- Deal with cases where several arrows coming from one side of one node, but goes to both sides of another node.
 
 - (??? Cannot repeat, possibly fixed by other changes) Check tooltip update on link column. Sometimes, it jumps to the wrong one after the mouse float to the main component. (e.g. first component, the arrival link for accession 6909)
+
 
 
 ## Component_segmentation issues

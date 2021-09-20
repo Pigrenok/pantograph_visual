@@ -107,9 +107,9 @@ const LinkColumn = observer(
 
         let dComp = this.props.store.linkInView(this.props.item.downstream);
         //Check directionality of both upstream and downstream and then decide where to put arrows or not.
-        // console.debug("[LinkColumn.points] this.props.item", this.props.item);
-        // console.debug("[LinkColumn.points] this.props", this.props);
-        // console.debug("[LinkColumn.points] dComp", dComp);
+        console.debug("[LinkColumn.points] this.props.item", this.props.item);
+        console.debug("[LinkColumn.points] this.props", this.props);
+        console.debug("[LinkColumn.points] dComp", dComp);
         if (
           dComp &&
           this.props.item.downstream >= this.props.store.getBeginBin &&
@@ -120,7 +120,9 @@ const LinkColumn = observer(
             "a" +
             this.props.item.key.slice(1, this.props.item.key.length - 3) +
             (this.props.side === "right" ? "osr" : "osl");
-          // console.debug("[LinkColumn.points] arrivalKey", arrivalKey);
+          // console.debug("[LinkColumn.points] link", this.props.item);
+
+          console.debug("[LinkColumn.points] arrivalKey", arrivalKey);
           let dLink;
           let dOffset = 0;
           if (this.props.item.otherSideRight) {
@@ -145,6 +147,8 @@ const LinkColumn = observer(
               return [];
             }
           }
+          console.debug("[LinkColumn.points] dComp", dComp);
+          console.debug("[LinkColumn.points] dLink", dLink);
 
           let dX =
             dComp.relativePixelX +

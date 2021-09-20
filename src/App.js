@@ -183,8 +183,9 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[schematizeComponent.index] =
-            schematizeComponent;
+          index_to_component_to_visualize_dict[
+            schematizeComponent.index
+          ] = schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -350,8 +351,9 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents =
-              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
+              this.schematic.components
+            ); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -728,6 +730,7 @@ const App = observer(
             // if (this.props.store.getBeginBin===42001) {
             //   debugger;
             // }
+
             let sortedArray = keys(this.props.store.components);
             sortedArray.sort((a, b) => Number(a) - Number(b));
 
@@ -938,8 +941,9 @@ const App = observer(
       //   this.props.store.visualisedComponents
       // );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent =
-          this.props.store.visualisedComponents.get(index);
+        let schematizeComponent = this.props.store.visualisedComponents.get(
+          index
+        );
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}

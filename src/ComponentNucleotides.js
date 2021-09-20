@@ -22,8 +22,13 @@ const ComponentNucleotides = observer(
         x_val += parent.leftLinkSize * this.props.store.pixelsPerColumn;
       }
 
+      let numBins = this.props.item.numBins;
+      if (parent.lastBin > this.props.store.getEndBin) {
+        numBins -= parent.lastBin - this.props.store.getEndBin;
+      }
+
       let listOfObjects = [];
-      for (var x = startPos; x < this.props.item.numBins; x++) {
+      for (var x = startPos; x < numBins; x++) {
         listOfObjects.push(
           <Text
             key={"nuc_text" + x}

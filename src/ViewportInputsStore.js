@@ -516,14 +516,14 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    jsonName: "AT_Chr1_OGOnly_new",
+    // jsonName: "AT_Chr1_OGOnly_new",
     // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
     // jsonName: "shorttest2_new_reverseBlock",
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
-    // jsonName: "coreGraph_inv_new",
+    jsonName: "coreGraph_inv_new",
     // jsonName: "coregraph_genes",
 
     // Added attributes for the zoom level management
@@ -1201,7 +1201,9 @@ RootStore = types
       } else if (leftSpaceInCols > self.columnsInView / 2) {
         begin =
           curComp.firstBin +
-          Math.ceil(leftSpaceInCols - self.columnsInView / 2);
+          Math.ceil(
+            leftSpaceInCols - self.columnsInView / 2 - curComp.leftLinkSize
+          );
       } else {
         begin = curComp.firstBin;
       }
@@ -1383,29 +1385,30 @@ RootStore = types
           let comp = self.components.get(index);
 
           if (
-            visibleLengthInCols + comp.leftLinkSize < self.columnsInView &&
             comp.lastBin >= begin &&
             !self.visualisedComponents.has(comp.index)
           ) {
-            self.visualisedComponents.set(comp.index, comp.index);
-            comp.moveTo(
-              visibleLengthInCols * self.pixelsPerColumn,
-              self.windowWidth,
-              self.pixelsPerColumn
-            );
-            lastCompDepartureSize = comp.rightLinkSize;
-            if (visibleLengthInCols === 0 && begin > comp.firstBin) {
-              visibleLengthInCols +=
-                comp.lastBin - begin + 1 + comp.rightLinkSize;
-            } else {
-              visibleLengthInCols +=
-                comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
+            if (visibleLengthInCols + comp.leftLinkSize < self.columnsInView) {
+              self.visualisedComponents.set(comp.index, comp.index);
+              comp.moveTo(
+                visibleLengthInCols * self.pixelsPerColumn,
+                self.windowWidth,
+                self.pixelsPerColumn
+              );
+              lastCompDepartureSize = comp.rightLinkSize;
+              if (visibleLengthInCols === 0 && begin > comp.firstBin) {
+                visibleLengthInCols +=
+                  comp.lastBin - begin + 1 + comp.rightLinkSize;
+              } else {
+                visibleLengthInCols +=
+                  comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
+              }
+            } else if (
+              visibleLengthInCols + comp.leftLinkSize >=
+              self.columnsInView
+            ) {
+              break;
             }
-          } else if (
-            visibleLengthInCols + comp.leftLinkSize >=
-            self.columnsInView
-          ) {
-            break;
           }
 
           if (visibleLengthInCols >= self.columnsInView) {
