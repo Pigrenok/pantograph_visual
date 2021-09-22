@@ -2074,9 +2074,12 @@ RootStore = types
     },
     visibleColFromBin(bin) {
       let comp = self.visibleCompByBin(bin);
-      let distRatio = (bin - comp.firstBin) / (comp.lastBin - comp.firstBin);
+      let distRatio =
+        (bin - comp.firstBin + 1) / (comp.lastBin - comp.firstBin + 1);
       let col =
-        comp.firstCol + Math.round(distRatio * (comp.lastCol - comp.firstCol));
+        comp.firstCol -
+        1 +
+        Math.round(distRatio * (comp.lastCol - comp.firstCol));
 
       return col;
     },

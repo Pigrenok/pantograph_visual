@@ -1,6 +1,7 @@
 ## Schematise issues
 
-- coregraph_inv_new, zoom level 1, begin bin 406, arrows (hidden) in the middle is incorrect.
+- coreGraph_inv_new: zoom level 4->16, error with setting boundary.
+
 - Joining should happen in terms of components and not nodes.
 
 ?- Deal with cases where several arrows coming from one side of one node, but goes to both sides of another node.
