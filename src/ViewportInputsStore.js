@@ -121,6 +121,7 @@ const BinData = types.model({
   repeats: types.number,
   reversal: types.number,
   pos: types.array(types.array(types.integer)),
+  annotation: types.array(types.string),
 });
 
 const ComponentMatrixElement = types
@@ -137,6 +138,7 @@ const ComponentMatrixElement = types
           repeats: bin[0],
           reversal: bin[1],
           pos: bin[2],
+          annotation: bin[3],
         });
       }
     },
@@ -523,7 +525,9 @@ RootStore = types
     // jsonName: "shorttest2_new_reverseBlock",
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
-    jsonName: "coreGraph_inv_new",
+    // jsonName: "coreGraph_inv_new",
+    jsonName: "coreGraph_v3_new",
+
     // jsonName: "coregraph_genes",
 
     // Added attributes for the zoom level management
@@ -658,6 +662,8 @@ RootStore = types
       if (!fromRight) {
         compArray.reverse();
       }
+      console.debug("[Store.addComponents] compArray", compArray);
+      console.debug("[Store.addComponents] nucleotides", nucleotides);
 
       for (const component of compArray.splice(splicing)) {
         if (!self.components.has(component.first_bin)) {

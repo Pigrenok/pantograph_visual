@@ -70,6 +70,10 @@ export const MatrixCell = observer(
         tooltipContent += new_content;
       }
 
+      if (item.annotation.length > 0) {
+        tooltipContent += "\n" + item.annotation;
+      }
+
       if (this.props.store.metaData.get(this.props.pathName) !== undefined) {
         tooltipContent +=
           "\n" + this.props.store.metaData.get(this.props.pathName).Info;

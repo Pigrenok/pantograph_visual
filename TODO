@@ -1,6 +1,7 @@
 ## Schematise issues
 
-- coreGraph_inv_new: zoom level 4->16, error with setting boundary.
+
+- Colouring of arrows should stay consistent irrespective of zoom level (still not sure how to do it).
 
 - Joining should happen in terms of components and not nodes.
 
