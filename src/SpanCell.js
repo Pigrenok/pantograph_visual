@@ -71,7 +71,11 @@ export const MatrixCell = observer(
       }
 
       if (item.annotation.length > 0) {
-        tooltipContent += "\n" + item.annotation;
+        if (item.reversal <= 0.5) {
+          tooltipContent += "\n" + item.annotation;
+        } else {
+          tooltipContent += "\n" + item.annotation.reverse();
+        }
       }
 
       if (this.props.store.metaData.get(this.props.pathName) !== undefined) {

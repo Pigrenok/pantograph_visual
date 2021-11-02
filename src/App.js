@@ -183,9 +183,8 @@ const App = observer(
             break;
           }
 
-          index_to_component_to_visualize_dict[
-            schematizeComponent.index
-          ] = schematizeComponent;
+          index_to_component_to_visualize_dict[schematizeComponent.index] =
+            schematizeComponent;
 
           newEndBin = schematizeComponent.lastBin;
         }
@@ -351,9 +350,8 @@ const App = observer(
               this.schematic.pathNames,
               Array.from(this.props.store.metaData.keys())
             );
-            this.maxNumRowsAcrossComponents = this.calcMaxNumRowsAcrossComponents(
-              this.schematic.components
-            ); // TODO add this to mobx-state-tree
+            this.maxNumRowsAcrossComponents =
+              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
             this.props.store.setLoading(false);
           }
         );
@@ -707,8 +705,7 @@ const App = observer(
         // avoiding any computation if nucleotides have not to be visualized.
         this.props.store.getBinWidth === 1 &&
         !this.props.store.useWidthCompression &&
-        this.props.store.pixelsPerColumn >= 10 &&
-        this.props.store.nucleotides.length > 0
+        this.props.store.pixelsPerColumn >= 10
       ) {
         //console.log('renderNucleotidesSchematic - START')
         // console.debug(
@@ -731,16 +728,16 @@ const App = observer(
             //   debugger;
             // }
 
-            let sortedArray = keys(this.props.store.components);
-            sortedArray.sort((a, b) => Number(a) - Number(b));
+            // let sortedArray = keys(this.props.store.components);
+            // sortedArray.sort((a, b) => Number(a) - Number(b));
 
-            let nt_shift =
-              this.props.store.components.get(sortedArray[0]).firstBin || 1;
+            // let nt_shift =
+            //   this.props.store.components.get(sortedArray[0]).firstBin || 1;
 
-            const nucleotides_slice = this.props.store.nucleotides.slice(
-              component.firstBin - nt_shift, // firstBin is 1 indexed, but this is canceled by nt_shift
-              component.lastBin - nt_shift + 1 // inclusive end
-            );
+            // const nucleotides_slice = this.props.store.nucleotides.slice(
+            //   component.firstBin - nt_shift, // firstBin is 1 indexed, but this is canceled by nt_shift
+            //   component.lastBin - nt_shift + 1 // inclusive end
+            // );
 
             // console.debug(
             //   "[App.renderNucleotidesSchematic] nt_shift",
@@ -750,23 +747,24 @@ const App = observer(
             //   "[App.renderNucleotidesSchematic] nucleotides_slice: " +
             //     nucleotides_slice
             // );
-
-            return (
-              <React.Fragment key={"nt" + i}>
-                <ComponentNucleotides
-                  store={this.props.store}
-                  item={component}
-                  key={i}
-                  y={
-                    // this.props.store.topOffset +
-                    this.props.store.maxArrowHeight *
-                    this.props.store.pixelsPerColumn
-                  }
-                  // They are passed only the nucleotides associated to the current component
-                  nucleotides={nucleotides_slice}
-                />
-              </React.Fragment>
-            );
+            if (component.sequence.length == component.numBins) {
+              return (
+                <React.Fragment key={"nt" + i}>
+                  <ComponentNucleotides
+                    store={this.props.store}
+                    item={component}
+                    key={i}
+                    y={
+                      // this.props.store.topOffset +
+                      this.props.store.maxArrowHeight *
+                      this.props.store.pixelsPerColumn
+                    }
+                    // They are passed only the nucleotides associated to the current component
+                    nucleotides={component.sequence}
+                  />
+                </React.Fragment>
+              );
+            }
           }
         );
       }
@@ -941,9 +939,8 @@ const App = observer(
       //   this.props.store.visualisedComponents
       // );
       return this.props.store.sortedVisualComponentsKeys.map((index, i) => {
-        let schematizeComponent = this.props.store.visualisedComponents.get(
-          index
-        );
+        let schematizeComponent =
+          this.props.store.visualisedComponents.get(index);
         return (
           <React.Fragment key={"f" + i}>
             {this.renderComponent(schematizeComponent, i)}

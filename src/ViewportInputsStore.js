@@ -187,6 +187,7 @@ const Component = types
     numBins: types.integer,
     matrix: types.map(ComponentMatrixElement),
     ends: types.array(types.integer),
+    sequence: types.optional(types.string, ""),
   })
   .actions((self) => ({
     updateEnds(ends) {
@@ -494,7 +495,7 @@ RootStore = types
     // this.jsonCache = {}; // URL keys, values are entire JSON file datas
     // TODO: make jsonCache store React components and save them in mobx
     // TODO: make FILO queue to remove old jsonCache once we hit max memory usage
-    nucleotides: types.array(types.string), // nucleotides attribute and its edges
+    // nucleotides: types.array(types.string), // nucleotides attribute and its edges
 
     // this.metadata = []; This will be used later to store annotation possibly.
 
@@ -614,7 +615,7 @@ RootStore = types
       self.updateBeginEndBin(self.getBeginBin);
     },
 
-    addComponent(component) {
+    addComponent(component, seq) {
       // Component index by first zoom
       let curComp = Component.create({
         // columnX: component.x,
@@ -632,6 +633,7 @@ RootStore = types
         // deep copy of occupants
         occupants: component.occupants,
         numBins: component.last_bin - component.first_bin + 1,
+        sequence: seq,
       });
       // console.debug("[Store.addComponent]",component )
       curComp.updateEnds(component.ends);
@@ -667,16 +669,14 @@ RootStore = types
 
       for (const component of compArray.splice(splicing)) {
         if (!self.components.has(component.first_bin)) {
-          self.addComponent(component);
+          let seq = "";
           if (nucleotides.length > 0) {
-            self.addNucleotideSequence(
-              nucleotides.slice(
-                component.first_bin - offset,
-                component.last_bin - offset + 1
-              ),
-              fromRight
+            seq = nucleotides.slice(
+              component.first_bin - offset,
+              component.last_bin - offset + 1
             );
           }
+          self.addComponent(component, seq);
         }
       }
     },
@@ -704,16 +704,16 @@ RootStore = types
         });
     },
 
-    addNucleotideSequence(sequence, fromRight) {
-      // console.debug("[Store.addNucleotideSequence] sequence", sequence);
-      // console.debug("[Store.addNucleotideSequence] fromRight", fromRight);
+    // addNucleotideSequence(sequence, fromRight) {
+    //   // console.debug("[Store.addNucleotideSequence] sequence", sequence);
+    //   // console.debug("[Store.addNucleotideSequence] fromRight", fromRight);
 
-      if (fromRight) {
-        self.nucleotides.splice(self.nucleotides.length, 0, ...sequence);
-      } else {
-        self.nucleotides.splice(0, 0, ...sequence);
-      }
-    },
+    //   if (fromRight) {
+    //     self.nucleotides.splice(self.nucleotides.length, 0, ...sequence);
+    //   } else {
+    //     self.nucleotides.splice(0, 0, ...sequence);
+    //   }
+    // },
 
     addNucleotidesFromFasta(url) {
       // console.debug("[Store.addNucleotidesFromFasta] url", url);
