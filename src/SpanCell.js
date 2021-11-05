@@ -17,8 +17,9 @@ export const MatrixCell = observer(
       );
       // console.log(event, this.props.range, relColumnX);
 
-      let item =
-        this.props.range[Math.min(this.props.range.length - 1, relColumnX)];
+      let item = this.props.range[
+        Math.min(this.props.range.length - 1, relColumnX)
+      ];
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
@@ -70,12 +71,25 @@ export const MatrixCell = observer(
         tooltipContent += new_content;
       }
 
+      let maxNumAnnotationToShow = 15;
+
       if (item.annotation.length > 0) {
-        if (item.reversal <= 0.5) {
-          tooltipContent += "\n" + item.annotation;
-        } else {
-          tooltipContent += "\n" + item.annotation.reverse();
+        // if (item.reversal <= 0.5) {
+        tooltipContent +=
+          "\n" +
+          item.annotation
+            .sort((a, b) => {
+              return a.length - b.length;
+            })
+            .slice(0, maxNumAnnotationToShow)
+            .join("\n");
+
+        if (item.annotation.length > maxNumAnnotationToShow) {
+          tooltipContent += "\n... (" + item.annotation.length + ")";
         }
+        // } else {
+        // tooltipContent += "\n" + item.annotation.reverse();
+        // }
       }
 
       if (this.props.store.metaData.get(this.props.pathName) !== undefined) {

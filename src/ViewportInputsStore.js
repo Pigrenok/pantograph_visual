@@ -478,9 +478,10 @@ const ChunkIndex = types.model({
   zoom_levels: types.map(ZoomLevel),
 });
 
-const PathNucPos = types.model("PathNucPos", {
+const searchTermsStruct = types.model({
   path: types.string,
-  nucPos: types.integer,
+  searchGenes: types.boolean,
+  search: types.string,
 });
 
 const metaDataModelEntry = types.model({
@@ -527,7 +528,8 @@ RootStore = types
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
     // jsonName: "coreGraph_inv_new",
-    jsonName: "coreGraph_v3_new",
+    jsonName: "coregraph_v3_new",
+    // jsonName: "coregraph_genes_v3_new",
 
     // jsonName: "coregraph_genes",
 
@@ -543,8 +545,12 @@ RootStore = types
     chunksProcessed: types.optional(types.array(types.string), []),
     chunksProcessedFasta: types.optional(types.array(types.string), []),
 
-    pathNucPos: types.optional(PathNucPos, { path: "path", nucPos: 0 }), // OR: types.maybe(PathNucPos)
-    pathIndexServerAddress: "http://localhost:3030", // "http://193.196.29.24:3010/",
+    searchTerms: types.optional(searchTermsStruct, {
+      path: "",
+      searchGenes: true,
+      search: "",
+    }), // OR: types.maybe(PathNucPos)
+    pathIndexServerAddress: "http://localhost:5000", // "http://193.196.29.24:3010/",
 
     loading: true,
     copyNumberColorArray: types.optional(types.array(types.string), [
@@ -1297,7 +1303,7 @@ RootStore = types
       self.updatingVisible = false;
     },
 
-    shiftVisualisedComponents() {
+    shiftVisualisedComponents(highlight = false) {
       // self.visualisedComponents.clear();
       // debugger;
       if (self.components.size === 0) {
@@ -1437,10 +1443,15 @@ RootStore = types
       }
 
       self.calcLinkElevations();
+      if (highlight) {
+        let comp = self.visibleCompByBin(self.getBeginBin);
+        self.addToSelection(comp.firstCol, comp.lastCol);
+      }
+
       self.updatingVisible = false;
     },
 
-    updateBeginEndBin(newBegin) {
+    updateBeginEndBin(newBegin, highlight = false) {
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
 
       // Need to handle zoom switch somehow.
@@ -1482,7 +1493,7 @@ RootStore = types
 
           Promise.all(promiseArray).then(() => {
             // self.clearVisualisedComponents();
-            self.shiftVisualisedComponents();
+            self.shiftVisualisedComponents(highlight);
             promiseArray = undefined;
           });
         } else if (firstBinInComponents >= newBegin) {
@@ -1498,12 +1509,12 @@ RootStore = types
           );
           Promise.all(promiseArray).then(() => {
             // self.clearVisualisedComponents();
-            self.shiftVisualisedComponents();
+            self.shiftVisualisedComponents(highlight);
             promiseArray = undefined;
           });
         } else {
           self.setBeginBin(newBegin);
-          self.shiftVisualisedComponents();
+          self.shiftVisualisedComponents(highlight);
 
           // This function is called 5 times every time the bin number is updated.
           // console.log("updateBeginEndBin - " + self.getBeginBin + " - " + self.getEndBin);
@@ -1828,16 +1839,23 @@ RootStore = types
       self.endBin = newEndBin;
     },
 
-    updatePathNucPos(path, nucPos) {
+    updateSearchTerms(path, searchGenes, search) {
       //console.log('updatePathNucPos: ' + path + ' --- ' + nucPos)
 
+      console.debug("[Store.updateSearchTerms] path", path);
+      console.debug("[Store.updateSearchTerms] searchGenes", searchGenes);
+      console.debug("[Store.updateSearchTerms] search", search);
+
       if (path !== undefined) {
-        if (nucPos) {
-          nucPos = Math.abs(parseInt(nucPos));
-        } else {
-          nucPos = 0;
-        }
-        self.pathNucPos = { path: path, nucPos: nucPos };
+        self.searchTerms.path = path;
+      }
+
+      if (search !== undefined) {
+        self.searchTerms.searchGenes = searchGenes;
+      }
+
+      if (searchGenes !== undefined) {
+        self.searchTerms.search = search;
       }
     },
 

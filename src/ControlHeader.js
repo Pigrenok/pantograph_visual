@@ -35,52 +35,55 @@ const ControlHeader = observer(
 
     handleJump() {
       // Need attention
-      console.log(
-        "JUMP: path name: " +
-          this.props.store.pathNucPos.path +
-          " nucleotide position: " +
-          this.props.store.pathNucPos.nucPos
-      );
+      // console.log(
+      //   "JUMP: path name: " +
+      //     this.props.store.pathNucPos.path +
+      //     " nucleotide position: " +
+      //     this.props.store.pathNucPos.nucPos
+      // );
       // I don't know why, but in order for the CORS headers to exchange we need to make a first GET request to "/hi" which will not return anything
 
       const store = this.props.store;
       const addr = store.pathIndexServerAddress;
-      const path_name = store.pathNucPos.path;
-      const nuc_pos = store.pathNucPos.nucPos;
+      const path_name = store.searchTerms.path;
+      const search = store.searchTerms.search;
+      const doSearchGenes = store.searchTerms.searchGenes;
+      const jsonName = store.jsonName;
+      const zoomLevel = store.selectedZoomLevel;
 
-      function handleOdgiServerResponse(result) {
-        if (result === "0") {
-          alert(
-            "The jump query returned 0. Either your path does not exist or your position in the path is wrong or server does not work. Please try again."
-          );
+      function handleSearchServerResponse(result) {
+        if (result === "-1") {
+          alert(`Did not find position ${search} in accession ${path_name}.`);
+        } else if (result === "-2") {
+          alert(`Did not find case ${jsonName} in database.`);
         } else {
           console.log(result);
           // go from nucleotide position to bin
           result = parseInt(result);
-          const centreBin = Math.ceil(result / store.getBinWidth);
 
-          let jumpToRight;
-          if (centreBin > this.props.store.centreBin) {
-            // Jump to right
-            jumpToRight = 1;
-          } else if (centreBin < this.props.store.centreBin) {
-            //Jump to left
-            jumpToRight = -1;
-          } else {
-            jumpToRight = 0;
-          }
-          store.jumpToCentre(centreBin, jumpToRight, null, true);
+          result = Math.max(0, result);
+
+          // store.jumpToCentre(centreBin, jumpToRight, null, true);
+          store.updateBeginEndBin(result, true);
         }
       }
       // httpGetAsync(addr + "hi", printResult);
       // httpGetAsync(addr + "5/1", printResult);
       // httpGetAsync(addr + "4/3", printResult);
-      let url = `${addr}/${path_name}/${nuc_pos}`;
+      let url = `${addr}/${
+        doSearchGenes ? "gene" : "pos"
+      }/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+      // if (searchGenes) {
+      //   let url = `${addr}/gene/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+      // } else {
+      //   let url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+      // }
+
       //httpGetAsync(`${addr}/${path_name}/${nuc_pos}`, handleOdgiServerResponse);
       jsonCache
         .getRaw(url)
         .then((data) => data.text())
-        .then(handleOdgiServerResponse.bind(this));
+        .then(handleSearchServerResponse.bind(this));
     }
 
     change_zoom_level(target) {
@@ -242,20 +245,34 @@ const ControlHeader = observer(
             </button>
           </span>
           <div className={"row"}>
-            Jump to path at nucleotide position: {/*Need Extra attention*/}
+            Search: {/*Need Extra attention*/}
             <span className="myarrow">
+              <input
+                type="checkbox"
+                checked={this.props.store.searchTerms.searchGenes}
+                onChange={(event) =>
+                  this.props.store.updateSearchTerms(
+                    this.props.store.searchTerms.path,
+                    event.target.checked,
+                    this.props.store.searchTerms.search
+                  )
+                }
+              />
+
               <input
                 type="string"
                 list="path"
                 name="path"
-                placeholder={"path"}
+                placeholder={"Path"}
                 id="#show-suggestions"
                 onChange={(event) =>
-                  this.props.store.updatePathNucPos(
+                  this.props.store.updateSearchTerms(
                     event.target.value,
-                    this.props.store.pathNucPos.nucPos
+                    this.props.store.searchTerms.searchGenes,
+                    this.props.store.searchTerms.search
                   )
                 }
+                value={this.props.store.searchTerms.path}
                 style={{ width: "80px" }}
                 // disabled
               />
@@ -269,11 +286,16 @@ const ControlHeader = observer(
             </datalist>
             -
             <input
-              type="number"
-              placeholder={"position"}
+              type="search"
+              placeholder={
+                this.props.store.searchTerms.searchGenes
+                  ? "Gene name"
+                  : "Position"
+              }
               onChange={(event) =>
-                this.props.store.updatePathNucPos(
-                  this.props.store.pathNucPos.path,
+                this.props.store.updateSearchTerms(
+                  this.props.store.searchTerms.path,
+                  this.props.store.searchTerms.searchGenes,
                   event.target.value
                 )
               }
