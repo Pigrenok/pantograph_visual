@@ -61,10 +61,17 @@ const ControlHeader = observer(
           // go from nucleotide position to bin
           result = parseInt(result);
 
-          result = Math.max(0, result);
+          result = Math.max(1, result);
 
-          // store.jumpToCentre(centreBin, jumpToRight, null, true);
-          store.updateBeginEndBin(result, true);
+          let jumpToRight;
+          if (store.centreBin >= result) {
+            jumpToRight = -1;
+          } else {
+            jumpToRight = 1;
+          }
+
+          store.jumpToCentre(result, jumpToRight, null, false, true);
+          // store.updateBeginEndBin(result, true);
         }
       }
       // httpGetAsync(addr + "hi", printResult);

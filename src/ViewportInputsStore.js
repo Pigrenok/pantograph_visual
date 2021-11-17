@@ -1123,9 +1123,12 @@ RootStore = types
       // debugger;
     },
 
-    shiftVisualisedComponentsCentre(centreBin, centreCol) {
+    shiftVisualisedComponentsCentre(centreBin, centreCol, highlight = false) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
-      // console.debug("[Store.shiftVisualisedComponentsCentre] components", self.components)
+      console.debug(
+        "[Store.shiftVisualisedComponentsCentre] highlight",
+        highlight
+      );
 
       // debugger;
 
@@ -1299,6 +1302,10 @@ RootStore = types
       self.setBeginBin(begin);
       self.setEndBin(end);
       self.calcLinkElevations();
+      if (highlight) {
+        let comp = self.visibleCompByBin(centreBin);
+        self.addToSelection(comp.firstCol, comp.lastCol);
+      }
 
       self.updatingVisible = false;
     },
@@ -1563,8 +1570,10 @@ RootStore = types
       centreBin,
       moveToRight,
       highlightedLink = null,
-      marker = false
+      marker = false,
+      highlight = false
     ) {
+      console.debug("[Store.jumpToCentre] highlight", highlight);
       self.updatingVisible = true;
       let promiseArray = [];
 
@@ -1620,7 +1629,7 @@ RootStore = types
 
       Promise.all(promiseArray).then(() => {
         self.clearVisualisedComponents();
-        self.shiftVisualisedComponentsCentre(centreBin);
+        self.shiftVisualisedComponentsCentre(centreBin, undefined, highlight);
       });
       setTimeout(() => {
         self.updateHighlightedLink(null);
