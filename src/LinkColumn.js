@@ -60,10 +60,10 @@ const LinkColumn = observer(
 
       let linkToRight;
 
-      if (this.props.item.upstream < this.props.store.downstream) {
+      if (this.props.item.upstream < this.props.item.downstream) {
         //Arrow to the right
         linkToRight = 1;
-      } else if (this.props.item.upstream < this.props.store.downstream) {
+      } else if (this.props.item.upstream > this.props.item.downstream) {
         //Arrow to the left
         linkToRight = -1;
       } else {

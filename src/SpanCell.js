@@ -17,9 +17,8 @@ export const MatrixCell = observer(
       );
       // console.log(event, this.props.range, relColumnX);
 
-      let item = this.props.range[
-        Math.min(this.props.range.length - 1, relColumnX)
-      ];
+      let item =
+        this.props.range[Math.min(this.props.range.length - 1, relColumnX)];
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
@@ -332,7 +331,6 @@ export const SpanCell = observer(
       if (!this.props.entry || !this.props.entry.occupiedBins.length) {
         return null;
       }
-
       // if (this.props.store.getBeginBin === 41196 && this.props.entry.pathID===26) {
       //   debugger;
       // }
@@ -381,7 +379,7 @@ export const SpanCell = observer(
             this.props.parent.numBins -
               (this.props.parent.lastBin - this.props.store.getEndBin) -
               1,
-            0
+            this.props.entry.occupiedBins.length
           );
         }
 
@@ -401,7 +399,7 @@ export const SpanCell = observer(
       let isStart = this.props.entry.binData[0].pos[0].includes(1);
 
       let isEnd = false;
-      if (this.props.parent.ends) {
+      if (this.props.parent.ends.length > 0) {
         isEnd = this.props.parent.ends.includes(this.props.rowNumber);
       }
 

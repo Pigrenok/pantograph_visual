@@ -520,15 +520,15 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    // jsonName: "AT_Chr1_OGOnly_new",
-    // jsonName: "AT_Chr1_OGOnly_strandReversal_new2",
+    jsonName: "AT_Chr1_OGOnly_2.1_new",
+    // jsonName: "AT_Chr1_OGOnly_2.1_noRef_new",
     // jsonName: "shorttest_seq",
     // jsonName: "shorttest2_new",
     // jsonName: "shorttest2_new_reverseBlock",
     // jsonName: "shorttest2_new_reverseBlockDouble",
     // jsonName: "coreGraph_new",
     // jsonName: "coreGraph_inv_new",
-    jsonName: "coregraph_v3_new",
+    // jsonName: "coregraph_v3_new",
     // jsonName: "coregraph_genes_v3_new",
 
     // jsonName: "coregraph_genes",
