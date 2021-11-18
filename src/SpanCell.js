@@ -486,7 +486,10 @@ export const SpanCell = observer(
           );
           startBeginningMarker = false;
           endBeginningMarker = false;
-          x = column - xAdjustment;
+          x =
+            (step < 0 ? this.props.parent.numBins - 1 : 0) +
+            step * column -
+            xAdjustment;
           //create new newSpan
           newSpan = [this.props.entry.binData[step * i]];
         }
