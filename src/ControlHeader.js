@@ -306,7 +306,7 @@ const ControlHeader = observer(
                   event.target.value
                 )
               }
-              style={{ width: "80px" }}
+              style={{ width: "120px" }}
               // disabled
             />
             <span style={{ marginLeft: "2px" }}>
