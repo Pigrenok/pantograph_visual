@@ -57,7 +57,7 @@ const ControlHeader = observer(
         } else if (result === "-2") {
           alert(`Did not find case ${jsonName} in database.`);
         } else {
-          console.log(result);
+          // console.log('[ControlHeader.handleJump.handleSearchServerResponse] Found bin',result);
           // go from nucleotide position to bin
           result = parseInt(result);
 

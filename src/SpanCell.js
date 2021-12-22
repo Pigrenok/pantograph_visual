@@ -17,8 +17,9 @@ export const MatrixCell = observer(
       );
       // console.log(event, this.props.range, relColumnX);
 
-      let item =
-        this.props.range[Math.min(this.props.range.length - 1, relColumnX)];
+      let item = this.props.range[
+        Math.min(this.props.range.length - 1, relColumnX)
+      ];
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
@@ -203,6 +204,9 @@ export const MatrixCell = observer(
       }
 
       const rangeLength = this.props.range.length;
+
+      // console.log('[MatrixCell.render] this.props.pathName', this.props.pathName)
+      // console.log('[MatrixCell.render] this.props.range', this.props.range)
 
       const inverted =
         this.props.range.reduce((total, element) => {
