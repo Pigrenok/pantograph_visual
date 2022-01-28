@@ -524,15 +524,8 @@ RootStore = types
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_2.1_new",
-    // jsonName: "AT_Chr1_OGOnly_2.1_noRef_new",
-    // jsonName: "shorttest_seq",
-    // jsonName: "shorttest2_new",
-    // jsonName: "shorttest2_new_reverseBlock",
-    // jsonName: "shorttest2_new_reverseBlockDouble",
-    // jsonName: "coreGraph_new",
-    // jsonName: "coreGraph_inv_new",
-    // jsonName: "coregraph_v3_new",
-    jsonName: "coregraph_genes_f2.1_Ref_v04_test",
+    // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
+    jsonName: "testCollapse_new",
 
     // jsonName: "coregraph_genes",
 

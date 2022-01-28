@@ -15,7 +15,7 @@ const NucleotideTooltip = observer(
         <MouseTooltip
           visible={this.props.store.cellToolTipContent != ""}
           offsetX={offsetX}
-          offsetY={-20}
+          offsetY={20}
           style={{ background: "white", zIndex: 4, whiteSpace: "pre-line" }}
         >
           <span>{this.props.store.cellToolTipContent}</span>
