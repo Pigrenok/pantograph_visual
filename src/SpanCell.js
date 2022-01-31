@@ -17,14 +17,15 @@ export const MatrixCell = observer(
       );
       // console.log(event, this.props.range, relColumnX);
 
-      let item = this.props.range[
-        Math.min(this.props.range.length - 1, relColumnX)
-      ];
+      let item =
+        this.props.range[Math.min(this.props.range.length - 1, relColumnX)];
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
       let tooltipContent = '"';
       tooltipContent += this.props.pathName + '"';
+
+      this.props.store.setHighlightedAccession(this.props.rowNumber);
 
       if (this.props.isStart) {
         if (
@@ -102,6 +103,7 @@ export const MatrixCell = observer(
 
     onLeave() {
       this.props.store.updateCellTooltipContent(""); // we don't want any tooltip displayed if we leave the cell
+      this.props.store.clearHighlightedAccession(); // Colour back all accessions.
     }
 
     isStartInRange(array) {
@@ -242,6 +244,14 @@ export const MatrixCell = observer(
           color = this.props.store.invertedColorArray[copyNumber];
         } else {
           color = this.props.store.invertedColorArray[10];
+        }
+      }
+
+      if (this.props.store.doHighlightRows) {
+        if (this.props.store.highlightedAccession != null) {
+          if (this.props.store.highlightedAccession != this.props.rowNumber) {
+            color = color + "4C";
+          }
         }
       }
       // console.debug("[MatrixCell.render] x, y, width, height",

@@ -338,6 +338,15 @@ const ControlHeader = observer(
                 onChange={this.props.store.toggleHideInversionLinks}
               />
             </span>
+            <span>
+              {" "}
+              Highlight accessions:
+              <input
+                type="checkbox"
+                checked={this.props.store.doHighlightRows}
+                onChange={this.props.store.toggleDoHighlightRows}
+              />
+            </span>
             {/*<span>
               {" "}
               Show Only Rearrangements:
@@ -386,6 +395,7 @@ const ControlHeader = observer(
                 style={{ width: "30px" }}
               />
             </span>
+
             <span>
               &nbsp;
               <a

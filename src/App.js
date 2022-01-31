@@ -3,7 +3,7 @@ import React, { Component } from "react";
 
 import "./App.css";
 import PangenomeSchematic from "./PangenomeSchematic";
-import ComponentRect, { compress_visible_rows } from "./ComponentRect";
+import ComponentRect from "./ComponentRect";
 import ComponentNucleotides from "./ComponentNucleotides";
 import LinkColumn from "./LinkColumn";
 import LinkArrow from "./LinkArrow";
@@ -309,54 +309,54 @@ const App = observer(
       }
     }
 
-    updateSchematicMetadata() {
-      if (
-        arraysEqual(
-          this.props.store.chunkURLs,
-          this.props.store.chunksProcessed
-        ) &&
-        arraysEqual(
-          this.props.store.chunkFastaURLs,
-          this.props.store.chunksProcessedFasta
-        )
-      ) {
-        console.log(
-          "updateSchematicMetadata #components: " +
-            this.schematic.components.length
-        );
-        console.log(
-          "STEP #8: chunksProcessed finishing triggers updateSchematicMetadata with final rendering info for this loaded chunks"
-        );
+    // updateSchematicMetadata() {
+    //   if (
+    //     arraysEqual(
+    //       this.props.store.chunkURLs,
+    //       this.props.store.chunksProcessed
+    //     ) &&
+    //     arraysEqual(
+    //       this.props.store.chunkFastaURLs,
+    //       this.props.store.chunksProcessedFasta
+    //     )
+    //   ) {
+    //     console.log(
+    //       "updateSchematicMetadata #components: " +
+    //         this.schematic.components.length
+    //     );
+    //     console.log(
+    //       "STEP #8: chunksProcessed finishing triggers updateSchematicMetadata with final rendering info for this loaded chunks"
+    //     );
 
-        const newEndBin = this.prepareWhichComponentsToVisualize(
-          window.innerWidth / this.props.store.pixelsPerColumn
-        );
-        this.props.store.updateBeginEndBin(
-          this.props.store.getBeginBin,
-          newEndBin
-        );
+    //     const newEndBin = this.prepareWhichComponentsToVisualize(
+    //       window.innerWidth / this.props.store.pixelsPerColumn
+    //     );
+    //     this.props.store.updateBeginEndBin(
+    //       this.props.store.getBeginBin,
+    //       newEndBin
+    //     );
 
-        // console.log(this.schematic.components);
-        this.setState(
-          {
-            schematize: this.schematic.components,
-            pathNames: this.schematic.pathNames,
-          },
-          () => {
-            this.recalcXLayout();
+    //     // console.log(this.schematic.components);
+    //     this.setState(
+    //       {
+    //         schematize: this.schematic.components,
+    //         pathNames: this.schematic.pathNames,
+    //       },
+    //       () => {
+    //         this.recalcXLayout();
 
-            this.compressed_row_mapping = compress_visible_rows(
-              this.schematic.components,
-              this.schematic.pathNames,
-              Array.from(this.props.store.metaData.keys())
-            );
-            this.maxNumRowsAcrossComponents =
-              this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
-            this.props.store.setLoading(false);
-          }
-        );
-      }
-    }
+    //         this.compressed_row_mapping = compress_visible_rows(
+    //           this.schematic.components,
+    //           this.schematic.pathNames,
+    //           Array.from(this.props.store.metaData.keys())
+    //         );
+    //         this.maxNumRowsAcrossComponents =
+    //           this.calcMaxNumRowsAcrossComponents(this.schematic.components); // TODO add this to mobx-state-tree
+    //         this.props.store.setLoading(false);
+    //       }
+    //     );
+    //   }
+    // }
 
     // recalcXLayout() {
     //   console.log("recalcXLayout");

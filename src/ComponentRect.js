@@ -22,55 +22,55 @@ function colorFromStr(colorKey) {
   return colour;
 }
 
-export function compress_visible_rows(components, pathNames, annotationNames) {
-  /*Returns a Map with key of the original row number and value of the new, compressed row number.
-   * Use this for y values of occupancy and LinkColumn cells.  */
-  let all_visible = new Set();
-  for (let c of components) {
-    for (let row of c.occupants) {
-      all_visible.add(row);
-    }
-  }
+// export function compress_visible_rows(components, pathNames, annotationNames) {
+//   /*Returns a Map with key of the original row number and value of the new, compressed row number.
+//    * Use this for y values of occupancy and LinkColumn cells.  */
+//   let all_visible = new Set();
+//   for (let c of components) {
+//     for (let row of c.occupants) {
+//       all_visible.add(row);
+//     }
+//   }
 
-  let row_mapping = {};
-  let ordered_num_rows = {};
-  if (annotationNames.length > 0) {
-    let all_annotation_num_rows = new Set();
-    for (let annotationName of annotationNames) {
-      all_annotation_num_rows.add(pathNames.indexOf(annotationName));
-    }
+//   let row_mapping = {};
+//   let ordered_num_rows = {};
+//   if (annotationNames.length > 0) {
+//     let all_annotation_num_rows = new Set();
+//     for (let annotationName of annotationNames) {
+//       all_annotation_num_rows.add(pathNames.indexOf(annotationName));
+//     }
 
-    let row_mapping_high = [];
-    let row_mapping_individuals = [];
+//     let row_mapping_high = [];
+//     let row_mapping_individuals = [];
 
-    const num_row_ref = pathNames.indexOf("NC_045512");
+//     const num_row_ref = pathNames.indexOf("NC_045512");
 
-    for (let num_row of all_visible) {
-      //console.log(num_row + ' -- ' + pathNames[num_row] + ' ----- ' + all_annotation_num_rows.has(num_row))
-      if (num_row !== num_row_ref) {
-        if (all_annotation_num_rows.has(num_row)) {
-          row_mapping_high.push(num_row);
-        } else {
-          row_mapping_individuals.push(num_row);
-        }
-      }
-    }
+//     for (let num_row of all_visible) {
+//       //console.log(num_row + ' -- ' + pathNames[num_row] + ' ----- ' + all_annotation_num_rows.has(num_row))
+//       if (num_row !== num_row_ref) {
+//         if (all_annotation_num_rows.has(num_row)) {
+//           row_mapping_high.push(num_row);
+//         } else {
+//           row_mapping_individuals.push(num_row);
+//         }
+//       }
+//     }
 
-    if (num_row_ref >= 0) {
-      row_mapping_high.push(num_row_ref);
-    }
+//     if (num_row_ref >= 0) {
+//       row_mapping_high.push(num_row_ref);
+//     }
 
-    ordered_num_rows = row_mapping_high.concat(row_mapping_individuals);
-  } else {
-    ordered_num_rows = Array.from(all_visible).sort();
-  }
+//     ordered_num_rows = row_mapping_high.concat(row_mapping_individuals);
+//   } else {
+//     ordered_num_rows = Array.from(all_visible).sort();
+//   }
 
-  for (let [count, index] of ordered_num_rows.entries()) {
-    row_mapping[index] = count;
-  }
+//   for (let [count, index] of ordered_num_rows.entries()) {
+//     row_mapping[index] = count;
+//   }
 
-  return row_mapping;
-}
+//   return row_mapping;
+// }
 
 const ComponentRect = observer(
   class extends React.Component {

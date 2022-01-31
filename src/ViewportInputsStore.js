@@ -519,6 +519,7 @@ RootStore = types
     leftOffset: 1,
     maxArrowHeight: types.optional(types.integer, 0),
     highlightedLink: types.maybeNull(types.array(types.integer)), // we will compare linkColumns
+    highlightedAccession: types.maybeNull(types.integer),
     // selectedLink: types.maybeNull(types.reference(LinkColumn)),
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
@@ -595,6 +596,7 @@ RootStore = types
     mouseY: types.optional(types.integer, 0),
     updatingVisible: false,
     hideInversionLinks: true,
+    doHighlightRows: true,
   })
   .actions((self) => ({
     // updateHighlightedLink(link) {
@@ -602,6 +604,21 @@ RootStore = types
     // },
 
     // jumpLink(link) {},
+    toggleDoHighlightRows() {
+      self.doHighlightRows = !self.doHighlightRows;
+    },
+
+    setHighlightedAccession(accessionNumber) {
+      if (accessionNumber < self.chunkIndex.pathNames.length) {
+        self.highlightedAccession = accessionNumber;
+      } else {
+        self.highlightedLink = null;
+      }
+    },
+
+    clearHighlightedAccession() {
+      self.highlightedAccession = null;
+    },
 
     toggleHideInversionLinks() {
       self.hideInversionLinks = !self.hideInversionLinks;

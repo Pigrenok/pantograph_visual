@@ -28,11 +28,13 @@ const LinkColumn = observer(
       }
 
       this.props.store.updateHighlightedLink(this.props.item);
+      this.props.store.setHighlightedAccession(pathID);
     }
 
     handleMouseOut() {
       this.props.store.updateCellTooltipContent("");
       this.props.store.updateHighlightedLink(null);
+      this.props.store.clearHighlightedAccession();
     }
 
     handleClick() {
@@ -198,6 +200,19 @@ const LinkColumn = observer(
     }
 
     renderArrow(points, color, opacity) {
+      let arrowOpacity = opacity;
+      if (this.props.store.doHighlightRows) {
+        if (this.props.store.highlightedAccession != null) {
+          if (
+            !this.props.item.participants.includes(
+              this.props.store.highlightedAccession
+            )
+          ) {
+            arrowOpacity = 0.1;
+          }
+        }
+      }
+
       return (
         <Arrow
           x={this.props.x}
@@ -208,7 +223,7 @@ const LinkColumn = observer(
           strokeWidth={this.props.store.pixelsPerColumn - 2}
           fill={color}
           stroke={color}
-          opacity={opacity}
+          opacity={arrowOpacity}
           // stroke-opacity={this.props.opacity}
           pointerLength={1}
           pointerWidth={1}
@@ -433,6 +448,14 @@ const LinkColumn = observer(
             ? this.renderArrow(points, localColor, localOpacity)
             : null}
           {this.props.item.participants.map((pathID) => {
+            let rowOpacity = localOpacity;
+            if (this.props.store.doHighlightRows) {
+              if (this.props.store.highlightedAccession != null) {
+                if (this.props.store.highlightedAccession != pathID) {
+                  rowOpacity = 0.3;
+                }
+              }
+            }
             return (
               <Rect
                 key={"dot" + pathID}
@@ -441,7 +464,7 @@ const LinkColumn = observer(
                 width={this.props.store.pixelsPerColumn - 1}
                 height={this.props.store.pixelsPerRow - 2}
                 fill={localColor}
-                opacity={localOpacity}
+                opacity={rowOpacity}
                 stroke={localStroke}
                 // onClick={this.handleClick}
                 onMouseOver={() => this.handleMouseOver(pathID)}
