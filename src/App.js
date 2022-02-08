@@ -631,12 +631,8 @@ const App = observer(
     //   return pixelsFromColumns + i * this.props.store.pixelsPerColumn;
     // }
 
-    renderLinkColumn(schematizeComponent, firstColumn, linkColumn) {
-      // if (schematizeComponent.firstBin === 123) {
-      //   debugger;
-      // }
-
-      let side = firstColumn === 0 ? "left" : "right";
+    renderLinkColumn(schematizeComponent, firstColumn, linkColumn, side) {
+      // let side = firstColumn === 0 ? "left" : "right";
 
       let name = side + "_";
 
@@ -724,9 +720,6 @@ const App = observer(
           (component, i) => {
             // The dummy component (firstBin and lastBin equal to 0) is not loaded in this.schematic.components, but there is a nucleotide for it in the FASTA file.
             // If the first component has firstBin == 1, then in the FASTA there is a nucleotide not visualized, so the shift start from 0, and not 1
-            // if (this.props.store.getBeginBin===42001) {
-            //   debugger;
-            // }
 
             // let sortedArray = keys(this.props.store.components);
             // sortedArray.sort((a, b) => Number(a) - Number(b));
@@ -788,13 +781,23 @@ const App = observer(
             // if (linkColumn.upstream - 1 == linkColumn.downstream) {
             //   return null;
             // }
-            return this.renderLinkColumn(schematizeComponent, 0, linkColumn);
+            return this.renderLinkColumn(
+              schematizeComponent,
+              0,
+              linkColumn,
+              "left"
+            );
           })
         );
 
         resArray = resArray.concat(
           values(schematizeComponent.ldepartures).map((linkColumn) => {
-            return this.renderLinkColumn(schematizeComponent, 0, linkColumn);
+            return this.renderLinkColumn(
+              schematizeComponent,
+              0,
+              linkColumn,
+              "left"
+            );
           })
         );
       }
@@ -827,7 +830,8 @@ const App = observer(
             return this.renderLinkColumn(
               schematizeComponent,
               leftPad,
-              linkColumn
+              linkColumn,
+              "right"
             );
           })
         );
@@ -859,7 +863,8 @@ const App = observer(
             return this.renderLinkColumn(
               schematizeComponent,
               leftPad,
-              linkColumn
+              linkColumn,
+              "right"
             );
           })
         );

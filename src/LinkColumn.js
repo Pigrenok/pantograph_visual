@@ -81,12 +81,6 @@ const LinkColumn = observer(
     }
 
     points() {
-      // if (this.props.parent.firstBin === 2) {
-      //   debugger;
-      // }
-      // if (this.props.item.upstream==214 && this.props.item.downstream==169) {
-      //   debugger;
-      // }
       if (
         this.props.item.key[0] === "d"
         //  &&
@@ -95,10 +89,6 @@ const LinkColumn = observer(
         //Some of the info can be obtained from above (App.renderComponentLinks)
       ) {
         // departure
-
-        // if (this.props.parent.firstBin==64 || this.props.parent.firstBin==122 || this.props.parent.firstBin==123) {
-        //   debugger;
-        // }
 
         let arrowPoints = [
           0.5 * this.props.store.pixelsPerColumn,
@@ -175,9 +165,6 @@ const LinkColumn = observer(
 
       if (this.props.item.key[0] === "a") {
         //arrival
-        // if (this.props.item.downstream === 492) {
-        //   debugger;
-        // }
         let upstreamComp = this.props.store.linkInView(
           this.props.item.upstream
         );
@@ -240,10 +227,6 @@ const LinkColumn = observer(
 
     checkSingleReverse() {
       //Link from first component to second component
-      // if (this.props.item.upstream===63 && this.props.item.downstream===56 ||
-      //   this.props.item.upstream===64 && this.props.item.downstream==57) {
-      //   debugger;
-      // }
 
       let otherSideBin;
       if (this.props.item.key.slice(0, 1) === "d") {
@@ -257,8 +240,6 @@ const LinkColumn = observer(
         this.props.item.key.slice(this.props.item.key.length - 3) === "osr" //&&
         // this.props.item.key.slice(0, 1) === "d"
       ) {
-        // debugger;
-
         let dComp = this.props.store.linkInView(otherSideBin);
 
         // First Component side
@@ -337,8 +318,6 @@ const LinkColumn = observer(
         // this.props.item.key.slice(0, 1) === "d" &&
         this.props.item.key.slice(this.props.item.key.length - 3) === "osl"
       ) {
-        // debugger;
-
         let dComp = this.props.store.linkInView(otherSideBin);
 
         //Second component side
@@ -417,17 +396,12 @@ const LinkColumn = observer(
 
     render() {
       //const contents = this.linkCells();
-      // debugger;
 
       if (this.props.store.updatingVisible) {
         return null;
       }
 
       if (this.props.store.hideInversionLinks) {
-        // if (this.props.item.upstream==121 && this.props.item.downstream==122 ||
-        //   this.props.item.upstream==123 && this.props.item.downstream==124) {
-        //   debugger;
-        // }
         let res = this.checkSingleReverse();
 
         if (res !== true) {
