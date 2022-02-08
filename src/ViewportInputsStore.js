@@ -1075,14 +1075,6 @@ RootStore = types
         let curLink = visibleLinks[curLinkIdx];
         let prevLink = visibleLinks[prevLinkIdx];
 
-        // if (curLinkIdx == 2) {
-        //   debugger;
-        // }
-
-        // if (curLink.downstream===123 || prevLink.downstream==123) {
-        //   debugger;
-        // }
-
         let curStart = Math.min(curLink.link.upstream, curLink.link.downstream);
 
         let curEnd = Math.max(curLink.link.upstream, curLink.link.downstream);
@@ -1126,9 +1118,6 @@ RootStore = types
 
       self.maxArrowHeight = 0;
       for (let curLinkIdx = 1; curLinkIdx < visibleLinks.length; curLinkIdx++) {
-        // if (visibleLinks[curLinkIdx].link.upstream===121 || visibleLinks[curLinkIdx].link.upstream === 122) {
-        //   debugger;
-        // }
         let existingElevations = new Set();
         for (let prevLinkIdx = 0; prevLinkIdx < curLinkIdx; prevLinkIdx++) {
           if (isIntersecting(curLinkIdx, prevLinkIdx)) {
@@ -1137,7 +1126,6 @@ RootStore = types
             //   visibleLinks[curLinkIdx].link.elevation,
             //   visibleLinks[prevLinkIdx].link.elevation+ 1
             // );
-            // if (visibleLinks[curLinkIdx].link.elevation>3) {debugger;}
           }
         }
         existingElevations = Array.from(existingElevations).sort(
@@ -1161,7 +1149,6 @@ RootStore = types
           self.maxArrowHeight = visibleLinks[curLinkIdx].link.elevation;
         }
       }
-      // debugger;
     },
 
     shiftVisualisedComponentsCentre(centreBin, centreCol, highlight = false) {
@@ -1182,7 +1169,6 @@ RootStore = types
       let centreCompIndex = sortedKeys.length - 1; // = sortedKeys.length>0 ? self.components.get(sortedKeys[Math.round(sortedKeys.length/2)]).index : 1;
 
       if (centreCol) {
-        // debugger;
         for (let i = 0; i < sortedKeys.length; i++) {
           let tComp = self.components.get(sortedKeys[i]);
           if (tComp.firstCol <= centreCol && tComp.lastCol >= centreCol) {
@@ -1204,10 +1190,6 @@ RootStore = types
         }
       }
       let curComp = self.components.get(sortedKeys[centreCompIndex]);
-
-      if (curComp == undefined) {
-        debugger;
-      }
 
       let leftSpaceInCols =
         curComp.leftLinkSize + (centreBin - curComp.firstBin + 1);
@@ -1259,8 +1241,11 @@ RootStore = types
       } else if (leftSpaceInCols > self.columnsInView / 2) {
         begin =
           curComp.firstBin +
-          Math.ceil(
-            leftSpaceInCols - self.columnsInView / 2 - curComp.leftLinkSize
+          Math.max(
+            0,
+            Math.ceil(
+              leftSpaceInCols - self.columnsInView / 2 - curComp.leftLinkSize
+            )
           );
       } else {
         begin = curComp.firstBin;
@@ -1355,7 +1340,6 @@ RootStore = types
 
     shiftVisualisedComponents(highlight = false) {
       // self.visualisedComponents.clear();
-      // debugger;
       if (self.components.size === 0) {
         return;
       }
@@ -1505,7 +1489,7 @@ RootStore = types
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
 
       // Need to handle zoom switch somehow.
-      // debugger;
+
       // Sometimes, typing new bin, it arrives something that is not a valid integer
       self.updatingVisible = true;
       self.updateHighlightedLink(null);
@@ -2166,6 +2150,7 @@ RootStore = types
     },
     visibleColFromBin(bin) {
       let comp = self.visibleCompByBin(bin);
+
       let distRatio =
         (bin - comp.firstBin + 1) / (comp.lastBin - comp.firstBin + 1);
       let col =
