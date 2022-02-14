@@ -28,7 +28,9 @@ const LinkColumn = observer(
       }
 
       this.props.store.updateHighlightedLink(this.props.item);
-      this.props.store.setHighlightedAccession(pathID);
+      if (pathID != undefined) {
+        this.props.store.setHighlightedAccession(pathID);
+      }
     }
 
     handleMouseOut() {
