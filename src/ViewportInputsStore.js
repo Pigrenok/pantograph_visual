@@ -597,6 +597,7 @@ RootStore = types
     updatingVisible: false,
     hideInversionLinks: true,
     doHighlightRows: true,
+    preferHighlight: true,
   })
   .actions((self) => ({
     // updateHighlightedLink(link) {
@@ -605,7 +606,14 @@ RootStore = types
 
     // jumpLink(link) {},
     toggleDoHighlightRows() {
+      if (self.doHighlightRows && self.preferHighlight) {
+        self.togglePreferHighlight();
+      }
       self.doHighlightRows = !self.doHighlightRows;
+    },
+
+    togglePreferHighlight() {
+      self.preferHighlight = !self.preferHighlight;
     },
 
     setHighlightedAccession(accessionNumber) {

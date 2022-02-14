@@ -247,6 +247,12 @@ export const MatrixCell = observer(
         }
       }
 
+      if (this.props.store.preferHighlight) {
+        if (this.props.store.highlightedAccession == null) {
+          color = color + "4C";
+        }
+      }
+
       if (this.props.store.doHighlightRows) {
         if (this.props.store.highlightedAccession != null) {
           if (this.props.store.highlightedAccession != this.props.rowNumber) {

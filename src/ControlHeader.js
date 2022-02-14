@@ -347,6 +347,16 @@ const ControlHeader = observer(
                 onChange={this.props.store.toggleDoHighlightRows}
               />
             </span>
+            <span>
+              {" "}
+              Dimmed by default:
+              <input
+                type="checkbox"
+                checked={this.props.store.preferHighlight}
+                onChange={this.props.store.togglePreferHighlight}
+                disabled={!this.props.store.doHighlightRows}
+              />
+            </span>
             {/*<span>
               {" "}
               Show Only Rearrangements:
