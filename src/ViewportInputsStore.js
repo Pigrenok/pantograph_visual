@@ -72,6 +72,7 @@ class JSONCache {
 
   _addURL(url, data = null) {
     //data has to be either string or null or your `data` will be converted to string by `String(data)` method.`
+
     if (data !== null) {
       // console.debug("[JSONCache._addURL] data is provided");
       this._addData(url, data);
@@ -525,8 +526,8 @@ RootStore = types
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_2.1_new",
-    // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
-    jsonName: "testCollapse_new",
+    jsonName: "coregraph_genes_f2.1_Ref_v04_new",
+    // jsonName: "testCollapse_new",
 
     // jsonName: "coregraph_genes",
 
