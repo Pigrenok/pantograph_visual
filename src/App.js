@@ -1,4 +1,4 @@
-import { Layer, Stage, Text, Rect, Arrow } from "react-konva";
+import { Layer, Stage, Text, Rect, Line, Arrow } from "react-konva";
 import React, { Component } from "react";
 
 import "./App.css";
@@ -931,6 +931,42 @@ const App = observer(
       );
     }
 
+    renderZoomRect() {
+      if (this.props.store.zoomHighlightBoundariesCoord.length == 2) {
+        let leftCoord = Math.min(...this.props.store.zoomHighlightBoundariesCoord)
+        let rightCoord = Math.max(...this.props.store.zoomHighlightBoundariesCoord)
+        
+        return <Rect
+            key={"ZoomRect"}
+            x={leftCoord}
+            y={this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn}
+            width={rightCoord-leftCoord}
+            height={this.props.store.chunkIndex.pathNames.length *
+              this.props.store.pixelsPerRow - 1}
+            stroke={'red'}
+            strokeWidth={4}
+          />
+      } else if (this.props.store.zoomHighlightBoundariesCoord.length == 1) {
+        let xPos = this.props.store.zoomHighlightBoundariesCoord[0];
+        let y = this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn;
+        let height = this.props.store.chunkIndex.pathNames.length *
+              this.props.store.pixelsPerRow - 1
+        return <Line
+              points={[
+                xPos,
+                y,
+                xPos,
+                y + height,
+              ]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"ZoomMarker"}
+            />
+      } else {
+        return null;
+      }
+    }
+
     renderSchematic() {
       // console.debug("[App.renderSchematic]");
 
@@ -1121,6 +1157,7 @@ const App = observer(
               <Layer ref={this.layerRef}>
                 {this.renderNucleotidesSchematic()}
                 {this.renderSchematic()}
+                {this.renderZoomRect()}
               </Layer>
             </Stage>
           )}

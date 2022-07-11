@@ -587,6 +587,7 @@ RootStore = types
       []
     ),
     zoomHighlightBoundaries: types.array(types.integer),
+    zoomHighlightBoundariesCoord: types.array(types.integer),
     components: types.map(Component),
     visualisedComponents: types.map(
       types.reference(types.late(() => Component))
@@ -981,11 +982,20 @@ RootStore = types
     },
 
     setZoomHighlightBoundaries(startBin, endBin) {
+      self.zoomHighlightBoundariesCoord = [];
       self.zoomHighlightBoundaries = [startBin, endBin];
     },
 
     clearZoomHighlightBoundaries() {
+      self.zoomHighlightBoundariesCoord = [];
       self.zoomHighlightBoundaries = [];
+    },
+
+    addZoomHighlightBoundCoord(xPos) {
+      // if (! Array.isArray(self.zoomHighlightBoundariesCoords)) {
+      //   self.zoomHighlightBoundariesCoords = []
+      // }
+      self.zoomHighlightBoundariesCoord.push(xPos)
     },
 
     loadIndexFile() {
@@ -1675,15 +1685,17 @@ RootStore = types
         self.updateHighlightedLink(null);
       }, 5000);
 
-      if (marker) {
-        self.setZoomHighlightBoundaries(
-          self.visibleColFromBin(centreBin),
-          self.visibleColFromBin(centreBin)
-        );
-        setTimeout(() => {
-          self.clearZoomHighlightBoundaries();
-        }, 10000);
-      }
+
+      // !!!! marker is never set to true, so, at the moment this procedure is commented.
+      // if (marker) {
+      //   self.setZoomHighlightBoundaries(
+      //     self.visibleColFromBin(centreBin),
+      //     self.visibleColFromBin(centreBin)
+      //   );
+      //   setTimeout(() => {
+      //     self.clearZoomHighlightBoundaries();
+      //   }, 10000);
+      // }
     },
 
     updateTopOffset(newTopOffset) {
@@ -1868,6 +1880,8 @@ RootStore = types
           setTimeout(() => {
             self.clearZoomHighlightBoundaries();
           }, 10000);
+        } else {
+          self.clearZoomHighlightBoundaries();
         }
       });
     },

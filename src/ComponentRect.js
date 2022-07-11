@@ -434,77 +434,83 @@ const ComponentRect = observer(
     }
 
     renderZoomBoundary() {
-      const lines = [];
-      if (this.props.store.zoomHighlightBoundaries.length === 2) {
-        // console.log("[ComponentRect.renderZoomBoundary] left zoom boundary",this.props.store.zoomHighlightBoundaries[0])
-        // console.log("[ComponentRect.renderZoomBoundary] right zoom boundary",this.props.store.zoomHighlightBoundaries[1])
-        // debugger;
-        if (
-          this.props.item.firstCol <=
-            this.props.store.zoomHighlightBoundaries[0] &&
-          this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[0]
-        ) {
-          // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
-          let xPos =
-            this.props.item.relativePixelX +
-            (this.props.item.leftLinkSize +
-              (binFromCol(
-                this.props.item,
-                this.props.store.zoomHighlightBoundaries[0]
-              ) -
-                this.props.item.firstBin)) *
-              this.props.store.pixelsPerColumn;
-          lines.push(
-            <Line
-              points={[
-                xPos,
-                this.props.y,
-                xPos,
-                this.props.y + this.props.height - 1,
-              ]}
-              stroke={"red"}
-              strokeWidth={4}
-              key={"LeftZoomMarker"}
-            />
-          );
-        }
+      // console.log("[ComponentRect.renderZoomBoundary] left zoom boundary",this.props.store.zoomHighlightBoundaries[0])
+      // console.log("[ComponentRect.renderZoomBoundary] right zoom boundary",this.props.store.zoomHighlightBoundaries[1])
+      // debugger;
+      if (
+        this.props.item.firstCol <=
+          this.props.store.zoomHighlightBoundaries[0] &&
+        this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[0] &&
+        this.props.store.zoomHighlightBoundariesCoord.length === 0
+      ) {
+        // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
+        let xPosLeft =
+          this.props.item.relativePixelX +
+          (this.props.item.leftLinkSize +
+            (binFromCol(
+              this.props.item,
+              this.props.store.zoomHighlightBoundaries[0]
+            ) -
+              this.props.item.firstBin)) *
+            this.props.store.pixelsPerColumn;
+        this.props.store.addZoomHighlightBoundCoord(xPosLeft);
+        // lines.push(
+        //   <Line
+        //     points={[
+        //       xPosLeft,
+        //       this.props.y,
+        //       xPosLeft,
+        //       this.props.y + this.props.height - 1,
+        //     ]}
+        //     stroke={"red"}
+        //     strokeWidth={4}
+        //     key={"LeftZoomMarker"}
+        //   />
+        // );
+        // leftShown = true;
+      }
 
-        if (
-          this.props.item.firstCol <=
-            this.props.store.zoomHighlightBoundaries[1] &&
-          this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[1]
-        ) {
-          // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
-          let xPos =
-            this.props.item.relativePixelX +
-            (this.props.item.leftLinkSize +
-              (binFromCol(
-                this.props.item,
-                this.props.store.zoomHighlightBoundaries[1]
-              ) -
-                this.props.item.firstBin +
-                1)) *
-              this.props.store.pixelsPerColumn;
-          lines.push(
-            <Line
-              points={[
-                xPos,
-                this.props.y,
-                xPos,
-                this.props.y + this.props.height - 1,
-              ]}
-              stroke={"red"}
-              strokeWidth={4}
-              key={"RightZoomMarker"}
-            />
-          );
-        }
-        window.setTimeout(() => {
+      if (
+        this.props.item.firstCol <=
+          this.props.store.zoomHighlightBoundaries[1] &&
+        this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[1] &&
+        this.props.store.zoomHighlightBoundariesCoord.length === 1
+      ) {
+        // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
+        let xPosRight =
+          this.props.item.relativePixelX +
+          (this.props.item.leftLinkSize +
+            (binFromCol(
+              this.props.item,
+              this.props.store.zoomHighlightBoundaries[1]
+            ) -
+              this.props.item.firstBin +
+              1)) *
+            this.props.store.pixelsPerColumn;
+        this.props.store.addZoomHighlightBoundCoord(xPosRight);
+        // lines.push(
+        //   <Line
+        //     points={[
+        //       xPosRight,
+        //       this.props.y,
+        //       xPosRight,
+        //       this.props.y + this.props.height - 1,
+        //     ]}
+        //     stroke={"red"}
+        //     strokeWidth={4}
+        //     key={"RightZoomMarker"}
+        //   />
+        // );
+        // rightShown = true
+      }
+
+      window.setTimeout(() => {
           this.props.store.clearZoomHighlightBoundaries();
         }, 10000);
-      }
-      return <>{lines}</>;
+      
     }
+    // return <>{lines}</>;
+    
 
     renderComponentConnector(this_y, isToRight) {
       let component = this.props.item;
@@ -570,6 +576,10 @@ const ComponentRect = observer(
       // // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
       // // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
       // // console.debug("[ComponentRect.render] height", this.props.height)
+      
+      if (this.props.store.zoomHighlightBoundaries.length === 2) {
+        this.renderZoomBoundary();
+      }
 
       return (
         <>
@@ -589,9 +599,6 @@ const ComponentRect = observer(
           {this.props.store.useConnector ? this.renderAllConnectors() : null}
           {this.renderSeparators()}
           {this.renderBlockMarker()}
-          {this.props.store.zoomHighlightBoundaries.length === 2
-            ? this.renderZoomBoundary()
-            : null}
           {/*{this.renderLinkBoundary()}*/}
         </>
       );
