@@ -406,6 +406,10 @@ export const SpanCell = observer(
         // endPos -= this.props.parent.lastBin - this.props.store.getEndBin;
       }
 
+      if (startPos==endPos) {
+        return null;
+      }
+
       // console.debug("[SpanCell.render] this.props.entry.binData[0]",
       //   this.props.entry.binData[0].pos[0][0],this.props.entry.binData[0].pos[0][1])
       // console.debug("[SpanCell.render] this.props.entry.binData[0].pos[0].includes(1)",
@@ -452,6 +456,7 @@ export const SpanCell = observer(
       let starti;
       let endi;
       let prev;
+
       if (this.props.entry.inverted) {
         step = -1;
         starti = -1 * (endPos - 1);
@@ -468,6 +473,13 @@ export const SpanCell = observer(
           startPos < endPos ? this.props.entry.occupiedBins[startPos] - 1 : 0;
       }
 
+      if (this.props.entry.binData[starti*step] === undefined) {
+        debugger;
+      }
+
+      let prevOcc = Math.round(this.props.entry.binData[starti*step].repeats);
+      let prevInv = this.props.entry.binData[starti*step].reversal > 0.5 ? 1 : 0
+
       // console.debug("[SpanCell.render] component", this.props.parent);
       // console.debug("[SpanCell.render] pathName", this.props.pathName);
       // console.debug("[SpanCell.render] xAdjustment", xAdjustment);
@@ -478,12 +490,18 @@ export const SpanCell = observer(
 
       for (let i = starti; i < endi; i++) {
         let column = this.props.entry.occupiedBins[step * i];
-        if (column === prev + step) {
+        let bin = this.props.entry.binData[step * i]
+        let occ = Math.round(bin.repeats)
+        let inv = bin.reversal > 0.5 ? 1 : 0
+
+        if (column === prev + step && prevOcc===occ && prevInv===inv ) {
           //contiguous
           newSpan.push(this.props.entry.binData[step * i]);
         } else {
           // console.debug("[SpanCell.render] newSpan",newSpan)
-
+          // if (newSpan.length==0) {
+          //   debugger
+          // }
           //non-contiguous
           matrixCells.push(
             <MatrixCell
@@ -514,6 +532,8 @@ export const SpanCell = observer(
           newSpan = [this.props.entry.binData[step * i]];
         }
         prev = column;
+        prevOcc = occ;
+        prevInv = inv;
       }
 
       if (matrixCells.length === 0) {
