@@ -327,6 +327,13 @@ const ControlHeader = observer(
                 ? 0
                 : this.props.store.chunkIndex.pathNames.length}
             </span>
+            
+            {/* This block prints array with selected components. Can be used for any other parameters.
+              DEBUG ONLY!!!
+            <span style={{ marginLeft: "30px" }}>
+              [{this.props.store.selectedComponents.map(pair => {return pair.toString()}).join('], [') }]
+            </span>*/}
+
           </div>
           <div className={"row"}>
             <span>

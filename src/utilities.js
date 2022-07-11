@@ -227,7 +227,7 @@ export function stringToColorAndOpacity(linkColumn, highlightedLink) {
         highlightedLink ? "black" : null,
       ];
     } else {
-      return ["gray", 0.3, null];
+      return [stringToColourSave(colorKey), 0.3, null]; // used to be "gray"
     }
   } else {
     return [stringToColourSave(colorKey), 1.0, null];

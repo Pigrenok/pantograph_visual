@@ -143,7 +143,7 @@ const LinkColumn = observer(
           }
           // console.debug("[LinkColumn.points] dComp", dComp);
           // console.debug("[LinkColumn.points] dLink", dLink);
-
+          
           let dX =
             dComp.relativePixelX +
             (dLink.order + dOffset) * this.props.store.pixelsPerColumn -
@@ -197,7 +197,7 @@ const LinkColumn = observer(
               this.props.store.highlightedAccession
             )
           ) {
-            arrowOpacity = 0.1;
+            arrowOpacity = 0.3;
           }
         }
       }
@@ -411,10 +411,17 @@ const LinkColumn = observer(
         }
       }
 
-      const [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
+      let [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
         this.props.item,
         this.props.store.highlightedLink
       );
+
+      if (this.props.store.preferHighlight) {
+        if (this.props.store.highlightedAccession == null) {
+          localOpacity = 0.3;
+        }
+      }
+
       let points = this.points();
       // console.debug("[LinkColumn.render] x,y",this.props.x,this.props.store.topOffset - 2*this.props.store.pixelsPerColumn)
       // console.debug("[LinkColumn.render] points",points)
@@ -429,6 +436,8 @@ const LinkColumn = observer(
               if (this.props.store.highlightedAccession != null) {
                 if (this.props.store.highlightedAccession != pathID) {
                   rowOpacity = 0.3;
+                } else {
+                  rowOpacity = 1.0;
                 }
               }
             }
