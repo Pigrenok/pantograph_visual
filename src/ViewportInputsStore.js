@@ -1968,11 +1968,11 @@ RootStore = types
           ];
 
           if (intersection[0] - val[0] > 0) {
-            newSelection.push([val[0], intersection[0]]);
+            newSelection.push([val[0], intersection[0]-1]);
           }
 
-          if (intersection[1] - val[1] > 0) {
-            newSelection.push([val[1], intersection[1]]);
+          if (val[1] - intersection[1] > 0) {
+            newSelection.push([intersection[1]+1, val[1]]);
           }
         } else {
           newSelection.push(val);
