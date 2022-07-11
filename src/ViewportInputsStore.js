@@ -526,8 +526,8 @@ RootStore = types
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_2.1_new",
-    jsonName: "coregraph_genes_f2.1_Ref_v04_new",
-    // jsonName: "testCollapse_new",
+    // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
+    jsonName: "paths_new",
 
     // jsonName: "coregraph_genes",
 
