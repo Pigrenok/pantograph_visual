@@ -368,7 +368,7 @@ const Component = types
         if (
           windowWidth <
           self.relativePixelX +
-            (self.leftLinkSize + self.numBins + self.rightLinkSize - 1) *
+            (self.leftLinkSize + self.numBins + self.rightLinkSize) *
               pixelsPerColumn
         ) {
           self.departureVisible = false;
