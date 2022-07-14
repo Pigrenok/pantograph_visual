@@ -369,7 +369,7 @@ const ComponentRect = observer(
 
       if (
         this.props.item.departureVisible &&
-        this.props.item.rightLinkSize > 1
+        this.props.item.rightLinkSize > 0
       ) {
         // lines.push(
         //   <>
@@ -415,7 +415,7 @@ const ComponentRect = observer(
             }
             y={this.props.y}
             width={
-              (this.props.item.rightLinkSize - 1) *
+              (this.props.item.rightLinkSize) *
               this.props.store.pixelsPerColumn
             }
             height={this.props.height - 1}
@@ -596,7 +596,7 @@ const ComponentRect = observer(
           />
           {/*{this.renderLinkBoundary()}*/}
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
-          {this.props.store.useConnector ? this.renderAllConnectors() : null}
+          {/*{this.props.store.useConnector ? this.renderAllConnectors() : null}*/}
           {this.renderSeparators()}
           {this.renderBlockMarker()}
           {/*{this.renderLinkBoundary()}*/}

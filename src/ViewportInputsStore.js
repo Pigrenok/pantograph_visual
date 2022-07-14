@@ -395,7 +395,7 @@ const Component = types
     },
 
     get rightLinkSize() {
-      return self.farRightDepartures.size + self.farRightArrivals.size + 1;
+      return self.farRightDepartures.size + self.farRightArrivals.size;
 
       // Calculate all far links on the right + 1 for connector column
     },
@@ -598,8 +598,8 @@ RootStore = types
     mouseY: types.optional(types.integer, 0),
     updatingVisible: false,
     hideInversionLinks: true,
-    doHighlightRows: true,
-    preferHighlight: true,
+    doHighlightRows: false,
+    preferHighlight: false,
   })
   .actions((self) => ({
     // updateHighlightedLink(link) {

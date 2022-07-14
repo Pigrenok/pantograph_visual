@@ -763,7 +763,49 @@ const App = observer(
       }
     };
 
-    renderComponentLinks(schematizeComponent, leftCut, rightCut) {
+    renderConnector(participant,schematizeComponent,isRight, isInverse) {
+      let x_val = schematizeComponent.relativePixelX;
+      // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
+      let numCols;
+
+      if (isRight) {
+        if (schematizeComponent.firstBin < this.props.store.getBeginBin) {
+          x_val +=
+            (schematizeComponent.numBins -
+              (this.props.store.getBeginBin - schematizeComponent.firstBin)) *
+            this.props.store.pixelsPerColumn;
+        } else {
+          x_val +=
+            (schematizeComponent.leftLinkSize + schematizeComponent.numBins) *
+            this.props.store.pixelsPerColumn;
+        }
+        numCols = schematizeComponent.rightLinkSize;
+      } else {
+        numCols = schematizeComponent.leftLinkSize;
+      }
+
+      let y = (this.props.store.maxArrowHeight + participant) * this.props.store.pixelsPerColumn;
+
+      let connectingRow = [];
+      
+      let arrow = isInverse?'<':'>';
+
+      for (let c=0;c<numCols;c++) {
+        connectingRow.push(<Text
+          x={x_val + c * this.props.store.pixelsPerColumn}
+          y={y}
+          width={this.props.store.pixelsPerColumn}
+          height={this.props.store.pixelsPerRow}
+          align={"center"}
+          verticalAlign={"center"}
+          text={arrow}
+        />)
+      }
+
+      return connectingRow;
+    };
+
+    renderComponentLinks(schematizeComponent, compInd, leftCut, rightCut) {
       let resArray = [];
       // console.debug(
       //   "[App.renderComponentLinks] component",
@@ -869,9 +911,55 @@ const App = observer(
           })
         );
       }
+      // next component this.props.store.visualisedComponents[i+1]
+      // debugger;
+
+      if (compInd>0) {
+        let prevCompID = this.props.store.sortedVisualComponentsKeys[compInd-1];
+        let prevComp = this.props.store.visualisedComponents.get(prevCompID);
+        let prevConnectorD = prevComp.connectorDepartures;
+        if (prevConnectorD !== null) {
+          resArray.push(
+            prevConnectorD.participants.map((participant,i) => {
+              return (<>{this.renderConnector(participant,schematizeComponent,false,false)}</>);         
+            })
+          )
+        }
+
+        let prevConnectorA = prevComp.connectorArrivals;
+        if (prevConnectorA !== null) {
+          resArray.push(
+            prevConnectorA.participants.map((participant,i) => {
+              return (<>{this.renderConnector(participant,schematizeComponent,false,true)}</>);         
+            })
+          )
+        }
+      }
+
+
+      let connectorDR = schematizeComponent.connectorDepartures;
+      if (connectorDR !== null) {  
+        resArray.push(
+          connectorDR.participants.map((participant,i) => {
+            return (<>{this.renderConnector(participant,schematizeComponent,true,false)}</>);         
+          }
+          )
+        );
+      }
+
+      let connectorA = schematizeComponent.connectorArrivals;
+      if (connectorA !== null) {
+        resArray.push(
+          connectorA.participants.map((participant,i) => {
+            return (<>{this.renderConnector(participant,schematizeComponent,true,true)}</>);         
+          })
+
+        )
+      }
+          
 
       return resArray;
-    }
+    };
 
     renderComponent(schematizeComponent, i) {
       // console.log("[App.renderComponent] rendering component",schematizeComponent)
@@ -884,29 +972,26 @@ const App = observer(
           schematizeComponent.lastBin -
           this.props.store.getBeginBin +
           1 +
-          schematizeComponent.rightLinkSize -
-          1;
+          schematizeComponent.rightLinkSize;
         leftCut = true;
       } else {
         width =
           schematizeComponent.leftLinkSize +
           schematizeComponent.numBins +
-          schematizeComponent.rightLinkSize -
-          1;
+          schematizeComponent.rightLinkSize;
       }
 
       if (this.props.store.getEndBin < schematizeComponent.lastBin) {
         width -=
           schematizeComponent.lastBin -
           this.props.store.getEndBin +
-          schematizeComponent.rightLinkSize -
-          1;
+          schematizeComponent.rightLinkSize;
         rightCut = true;
       } else if (
         this.props.store.getEndBin === schematizeComponent.lastBin &&
         !schematizeComponent.departureVisible
       ) {
-        width -= schematizeComponent.rightLinkSize - 1;
+        width -= schematizeComponent.rightLinkSize;
         rightCut = true;
       }
 
@@ -926,7 +1011,7 @@ const App = observer(
             }
             widthInColumns={width}
           />
-          {this.renderComponentLinks(schematizeComponent, leftCut, rightCut)}
+          {this.renderComponentLinks(schematizeComponent, i, leftCut, rightCut)}
         </>
       );
     }
