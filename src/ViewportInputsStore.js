@@ -552,7 +552,8 @@ RootStore = types
 
     loading: true,
     copyNumberColorArray: types.optional(types.array(types.string), [
-      "#6a6a6a",
+      //"#6a6a6a",
+      "#838383",
       "#5f5f5f",
       "#545454",
       "#4a4a4a",
@@ -600,6 +601,7 @@ RootStore = types
     hideInversionLinks: true,
     doHighlightRows: false,
     preferHighlight: false,
+    colourRepeats: true,
   })
   .actions((self) => ({
     // updateHighlightedLink(link) {
@@ -607,6 +609,11 @@ RootStore = types
     // },
 
     // jumpLink(link) {},
+
+    toggleColourRepeats() {
+      self.colourRepeats = !self.colourRepeats;
+    },
+
     toggleDoHighlightRows() {
       if (self.doHighlightRows && self.preferHighlight) {
         self.togglePreferHighlight();

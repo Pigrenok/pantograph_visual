@@ -219,7 +219,7 @@ const ControlHeader = observer(
             >
               &lt;
             </button>
-            Pangenome Bin Position:
+            {" "}Pangenome Bin Position:
             <>
               <input
                 type="number"
@@ -364,6 +364,16 @@ const ControlHeader = observer(
                 disabled={!this.props.store.doHighlightRows}
               />
             </span>
+            <span>
+              {" "}
+              Show copies:
+              <input
+                type="checkbox"
+                checked={this.props.store.colourRepeats}
+                onChange={this.props.store.toggleColourRepeats}
+              />
+            </span>
+            
             {/*<span>
               {" "}
               Show Only Rearrangements:

@@ -156,17 +156,17 @@ const ComponentRect = observer(
       }
 
       let pathName = this.props.store.chunkIndex.pathNames[entry.pathID];
-      let rowColor = "#838383";
-      if (this.props.store.colorByGeneAnnotation && this.props.store.metaData) {
-        let metaData = this.props.store.metaData;
-        if (metaData.get(pathName) !== undefined) {
-          if (metaData.get(pathName).Color.startsWith("#")) {
-            rowColor = metaData.get(pathName).Color;
-          } else {
-            rowColor = colorFromStr(metaData.get(pathName).Color);
-          }
-        }
-      }
+      // let rowColor = "#838383";
+      // if (this.props.store.colorByGeneAnnotation && this.props.store.metaData) {
+      //   let metaData = this.props.store.metaData;
+      //   if (metaData.get(pathName) !== undefined) {
+      //     if (metaData.get(pathName).Color.startsWith("#")) {
+      //       rowColor = metaData.get(pathName).Color;
+      //     } else {
+      //       rowColor = colorFromStr(metaData.get(pathName).Color);
+      //     }
+      //   }
+      // }
       // console.debug("[ComponentRect.renderMatrixRow] matrix entry", entry);
 
       return (
@@ -176,7 +176,7 @@ const ComponentRect = observer(
           parent={this.props.item}
           store={this.props.store}
           pathName={pathName}
-          color={rowColor}
+          //color={rowColor}
           x={this_x}
           y={this_y * this.props.store.pixelsPerRow + this.props.y}
           rowNumber={this_y}

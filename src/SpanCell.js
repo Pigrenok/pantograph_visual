@@ -224,29 +224,31 @@ export const MatrixCell = observer(
       // const startBlock = this.props.range.findIndex((element) =>
       //   this.isStartInRange(element.pos)
       // );
-
-      let color = this.props.color;
+      let color = this.props.store.copyNumberColorArray[0];
+      if (inverted) {
+        color = this.props.store.invertedColorArray[0]
+      }
+      // let color = this.props.color;
 
       // let boundaryThickness = 0;
 
-      if (copyNumber > 1 && !inverted) {
-        // 11 items is number of colors in copyNumberColorArray
-        if (copyNumber < 10) {
-          color = this.props.store.copyNumberColorArray[copyNumber];
+      if (this.props.store.colourRepeats && copyNumber>1) {
+        if (!inverted) {
+          // 11 items is number of colors in copyNumberColorArray
+          if (copyNumber < 10) {
+            color = this.props.store.copyNumberColorArray[copyNumber];
+          } else {
+            color = this.props.store.copyNumberColorArray[10];
+          }
         } else {
-          color = this.props.store.copyNumberColorArray[10];
+          // 11 items is number of colors in invertedColorArray
+          if (copyNumber < 10) {
+            color = this.props.store.invertedColorArray[copyNumber];
+          } else {
+            color = this.props.store.invertedColorArray[10];
+          }
         }
       }
-
-      if (inverted) {
-        // 11 items is number of colors in invertedColorArray
-        if (copyNumber < 10) {
-          color = this.props.store.invertedColorArray[copyNumber];
-        } else {
-          color = this.props.store.invertedColorArray[10];
-        }
-      }
-
       if (this.props.store.preferHighlight) {
         if (this.props.store.highlightedAccession == null) {
           color = color + "4C";
@@ -509,7 +511,7 @@ export const SpanCell = observer(
               range={newSpan}
               store={this.props.store}
               pathName={this.props.pathName}
-              color={this.props.color}
+              //color={this.props.color}
               x={this.props.x + x * this.props.store.pixelsPerColumn}
               y={this.props.y}
               isStart={startBeginningMarker}
@@ -547,7 +549,7 @@ export const SpanCell = observer(
             range={newSpan}
             store={this.props.store}
             pathName={this.props.pathName}
-            color={this.props.color}
+            //color={this.props.color}
             x={this.props.x + x * this.props.store.pixelsPerColumn}
             y={this.props.y}
             isStart={startEndMarker}
