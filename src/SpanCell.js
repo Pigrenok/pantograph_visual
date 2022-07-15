@@ -216,11 +216,11 @@ export const MatrixCell = observer(
         }, 0) /
           rangeLength >
         0.5;
-      const copyNumber = Math.round(
-        this.props.range.reduce((total, element) => {
+      let floatCopyNumber = this.props.range.reduce((total, element) => {
           return total + element.repeats;
         }, 0) / rangeLength
-      );
+      const copyNumber = Math.ceil(floatCopyNumber-0.5);
+
       // const startBlock = this.props.range.findIndex((element) =>
       //   this.isStartInRange(element.pos)
       // );
