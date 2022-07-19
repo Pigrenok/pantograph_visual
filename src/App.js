@@ -1058,9 +1058,42 @@ const App = observer(
         let rightCoord = Math.max(
           ...this.props.store.zoomHighlightBoundariesCoord
         );
+        let x = leftCoord;
+        let y =
+          this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn;
 
+        let width = rightCoord - leftCoord;
+        let height =
+          this.props.store.chunkIndex.pathNames.length *
+            this.props.store.pixelsPerRow -
+          1;
         return (
-          <Rect
+          <>
+            <Line
+              points={[x, y, x, y + height]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"ZoomMarker1"}
+            />
+            <Line
+              points={[x + width, y, x + width, y + height]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"ZoomMarker2"}
+            />
+            <Line
+              points={[x, y, x + width, y]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"ZoomMarker3"}
+            />
+            <Line
+              points={[x, y + height, x + width, y + height]}
+              stroke={"red"}
+              strokeWidth={4}
+              key={"ZoomMarker4"}
+            />
+            {/*<Rect
             key={"ZoomRect"}
             x={leftCoord}
             y={
@@ -1074,7 +1107,8 @@ const App = observer(
             }
             stroke={"red"}
             strokeWidth={4}
-          />
+          />*/}
+          </>
         );
       } else if (this.props.store.zoomHighlightBoundariesCoord.length == 1) {
         let xPos = this.props.store.zoomHighlightBoundariesCoord[0];
