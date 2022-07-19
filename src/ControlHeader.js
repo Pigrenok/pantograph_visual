@@ -218,8 +218,8 @@ const ControlHeader = observer(
               disabled={this.props.store.updatingVisible}
             >
               &lt;
-            </button>
-            {" "}Pangenome Bin Position:
+            </button>{" "}
+            Pangenome Bin Position:
             <>
               <input
                 type="number"
@@ -327,13 +327,11 @@ const ControlHeader = observer(
                 ? 0
                 : this.props.store.chunkIndex.pathNames.length}
             </span>
-            
             {/* This block prints array with selected components. Can be used for any other parameters.
               DEBUG ONLY!!!
             <span style={{ marginLeft: "30px" }}>
               [{this.props.store.selectedComponents.map(pair => {return pair.toString()}).join('], [') }]
             </span>*/}
-
           </div>
           <div className={"row"}>
             <span>
@@ -373,7 +371,7 @@ const ControlHeader = observer(
                 onChange={this.props.store.toggleColourRepeats}
               />
             </span>
-            
+
             {/*<span>
               {" "}
               Show Only Rearrangements:
@@ -408,7 +406,7 @@ const ControlHeader = observer(
                 min={1}
                 value={this.props.store.pixelsPerRow}
                 onChange={this.props.store.updateHeight}
-                style={{ width: "30px" }}
+                style={{ width: "50px" }}
               />
             </span>
             <span>
@@ -419,7 +417,7 @@ const ControlHeader = observer(
                 min={1}
                 value={this.props.store.editingPixelsPerColumn}
                 onChange={this.handleChangeWidth.bind(this)}
-                style={{ width: "30px" }}
+                style={{ width: "50px" }}
               />
             </span>
 

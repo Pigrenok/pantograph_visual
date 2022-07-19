@@ -4,6 +4,7 @@ import React, { Component } from "react";
 import "./App.css";
 import PangenomeSchematic from "./PangenomeSchematic";
 import ComponentRect from "./ComponentRect";
+import ConnectorRect from "./ComponentConnectorRect";
 import ComponentNucleotides from "./ComponentNucleotides";
 import LinkColumn from "./LinkColumn";
 import LinkArrow from "./LinkArrow";
@@ -763,47 +764,47 @@ const App = observer(
       }
     };
 
-    renderConnector(participant,schematizeComponent,isRight, isInverse) {
-      let x_val = schematizeComponent.relativePixelX;
-      // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
-      let numCols;
+    // renderConnector(participant,schematizeComponent,isRight, isInverse) {
+    //   let x_val = schematizeComponent.relativePixelX;
+    //   // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
+    //   let numCols;
 
-      if (isRight) {
-        if (schematizeComponent.firstBin < this.props.store.getBeginBin) {
-          x_val +=
-            (schematizeComponent.numBins -
-              (this.props.store.getBeginBin - schematizeComponent.firstBin)) *
-            this.props.store.pixelsPerColumn;
-        } else {
-          x_val +=
-            (schematizeComponent.leftLinkSize + schematizeComponent.numBins) *
-            this.props.store.pixelsPerColumn;
-        }
-        numCols = schematizeComponent.rightLinkSize;
-      } else {
-        numCols = schematizeComponent.leftLinkSize;
-      }
+    //   if (isRight) {
+    //     if (schematizeComponent.firstBin < this.props.store.getBeginBin) {
+    //       x_val +=
+    //         (schematizeComponent.numBins -
+    //           (this.props.store.getBeginBin - schematizeComponent.firstBin)) *
+    //         this.props.store.pixelsPerColumn;
+    //     } else {
+    //       x_val +=
+    //         (schematizeComponent.leftLinkSize + schematizeComponent.numBins) *
+    //         this.props.store.pixelsPerColumn;
+    //     }
+    //     numCols = schematizeComponent.rightLinkSize;
+    //   } else {
+    //     numCols = schematizeComponent.leftLinkSize;
+    //   }
 
-      let y = (this.props.store.maxArrowHeight + participant) * this.props.store.pixelsPerColumn;
+    //   let y = (this.props.store.maxArrowHeight + participant) * this.props.store.pixelsPerColumn;
 
-      let connectingRow = [];
-      
-      let arrow = isInverse?'<':'>';
+    //   let connectingRow = [];
 
-      for (let c=0;c<numCols;c++) {
-        connectingRow.push(<Text
-          x={x_val + c * this.props.store.pixelsPerColumn}
-          y={y}
-          width={this.props.store.pixelsPerColumn}
-          height={this.props.store.pixelsPerRow}
-          align={"center"}
-          verticalAlign={"center"}
-          text={arrow}
-        />)
-      }
+    //   let arrow = isInverse?'<':'>';
 
-      return connectingRow;
-    };
+    //   for (let c=0;c<numCols;c++) {
+    //     connectingRow.push(<Text
+    //       x={x_val + c * this.props.store.pixelsPerColumn}
+    //       y={y}
+    //       width={this.props.store.pixelsPerColumn}
+    //       height={this.props.store.pixelsPerRow}
+    //       align={"center"}
+    //       verticalAlign={"center"}
+    //       text={arrow}
+    //     />)
+    //   }
+
+    //   return connectingRow;
+    // };
 
     renderComponentLinks(schematizeComponent, compInd, leftCut, rightCut) {
       let resArray = [];
@@ -914,52 +915,85 @@ const App = observer(
       // next component this.props.store.visualisedComponents[i+1]
       // debugger;
 
-      if (compInd>0) {
-        let prevCompID = this.props.store.sortedVisualComponentsKeys[compInd-1];
+      if (compInd > 0) {
+        let prevCompID =
+          this.props.store.sortedVisualComponentsKeys[compInd - 1];
         let prevComp = this.props.store.visualisedComponents.get(prevCompID);
         let prevConnectorD = prevComp.connectorDepartures;
         if (prevConnectorD !== null) {
           resArray.push(
-            prevConnectorD.participants.map((participant,i) => {
-              return (<>{this.renderConnector(participant,schematizeComponent,false,false)}</>);         
+            prevConnectorD.participants.map((participant, i) => {
+              // return (<>{this.renderConnector(participant,schematizeComponent,false,false)}</>);
+              return (
+                <ConnectorRect
+                  participant={participant}
+                  item={schematizeComponent}
+                  store={this.props.store}
+                  isRight={false}
+                  isInverse={false}
+                />
+              );
             })
-          )
+          );
         }
 
         let prevConnectorA = prevComp.connectorArrivals;
         if (prevConnectorA !== null) {
           resArray.push(
-            prevConnectorA.participants.map((participant,i) => {
-              return (<>{this.renderConnector(participant,schematizeComponent,false,true)}</>);         
+            prevConnectorA.participants.map((participant, i) => {
+              //{/*return (<>{this.renderConnector(participant,schematizeComponent,false,true)}</>);         */}
+              return (
+                <ConnectorRect
+                  participant={participant}
+                  item={schematizeComponent}
+                  store={this.props.store}
+                  isRight={false}
+                  isInverse={true}
+                />
+              );
             })
-          )
+          );
         }
       }
 
-
       let connectorDR = schematizeComponent.connectorDepartures;
-      if (connectorDR !== null) {  
+      if (connectorDR !== null) {
         resArray.push(
-          connectorDR.participants.map((participant,i) => {
-            return (<>{this.renderConnector(participant,schematizeComponent,true,false)}</>);         
-          }
-          )
+          connectorDR.participants.map((participant, i) => {
+            //{/*return (<>{this.renderConnector(participant,schematizeComponent,true,false)}</>);         */}
+            return (
+              <ConnectorRect
+                participant={participant}
+                item={schematizeComponent}
+                store={this.props.store}
+                isRight={true}
+                isInverse={false}
+              />
+            );
+          })
         );
       }
 
       let connectorA = schematizeComponent.connectorArrivals;
       if (connectorA !== null) {
         resArray.push(
-          connectorA.participants.map((participant,i) => {
-            return (<>{this.renderConnector(participant,schematizeComponent,true,true)}</>);         
+          connectorA.participants.map((participant, i) => {
+            //{/*return (<>{this.renderConnector(participant,schematizeComponent,true,true)}</>);         */}
+            return (
+              <ConnectorRect
+                participant={participant}
+                item={schematizeComponent}
+                store={this.props.store}
+                isRight={true}
+                isInverse={true}
+              />
+            );
           })
-
-        )
+        );
       }
-          
 
       return resArray;
-    };
+    }
 
     renderComponent(schematizeComponent, i) {
       // console.log("[App.renderComponent] rendering component",schematizeComponent)
@@ -1018,35 +1052,46 @@ const App = observer(
 
     renderZoomRect() {
       if (this.props.store.zoomHighlightBoundariesCoord.length == 2) {
-        let leftCoord = Math.min(...this.props.store.zoomHighlightBoundariesCoord)
-        let rightCoord = Math.max(...this.props.store.zoomHighlightBoundariesCoord)
-        
-        return <Rect
+        let leftCoord = Math.min(
+          ...this.props.store.zoomHighlightBoundariesCoord
+        );
+        let rightCoord = Math.max(
+          ...this.props.store.zoomHighlightBoundariesCoord
+        );
+
+        return (
+          <Rect
             key={"ZoomRect"}
             x={leftCoord}
-            y={this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn}
-            width={rightCoord-leftCoord}
-            height={this.props.store.chunkIndex.pathNames.length *
-              this.props.store.pixelsPerRow - 1}
-            stroke={'red'}
+            y={
+              this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn
+            }
+            width={rightCoord - leftCoord}
+            height={
+              this.props.store.chunkIndex.pathNames.length *
+                this.props.store.pixelsPerRow -
+              1
+            }
+            stroke={"red"}
             strokeWidth={4}
           />
+        );
       } else if (this.props.store.zoomHighlightBoundariesCoord.length == 1) {
         let xPos = this.props.store.zoomHighlightBoundariesCoord[0];
-        let y = this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn;
-        let height = this.props.store.chunkIndex.pathNames.length *
-              this.props.store.pixelsPerRow - 1
-        return <Line
-              points={[
-                xPos,
-                y,
-                xPos,
-                y + height,
-              ]}
-              stroke={"red"}
-              strokeWidth={4}
-              key={"ZoomMarker"}
-            />
+        let y =
+          this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn;
+        let height =
+          this.props.store.chunkIndex.pathNames.length *
+            this.props.store.pixelsPerRow -
+          1;
+        return (
+          <Line
+            points={[xPos, y, xPos, y + height]}
+            stroke={"red"}
+            strokeWidth={4}
+            key={"ZoomMarker"}
+          />
+        );
       } else {
         return null;
       }

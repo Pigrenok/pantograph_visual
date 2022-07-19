@@ -3,7 +3,7 @@ import React from "react";
 import { Rect, Line } from "react-konva";
 import { observer } from "mobx-react";
 import { values } from "mobx";
-import { ConnectorRect } from "./ComponentConnectorRect";
+import ConnectorRect from "./ComponentConnectorRect";
 import { SpanCell } from "./SpanCell";
 import PropTypes from "prop-types";
 import { sum, binFromCol } from "./utilities";
@@ -415,8 +415,7 @@ const ComponentRect = observer(
             }
             y={this.props.y}
             width={
-              (this.props.item.rightLinkSize) *
-              this.props.store.pixelsPerColumn
+              this.props.item.rightLinkSize * this.props.store.pixelsPerColumn
             }
             height={this.props.height - 1}
             fill={colour}
@@ -440,7 +439,8 @@ const ComponentRect = observer(
       if (
         this.props.item.firstCol <=
           this.props.store.zoomHighlightBoundaries[0] &&
-        this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[0] &&
+        this.props.item.lastCol >=
+          this.props.store.zoomHighlightBoundaries[0] &&
         this.props.store.zoomHighlightBoundariesCoord.length === 0
       ) {
         // console.log("[ComponentRect.renderZoomBoundary] start zoom boundary is in component",this.props.item)
@@ -473,7 +473,8 @@ const ComponentRect = observer(
       if (
         this.props.item.firstCol <=
           this.props.store.zoomHighlightBoundaries[1] &&
-        this.props.item.lastCol >= this.props.store.zoomHighlightBoundaries[1] &&
+        this.props.item.lastCol >=
+          this.props.store.zoomHighlightBoundaries[1] &&
         this.props.store.zoomHighlightBoundariesCoord.length === 1
       ) {
         // console.log("[ComponentRect.renderZoomBoundary] end zoom boundary is in component",this.props.item)
@@ -505,53 +506,51 @@ const ComponentRect = observer(
       }
 
       window.setTimeout(() => {
-          this.props.store.clearZoomHighlightBoundaries();
-        }, 10000);
-      
+        this.props.store.clearZoomHighlightBoundaries();
+      }, 10000);
     }
     // return <>{lines}</>;
-    
 
-    renderComponentConnector(this_y, isToRight) {
-      let component = this.props.item;
+    // renderComponentConnector(this_y, isToRight) {
+    //   let component = this.props.item;
 
-      // if (component.firstBin==1 && this.props.store.getBeginBin==5) {
-      //   debugger;
-      // }
+    //   // if (component.firstBin==1 && this.props.store.getBeginBin==5) {
+    //   //   debugger;
+    //   // }
 
-      // let depOffset = 0;
-      // if (component.connectorLink) {
-      //   depOffset += 1;
-      // }
-      let x_val =
-        this.props.item.relativePixelX +
-        (component.rightLinkSize - 1) * this.props.store.pixelsPerColumn;
-      // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
-      if (component.firstBin < this.props.store.getBeginBin) {
-        x_val +=
-          (component.numBins -
-            (this.props.store.getBeginBin - component.firstBin)) *
-          this.props.store.pixelsPerColumn;
-      } else {
-        x_val +=
-          (component.leftLinkSize + component.numBins) *
-          this.props.store.pixelsPerColumn;
-      }
+    //   // let depOffset = 0;
+    //   // if (component.connectorLink) {
+    //   //   depOffset += 1;
+    //   // }
+    //   let x_val =
+    //     this.props.item.relativePixelX +
+    //     (component.rightLinkSize - 1) * this.props.store.pixelsPerColumn;
+    //   // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
+    //   if (component.firstBin < this.props.store.getBeginBin) {
+    //     x_val +=
+    //       (component.numBins -
+    //         (this.props.store.getBeginBin - component.firstBin)) *
+    //       this.props.store.pixelsPerColumn;
+    //   } else {
+    //     x_val +=
+    //       (component.leftLinkSize + component.numBins) *
+    //       this.props.store.pixelsPerColumn;
+    //   }
 
-      // if (!this.props.store.useVerticalCompression) {
-      //   this_y = this.props.compressed_row_mapping[uncompressedRow];
-      // }
-      return (
-        <ConnectorRect
-          key={"connector" + component.index + this_y}
-          x={x_val}
-          y={this.props.y + this_y * this.props.store.pixelsPerRow}
-          width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
-          height={this.props.store.pixelsPerRow}
-          isToRight={isToRight}
-        />
-      );
-    }
+    //   // if (!this.props.store.useVerticalCompression) {
+    //   //   this_y = this.props.compressed_row_mapping[uncompressedRow];
+    //   // }
+    //   return (
+    //     <ConnectorRect
+    //       key={"connector" + component.index + this_y}
+    //       x={x_val}
+    //       y={this.props.y + this_y * this.props.store.pixelsPerRow}
+    //       width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
+    //       height={this.props.store.pixelsPerRow}
+    //       isToRight={isToRight}
+    //     />
+    //   );
+    // }
     // componentDidUpdate(prevProps) {
     //   console.log("[ComponentRect.componentDidUpdate] prevProps", prevProps,
     //     " new props ", this.props,
@@ -576,7 +575,7 @@ const ComponentRect = observer(
       // // console.debug("[ComponentRect.render] relativePixelX", this.props.item.relativePixelX)
       // // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
       // // console.debug("[ComponentRect.render] height", this.props.height)
-      
+
       if (this.props.store.zoomHighlightBoundaries.length === 2) {
         this.renderZoomBoundary();
       }

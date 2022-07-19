@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import PropTypes from "prop-types";
 import { range, stringToColorAndOpacity, arraysEqual } from "./utilities";
 import { values } from "mobx";
-import { ConnectorRect } from "./ComponentConnectorRect";
+import ConnectorRect from "./ComponentConnectorRect";
 
 const LinkColumn = observer(
   class extends React.Component {
@@ -143,7 +143,7 @@ const LinkColumn = observer(
           }
           // console.debug("[LinkColumn.points] dComp", dComp);
           // console.debug("[LinkColumn.points] dLink", dLink);
-          
+
           let dX =
             dComp.relativePixelX +
             (dLink.order + dOffset) * this.props.store.pixelsPerColumn -
@@ -290,19 +290,29 @@ const LinkColumn = observer(
                 (link.upstream - 1 === this.props.parent.lastBin &&
                   this.props.item.key.slice(0, 1) === "d"))
             ) {
-              return this.props.item.participants.map((item) => (
-                <ConnectorRect
-                  key={"connector" + this.props.item.index + item}
-                  x={
-                    this.props.parent.relativePixelX -
-                    this.props.store.pixelsPerColumn
-                  }
-                  y={this.props.y + item * this.props.store.pixelsPerRow}
-                  width={this.props.store.pixelsPerColumn} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
-                  height={this.props.store.pixelsPerRow}
-                  isToRight={this.props.item.key.slice(0, 1) === "a"}
-                />
-              ));
+              // debugger;
+              return (
+                <>
+                  {this.props.item.participants.map((item) => (
+                    <ConnectorRect
+                      participant={item}
+                      item={this.props.parent}
+                      store={this.props.store}
+                      isRight={false}
+                      isInverse={false}
+                    />
+                  ))}
+                  {this.props.item.participants.map((item) => (
+                    <ConnectorRect
+                      participant={item}
+                      item={dComp}
+                      store={this.props.store}
+                      isRight={true}
+                      isInverse={false}
+                    />
+                  ))}
+                </>
+              );
 
               //Add connector here
               // return null;
@@ -367,20 +377,29 @@ const LinkColumn = observer(
                 (link.downstream + 1 === dComp.firstBin &&
                   this.props.item.key.slice(0, 1) === "d"))
             ) {
-              return this.props.item.participants.map((item) => (
-                <ConnectorRect
-                  key={"connector" + this.props.item.index + item}
-                  x={
-                    this.props.parent.relativePixelX -
-                    this.props.store.pixelsPerColumn +
-                    1
-                  }
-                  y={this.props.y + item * this.props.store.pixelsPerRow}
-                  width={this.props.store.pixelsPerColumn - 2} //Clarified and corrected adjacent connectors as based on pixelsPerColumn width #9
-                  height={this.props.store.pixelsPerRow}
-                  isToRight={this.props.item.key.slice(0, 1) === "a"}
-                />
-              ));
+              // debugger;
+              return (
+                <>
+                  {this.props.item.participants.map((item) => (
+                    <ConnectorRect
+                      participant={item}
+                      item={this.props.parent}
+                      store={this.props.store}
+                      isRight={false}
+                      isInverse={false}
+                    />
+                  ))}
+                  {this.props.item.participants.map((item) => (
+                    <ConnectorRect
+                      participant={item}
+                      item={dComp}
+                      store={this.props.store}
+                      isRight={true}
+                      isInverse={false}
+                    />
+                  ))}
+                </>
+              );
 
               // Add connector here
               // return null;
