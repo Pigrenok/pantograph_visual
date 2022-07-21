@@ -151,6 +151,8 @@ const LinkColumn = types
     order: types.integer,
     upstream: types.integer,
     downstream: types.integer,
+    upstreamCol: types.integer,
+    downstreamCol: types.integer,
     otherSideRight: types.boolean,
     elevation: types.optional(types.integer, 0),
     participants: types.array(types.integer),
@@ -453,6 +455,23 @@ const Component = types
 
       return null;
     },
+
+    // get colFromBin(bin) {
+
+    //   if (bin<self.firstBin || bin>self.lastBin) {
+    //     return null;
+    //   }
+
+    //   let distRatio =
+    //     (bin - self.firstBin + 1) / (self.lastBin - self.firstBin + 1);
+    //   let col =
+    //     self.firstCol -
+    //     1 +
+    //     Math.round(distRatio * (self.lastCol - self.firstCol));
+
+    //   return col;
+
+    // }
 
     // when we will get across information about order of passes
     // through the node in relation to links, its sorting needs
@@ -1721,7 +1740,7 @@ RootStore = types
         if (linkRect instanceof Array) {
           self.highlightedLink = [linkRect[0], linkRect[1]];
         } else {
-          self.highlightedLink = [linkRect.upstream, linkRect.downstream];
+          self.highlightedLink = [linkRect.upstreamCol, linkRect.downstreamCol];
         }
       } else {
         self.highlightedLink = null;
