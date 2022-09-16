@@ -1034,7 +1034,7 @@ const App = observer(
           <ComponentRect
             store={this.props.store}
             item={schematizeComponent}
-            key={"r" + Math.random()}
+            key={"r" + schematizeComponent.index}
             y={
               // this.props.store.topOffset +
               this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn

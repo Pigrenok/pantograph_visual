@@ -41,6 +41,7 @@ const ConnectorRect = observer(
       for (let c = 0; c < numCols; c++) {
         connectingRow.push(
           <Text
+            key={this.props.participant}
             x={x_val + c * this.props.store.pixelsPerColumn}
             y={y}
             width={this.props.store.pixelsPerColumn}
