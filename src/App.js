@@ -1050,6 +1050,24 @@ const App = observer(
       );
     }
 
+    renderCentreLine() {
+      let x =
+        Math.floor(this.props.store.columnsInView / 2) *
+          this.props.store.pixelsPerColumn -
+        Math.round(this.props.store.pixelsPerColumn * 0.5);
+
+      let y =
+        this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn;
+
+      let height =
+        (this.props.store.chunkIndex.pathNames.length + 1) *
+        this.props.store.pixelsPerRow;
+
+      return (
+        <Line points={[x, y, x, y + height]} stroke={"red"} strokeWidth={1} />
+      );
+    }
+
     renderZoomRect() {
       if (this.props.store.zoomHighlightBoundariesCoord.length == 2) {
         let leftCoord = Math.min(
@@ -1322,6 +1340,7 @@ const App = observer(
                 {this.renderNucleotidesSchematic()}
                 {this.renderSchematic()}
                 {this.renderZoomRect()}
+                {this.renderCentreLine()}
               </Layer>
             </Stage>
           )}
