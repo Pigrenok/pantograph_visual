@@ -191,6 +191,9 @@ const Component = types
     matrix: types.map(ComponentMatrixElement),
     ends: types.array(types.integer),
     sequence: types.optional(types.string, ""),
+    binsToCols: types.array(types.integer),
+    binColStarts: types.array(types.integer),
+    binColEnds: types.array(types.integer),
   })
   .actions((self) => ({
     updateEnds(ends) {
@@ -689,6 +692,9 @@ RootStore = types
         occupants: component.occupants,
         numBins: component.last_bin - component.first_bin + 1,
         sequence: seq,
+        binsToCols: component.binsToCols,
+        binColStarts: component.binColStarts,
+        binColEnds: component.binColEnds,
       });
       // console.debug("[Store.addComponent]",component )
       curComp.updateEnds(component.ends);
@@ -1021,7 +1027,7 @@ RootStore = types
       // if (! Array.isArray(self.zoomHighlightBoundariesCoords)) {
       //   self.zoomHighlightBoundariesCoords = []
       // }
-      self.zoomHighlightBoundariesCoord.push(xPos)
+      self.zoomHighlightBoundariesCoord.push(xPos);
     },
 
     loadIndexFile() {
@@ -1711,7 +1717,6 @@ RootStore = types
         self.updateHighlightedLink(null);
       }, 5000);
 
-
       // !!!! marker is never set to true, so, at the moment this procedure is commented.
       // if (marker) {
       //   self.setZoomHighlightBoundaries(
@@ -1994,11 +1999,11 @@ RootStore = types
           ];
 
           if (intersection[0] - val[0] > 0) {
-            newSelection.push([val[0], intersection[0]-1]);
+            newSelection.push([val[0], intersection[0] - 1]);
           }
 
           if (val[1] - intersection[1] > 0) {
-            newSelection.push([intersection[1]+1, val[1]]);
+            newSelection.push([intersection[1] + 1, val[1]]);
           }
         } else {
           newSelection.push(val);
@@ -2185,6 +2190,20 @@ RootStore = types
     },
 
     linkInView(bin) {
+      // let comp;
+      // try {
+      // comp = values(self.visualisedComponents).find((comp) => {
+      //   return (
+      //     (comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
+      //     (comp.firstBin === bin && self.getBeginBin <= comp.firstBin)
+      //   );
+      // });
+      // } catch(err) {
+      //   console.debug(err);
+      //   // console.debug(values(self.visualisedComponents));
+      //   debugger;
+      // }
+
       return values(self.visualisedComponents).find((comp) => {
         return (
           (comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
@@ -2197,15 +2216,31 @@ RootStore = types
         return comp.lastBin >= bin && comp.firstBin <= bin;
       });
     },
-    visibleColFromBin(bin) {
-      let comp = self.visibleCompByBin(bin);
+    visibleColFromBin(bin, pos = 1) {
+      // Pos indicates whether left (0), centre (1) or right (2) of the bin should be taken
+      // Default is centre.
 
-      let distRatio =
-        (bin - comp.firstBin + 1) / (comp.lastBin - comp.firstBin + 1);
-      let col =
-        comp.firstCol -
-        1 +
-        Math.round(distRatio * (comp.lastCol - comp.firstCol));
+      let comp = self.visibleCompByBin(bin);
+      let relBin = bin - comp.firstBin; // 0-based
+      // Change to startCol and endCol of the bin
+      let binColStart = comp.binColStarts.get(relBin);
+      let binColEnd = comp.binColEnds.get(relBin);
+
+      // let distRatio =
+      //   (bin - comp.firstBin + 1) / (comp.lastBin - comp.firstBin + 1);
+
+      let col;
+
+      switch (pos) {
+        case 0:
+          col = binColStart;
+          break;
+        case 2:
+          col = binColEnd;
+          break;
+        default:
+          col = binColStart + Math.round((binColEnd - binColStart) / 2);
+      }
 
       return col;
     },
