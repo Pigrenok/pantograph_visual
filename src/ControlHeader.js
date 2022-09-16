@@ -16,21 +16,12 @@ const ControlHeader = observer(
     }
 
     shift(percentage) {
-      const beginBin = this.props.store.getBeginBin;
-      const endBin = this.props.store.getEndBin;
-      let size = endBin - beginBin;
+      const pos = this.props.store.getPosition;
+      // const endBin = this.props.store.getEndBin;
+      let size = this.props.store.columnsInView;
       let diff = Math.floor(size * (percentage / 100));
-      console.log(
-        "[ControlHeader.shift]" +
-          endBin +
-          "-" +
-          beginBin +
-          "=" +
-          size +
-          " --> diff: " +
-          diff
-      );
-      this.props.store.updateBeginEndBin(beginBin + diff);
+
+      this.props.store.updatePosition(pos + diff);
     }
 
     handleJump() {
@@ -63,14 +54,14 @@ const ControlHeader = observer(
 
           result = Math.max(1, result);
 
-          let jumpToRight;
-          if (store.centreBin >= result) {
-            jumpToRight = -1;
-          } else {
-            jumpToRight = 1;
-          }
+          // let jumpToRight;
+          // if (store.centreBin >= result) {
+          //   jumpToRight = -1;
+          // } else {
+          //   jumpToRight = 1;
+          // }
 
-          store.jumpToCentre(result, jumpToRight, null, false, true);
+          store.updatePosition(result, true);
           // store.updateBeginEndBin(result, true);
         }
       }
@@ -133,13 +124,13 @@ const ControlHeader = observer(
     // }
 
     handleShift(event) {
-      this.props.store.setEditingBeginBin(Number(event.target.value));
+      this.props.store.setEditingPosition(Number(event.target.value));
       if (this.posTimer !== null) {
         clearTimeout(this.posTimer);
       }
 
       this.posTimer = setTimeout(() => {
-        this.props.store.updateBeginEndBin(this.props.store.editingBeginBin);
+        this.props.store.updatePosition(this.props.store.editingPosition);
         this.posTimer = null;
       }, 1000);
     }
@@ -223,18 +214,18 @@ const ControlHeader = observer(
             <>
               <input
                 type="number"
-                value={this.props.store.editingBeginBin} // TODO Get methods don't work here, but I don't know why. Need to ask Robert Buels.
+                value={this.props.store.editingPosition} // TODO Get methods don't work here, but I don't know why. Need to ask Robert Buels.
                 onChange={this.handleShift.bind(this)}
                 style={{ width: "80px" }}
                 disabled={this.props.store.updatingVisible}
               />
-              -
+              {/*-
               <input
                 type="number"
                 value={this.props.store.getEndBin}
                 readOnly
                 style={{ width: "80px" }}
-              />
+              />*/}
             </>
             <button
               className="button"
@@ -285,7 +276,7 @@ const ControlHeader = observer(
               />
             </span>
             <datalist id="path">
-              {!this.props.store.loading
+              {this.props.store.chunkIndex !== null
                 ? this.props.store.chunkIndex.pathNames.map((item, key) => (
                     <option key={key} value={item} />
                   ))

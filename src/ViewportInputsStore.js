@@ -527,11 +527,15 @@ RootStore = types
     // this.metadata = []; This will be used later to store annotation possibly.
 
     chunkIndex: types.maybeNull(ChunkIndex),
-    beginBin: types.optional(types.integer, 1),
-    editingBeginBin: types.optional(types.integer, 1),
+    firstVisiblePosition: types.optional(types.integer, 1),
+    lastVisiblePosition: types.optional(types.integer, 1),
+    position: types.optional(types.integer, 1),
+    breakComponentUpdate: false,
+    editingPosition: types.optional(types.integer, 1),
     editingPixelsPerColumn: types.optional(types.integer, 10),
     editingPixelsPerRow: types.optional(types.integer, 1),
-    endBin: types.optional(types.integer, 1),
+    beginBinVisual: types.optional(types.integer, 1),
+    endBinVisual: types.optional(types.integer, 1),
     useVerticalCompression: false,
     useWidthCompression: false,
     binScalingFactor: 3,
@@ -549,7 +553,7 @@ RootStore = types
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_2.1_new",
     // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
-    jsonName: "paths_new",
+    jsonName: "paths_new2",
 
     // jsonName: "coregraph_genes",
 
@@ -572,7 +576,7 @@ RootStore = types
     }), // OR: types.maybe(PathNucPos)
     pathIndexServerAddress: "http://localhost:5000", // "http://193.196.29.24:3010/",
 
-    loading: true,
+    loading: false,
     copyNumberColorArray: types.optional(types.array(types.string), [
       //"#6a6a6a",
       "#838383",
@@ -619,7 +623,7 @@ RootStore = types
     windowWidth: types.optional(types.integer, 0),
     mouseX: types.optional(types.integer, 0),
     mouseY: types.optional(types.integer, 0),
-    updatingVisible: false,
+    updatingVisible: true,
     hideInversionLinks: true,
     doHighlightRows: false,
     preferHighlight: false,
@@ -670,7 +674,7 @@ RootStore = types
 
     updateWindow(windowWidth) {
       self.windowWidth = windowWidth;
-      self.updateBeginEndBin(self.getBeginBin);
+      self.updatePosition(self.getPosition);
     },
 
     addComponent(component, seq) {
@@ -714,7 +718,6 @@ RootStore = types
       // console.debug("[Store.addComponents] compArray", compArray);
       // console.debug("[Store.addComponents] nucleotides", nucleotides);
       // console.debug("[Store.addComponents] fromRight", fromRight);
-
       let splicing = 0;
 
       if (compArray[0].first_bin === 0) {
@@ -729,6 +732,11 @@ RootStore = types
       console.debug("[Store.addComponents] nucleotides", nucleotides);
 
       for (const component of compArray.splice(splicing)) {
+        // If new update is needed, current update should be interrupted.
+        if (self.breakComponentUpdate) {
+          break;
+        }
+
         if (!self.components.has(component.first_bin)) {
           let seq = "";
           if (nucleotides.length > 0) {
@@ -743,6 +751,9 @@ RootStore = types
     },
 
     addComponentsFromURL(url, fastaURL, fromRight = true) {
+      if (self.breakComponentUpdate) {
+        return;
+      }
       return jsonCache
         .getJSON(
           `${process.env.PUBLIC_URL}/test_data/${self.jsonName}/${self.selectedZoomLevel}/${url}`
@@ -796,23 +807,25 @@ RootStore = types
         });
     },
 
+    // Done
     shiftComponentsRight(
       windowStart,
       windowEnd,
       byCols = false,
       doClean = true
     ) {
-      // console.debug(
-      //   "[Store.shiftComponentsRight] component store before removal",
-      //   self.components
-      // );
-      // console.debug(
-      //   "[Store.shiftComponentsRight] windowStart windowEnd",
-      //   windowStart,
-      //   windowEnd
-      // );
-      // debugger;
-      let lastBin = windowStart;
+      // This function loads components from windowStart to the right
+      // towards windowEnd
+      // If there are components to the right from windowEnd (before loading),
+      // it will remove them.
+
+      if (self.breakComponentUpdate) {
+        return;
+      }
+
+      self.setLoading(true);
+
+      let lastBin = 0;
 
       if (doClean && self.components.size > 0) {
         // for (let [index,comp] of entries(self.components)) {
@@ -824,7 +837,7 @@ RootStore = types
         //     self.removeComponent(index);
         //   }
         // }
-        self.removeComponents(windowStart, true);
+        self.removeComponents(windowEnd, false);
 
         if (byCols) {
           lastBin = Array.from(
@@ -868,11 +881,13 @@ RootStore = types
               0;
         }
         if (loadChunk) {
+          // TODO: Should this condition be switched to getBeginBin and getEndBin???
           if (
-            (self.getEndBin - chunkFile.first_bin) *
-              (chunkFile.last_bin - self.getBeginBin) >=
-              0 &&
-            self.getEndBin >= self.getBeginBin
+            (self.getBeginBin - chunkFile.first_bin) *
+              (chunkFile.last_bin - self.getEndBin) >=
+            0
+            // &&
+            // self.getEndBin >= self.getPosition
           ) {
             doUpdateVisual = true;
           }
@@ -886,23 +901,32 @@ RootStore = types
         }
       }
 
-      if (doUpdateVisual && doClean && !byCols) {
-        Promise.all(promiseArray).then((values) => {
-          self.shiftVisualisedComponents();
-        });
-      }
-      if (!doClean) {
-        return promiseArray;
-      }
+      // Do we remove it outright or leave in some specific conditions?
+      // if (doUpdateVisual && doClean && !byCols) {
+      //   Promise.all(promiseArray).then((values) => {
+      //     self.shiftVisualisedComponentsCentre(windowStart,byCols);
+      //   });
+      // }
+
+      // if (!doClean) {
+      return promiseArray;
+      // }
     },
 
+    // Done
     shiftComponentsLeft(
       windowStart,
       windowEnd,
       byCols = false,
       doClean = true
     ) {
-      let firstBin = windowEnd;
+      if (self.breakComponentUpdate) {
+        return;
+      }
+
+      self.setLoading(true);
+
+      let firstBin = byCols ? self.last_col_pangenome : self.last_bin_pangenome;
 
       // console.debug("[Store.shiftComponentsLeft] windowStart windowEnd",windowStart, windowEnd)
       if (doClean && self.components.size > 0) {
@@ -912,13 +936,14 @@ RootStore = types
         //     self.removeComponent(index);
         //   }
         // }
-        self.removeComponents(windowEnd, false);
+        let oldFirstBin = firstBin;
+        self.removeComponents(windowStart, true);
         if (byCols) {
           firstBin = self.components.values().next().value.firstCol;
         } else {
           firstBin = self.components.values().next().value.firstBin;
         }
-        firstBin = firstBin ? firstBin : 0;
+        firstBin = firstBin ? firstBin : oldFirstBin;
       }
 
       let doUpdateVisual = false;
@@ -959,16 +984,17 @@ RootStore = types
         }
       }
 
-      if (doUpdateVisual && doClean) {
-        Promise.all(promiseArray).then((values) => {
-          self.shiftVisualisedComponents();
-          promiseArray = undefined;
-        });
-      }
+      // Do we remove it outright or leave in some specific conditions?
+      // if (doUpdateVisual && doClean) {
+      //   Promise.all(promiseArray).then((values) => {
+      //     self.shiftVisualisedComponentsCentre(windowEnd,byCols);
+      //     promiseArray = [];
+      //   });
+      // }
 
-      if (!doClean) {
-        return promiseArray;
-      }
+      // if (!doClean) {
+      return promiseArray;
+      // }
     },
 
     removeComponent(id) {
@@ -1006,11 +1032,26 @@ RootStore = types
       }
     },
 
+    // Done
     clearComponents() {
       // console.debug("[Store.clearComponents]");
-      self.visualisedComponents.clear();
-      self.nucleotides = [];
-      self.components.clear();
+      if (self.visualisedComponents.length > 0) {
+        self.visualisedComponents.clear();
+      }
+
+      self.breakComponentUpdate = true;
+
+      if (self.loading) {
+        setTimeout(() => {
+          self.clearComponents();
+        }, 100);
+      } else {
+        self.breakComponentUpdate = false;
+        self.updatingVisible = true;
+        self.setLoading(true);
+        self.nucleotides = [];
+        self.components.clear();
+      }
     },
 
     setZoomHighlightBoundaries(startBin, endBin) {
@@ -1032,7 +1073,7 @@ RootStore = types
 
     loadIndexFile() {
       console.log("STEP #1: whenever jsonName changes, loadIndexFile");
-      self.setLoading(true);
+      // self.setLoading(true);
       self.clearComponents();
       let indexPath =
         process.env.PUBLIC_URL +
@@ -1062,6 +1103,7 @@ RootStore = types
     },
 
     clearVisualisedComponents() {
+      self.updatingVisible = true;
       for (let key of keys(self.visualisedComponents)) {
         if (self.components.has(key)) {
           self.components.get(key).moveTo(-1);
@@ -1202,7 +1244,11 @@ RootStore = types
       }
     },
 
-    shiftVisualisedComponentsCentre(centreBin, centreCol, highlight = false) {
+    shiftVisualisedComponentsCentre(
+      centreBin,
+      centreCol = false,
+      highlight = false
+    ) {
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
       console.debug(
         "[Store.shiftVisualisedComponentsCentre] highlight",
@@ -1222,16 +1268,28 @@ RootStore = types
       if (centreCol) {
         for (let i = 0; i < sortedKeys.length; i++) {
           let tComp = self.components.get(sortedKeys[i]);
-          if (tComp.firstCol <= centreCol && tComp.lastCol >= centreCol) {
+          if (tComp.firstCol <= centreBin && tComp.lastCol >= centreBin) {
             centreCompIndex = i;
-            let distRatio =
-              (centreCol - tComp.firstCol) / (tComp.lastCol - tComp.firstCol);
-            centreBin =
-              tComp.firstBin +
-              Math.floor(distRatio * (tComp.lastBin - tComp.firstBin));
+
+            for (let bin = 0; bin < tComp.numBins; bin++) {
+              if (
+                tComp.binColStarts[bin] <= centreBin &&
+                tComp.binColEnds[bin] >= centreBin
+              ) {
+                centreBin = tComp.firstBin + bin;
+                break;
+              }
+            }
+
+            // let distRatio =
+            //   (centreBin - tComp.firstCol) / (tComp.lastCol - tComp.firstCol);
+            // centreBin =
+            //   tComp.firstBin +
+            //   Math.round(distRatio * (tComp.lastBin - tComp.firstBin));
             break;
           }
         }
+        self.setPosition(centreBin); // Is it correct?
       } else {
         for (let i = 0; i < sortedKeys.length; i++) {
           if (sortedKeys[i] > centreBin) {
@@ -1284,10 +1342,13 @@ RootStore = types
         counter++;
       }
 
+      let relativePos = 0;
+
       if (leftSpaceInCols < self.columnsInView / 2) {
-        rightSpaceInCols -= Math.round(
-          self.columnsInView / 2 - leftSpaceInCols
-        );
+        relativePos = Math.round(self.columnsInView / 2 - leftSpaceInCols);
+        // rightSpaceInCols -= Math.round(
+        //   self.columnsInView / 2 - leftSpaceInCols
+        // );
         begin = curComp.firstBin;
       } else if (leftSpaceInCols > self.columnsInView / 2) {
         begin =
@@ -1358,8 +1419,6 @@ RootStore = types
       //   end = curComp.lastBin;
       // }
 
-      let relativePos = 0;
-
       visComps.forEach((item) => {
         let curComp = self.components.get(item);
         curComp.moveTo(
@@ -1378,8 +1437,8 @@ RootStore = types
         self.visualisedComponents.set(item, item);
       });
 
-      self.setBeginBin(begin);
-      self.setEndBin(end);
+      self.setBeginBinVisual(begin);
+      self.setEndBinVisual(end);
       self.calcLinkElevations();
       if (highlight) {
         let comp = self.visibleCompByBin(centreBin);
@@ -1389,345 +1448,459 @@ RootStore = types
       self.updatingVisible = false;
     },
 
-    shiftVisualisedComponents(highlight = false) {
-      // self.visualisedComponents.clear();
-      if (self.components.size === 0) {
-        return;
-      }
-      // !!! When left component removed, arrival is removed as well ???
-      // console.debug("[Store.shiftVisualisedComponents] components", self.components);
-
-      let begin = self.getBeginBin;
-      // let end = self.getEndBin;
-
-      let visibleLengthInCols = 0;
-      let lastCompDepartureSize = 0;
-
-      let accountedComponents = [];
-
-      if (self.visualisedComponents.size > 0) {
-        let firstInView = self.firstVisualBin;
-
-        if (begin < firstInView) {
-          for (let index of self.sortedComponentsKeys) {
-            if (self.visualisedComponents.has(index)) {
-              break;
-            }
-
-            let comp = self.components.get(index);
-
-            if (
-              visibleLengthInCols + comp.rightLinkSize < self.columnsInView &&
-              comp.lastBin >= begin
-            ) {
-              self.visualisedComponents.set(comp.index, comp.index);
-              accountedComponents.push(comp.index);
-              comp.moveTo(
-                visibleLengthInCols * self.pixelsPerColumn,
-                self.windowWidth,
-                self.pixelsPerColumn
-              );
-              lastCompDepartureSize = comp.rightLinkSize;
-              if (visibleLengthInCols === 0 && begin > comp.firstBin) {
-                visibleLengthInCols +=
-                  comp.lastBin - begin + 1 + comp.rightLinkSize;
-              } else {
-                visibleLengthInCols +=
-                  comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
-              }
-            }
-
-            if (visibleLengthInCols >= self.columnsInView) {
-              break;
-            }
-          }
-        }
-      }
-      let deleteTheRest = false;
-      for (let index of self.sortedVisualComponentsKeys) {
-        if (accountedComponents.includes(Number(index))) {
-          continue;
-        }
-        let vComp = self.components.get(index);
-        if (
-          vComp.lastBin < begin ||
-          visibleLengthInCols + vComp.leftLinkSize >= self.columnsInView ||
-          deleteTheRest
-        ) {
-          if (visibleLengthInCols + vComp.leftLinkSize >= self.columnsInView) {
-            deleteTheRest = true;
-          }
-          self.components.get(index).moveTo(-1);
-          self.visualisedComponents.delete(index);
-        } else {
-          vComp.moveTo(
-            visibleLengthInCols * self.pixelsPerColumn,
-            self.windowWidth,
-            self.pixelsPerColumn
-          );
-          lastCompDepartureSize = vComp.rightLinkSize;
-          if (vComp.firstBin < begin && vComp.lastBin >= begin) {
-            visibleLengthInCols +=
-              vComp.lastBin - begin + 1 + vComp.rightLinkSize;
-          } else {
-            visibleLengthInCols +=
-              vComp.leftLinkSize + vComp.numBins + vComp.rightLinkSize;
-          }
-        }
-        // console.debug("[Store.shiftVisualisedComponents] deletion visibleLengthInCols", visibleLengthInCols);
-      }
-
-      if (visibleLengthInCols < self.columnsInView) {
-        for (let index of self.sortedComponentsKeys) {
-          let comp = self.components.get(index);
-
-          if (
-            comp.lastBin >= begin &&
-            !self.visualisedComponents.has(comp.index)
-          ) {
-            if (visibleLengthInCols + comp.leftLinkSize < self.columnsInView) {
-              self.visualisedComponents.set(comp.index, comp.index);
-              comp.moveTo(
-                visibleLengthInCols * self.pixelsPerColumn,
-                self.windowWidth,
-                self.pixelsPerColumn
-              );
-              lastCompDepartureSize = comp.rightLinkSize;
-              if (visibleLengthInCols === 0 && begin > comp.firstBin) {
-                visibleLengthInCols +=
-                  comp.lastBin - begin + 1 + comp.rightLinkSize;
-              } else {
-                visibleLengthInCols +=
-                  comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
-              }
-            } else if (
-              visibleLengthInCols + comp.leftLinkSize >=
-              self.columnsInView
-            ) {
-              break;
-            }
-          }
-
-          if (visibleLengthInCols >= self.columnsInView) {
-            break;
-          }
-        }
-      }
-
-      if (self.visualisedComponents.size > 0) {
-        let end = self.lastVisualBin;
-
-        if (visibleLengthInCols > self.columnsInView) {
-          end -= Math.max(
-            0,
-            visibleLengthInCols - self.columnsInView - lastCompDepartureSize
-          );
-        }
-
-        self.setEndBin(end);
-      }
-
-      self.calcLinkElevations();
-      if (highlight) {
-        let comp = self.visibleCompByBin(self.getBeginBin);
-        self.addToSelection(comp.firstCol, comp.lastCol);
-      }
-
-      self.updatingVisible = false;
+    setBeginBinVisual(begin) {
+      self.beginBinVisual = begin;
     },
 
-    updateBeginEndBin(newBegin, highlight = false) {
+    setEndBinVisual(end) {
+      self.endBinVisual = end;
+    },
+
+    // shiftVisualisedComponentsCentre becomes the main function. shiftVisualisedComponents become deprecated
+    // The latter should be removed and all references should be changed to shiftVisualisedComponentsCentre.
+    // Should centreBin be passed explicitly or should it be done through self.position (preferred)
+    // In this case, if we need to move by column, then column should be transferred to bin before?
+    // Or in that case, this should be done inside with optional centreCol parameter?
+
+    // shiftVisualisedComponents(highlight = false) {
+    //   // self.visualisedComponents.clear();
+    //   if (self.components.size === 0) {
+    //     return;
+    //   }
+    //   // !!! When left component removed, arrival is removed as well ???
+    //   // console.debug("[Store.shiftVisualisedComponents] components", self.components);
+
+    //   let centreBin = self.getPosition;
+    //   // let end = self.getEndBin;
+
+    //   let visibleLengthInCols = 0;
+    //   let lastCompDepartureSize = 0;
+
+    //   let accountedComponents = [];
+
+    //   if (self.visualisedComponents.size > 0) {
+    //     let firstInView = self.firstVisualBin;
+
+    //     if (begin < firstInView) {
+    //       for (let index of self.sortedComponentsKeys) {
+    //         if (self.visualisedComponents.has(index)) {
+    //           break;
+    //         }
+
+    //         let comp = self.components.get(index);
+
+    //         if (
+    //           visibleLengthInCols + comp.rightLinkSize < self.columnsInView &&
+    //           comp.lastBin >= begin
+    //         ) {
+    //           self.visualisedComponents.set(comp.index, comp.index);
+    //           accountedComponents.push(comp.index);
+    //           comp.moveTo(
+    //             visibleLengthInCols * self.pixelsPerColumn,
+    //             self.windowWidth,
+    //             self.pixelsPerColumn
+    //           );
+    //           lastCompDepartureSize = comp.rightLinkSize;
+    //           if (visibleLengthInCols === 0 && begin > comp.firstBin) {
+    //             visibleLengthInCols +=
+    //               comp.lastBin - begin + 1 + comp.rightLinkSize;
+    //           } else {
+    //             visibleLengthInCols +=
+    //               comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
+    //           }
+    //         }
+
+    //         if (visibleLengthInCols >= self.columnsInView) {
+    //           break;
+    //         }
+    //       }
+    //     }
+    //   }
+    //   let deleteTheRest = false;
+    //   for (let index of self.sortedVisualComponentsKeys) {
+    //     if (accountedComponents.includes(Number(index))) {
+    //       continue;
+    //     }
+    //     let vComp = self.components.get(index);
+    //     if (
+    //       vComp.lastBin < begin ||
+    //       visibleLengthInCols + vComp.leftLinkSize >= self.columnsInView ||
+    //       deleteTheRest
+    //     ) {
+    //       if (visibleLengthInCols + vComp.leftLinkSize >= self.columnsInView) {
+    //         deleteTheRest = true;
+    //       }
+    //       self.components.get(index).moveTo(-1);
+    //       self.visualisedComponents.delete(index);
+    //     } else {
+    //       vComp.moveTo(
+    //         visibleLengthInCols * self.pixelsPerColumn,
+    //         self.windowWidth,
+    //         self.pixelsPerColumn
+    //       );
+    //       lastCompDepartureSize = vComp.rightLinkSize;
+    //       if (vComp.firstBin < begin && vComp.lastBin >= begin) {
+    //         visibleLengthInCols +=
+    //           vComp.lastBin - begin + 1 + vComp.rightLinkSize;
+    //       } else {
+    //         visibleLengthInCols +=
+    //           vComp.leftLinkSize + vComp.numBins + vComp.rightLinkSize;
+    //       }
+    //     }
+    //     // console.debug("[Store.shiftVisualisedComponents] deletion visibleLengthInCols", visibleLengthInCols);
+    //   }
+
+    //   if (visibleLengthInCols < self.columnsInView) {
+    //     for (let index of self.sortedComponentsKeys) {
+    //       let comp = self.components.get(index);
+
+    //       if (
+    //         comp.lastBin >= begin &&
+    //         !self.visualisedComponents.has(comp.index)
+    //       ) {
+    //         if (visibleLengthInCols + comp.leftLinkSize < self.columnsInView) {
+    //           self.visualisedComponents.set(comp.index, comp.index);
+    //           comp.moveTo(
+    //             visibleLengthInCols * self.pixelsPerColumn,
+    //             self.windowWidth,
+    //             self.pixelsPerColumn
+    //           );
+    //           lastCompDepartureSize = comp.rightLinkSize;
+    //           if (visibleLengthInCols === 0 && begin > comp.firstBin) {
+    //             visibleLengthInCols +=
+    //               comp.lastBin - begin + 1 + comp.rightLinkSize;
+    //           } else {
+    //             visibleLengthInCols +=
+    //               comp.leftLinkSize + comp.numBins + comp.rightLinkSize;
+    //           }
+    //         } else if (
+    //           visibleLengthInCols + comp.leftLinkSize >=
+    //           self.columnsInView
+    //         ) {
+    //           break;
+    //         }
+    //       }
+
+    //       if (visibleLengthInCols >= self.columnsInView) {
+    //         break;
+    //       }
+    //     }
+    //   }
+
+    //   if (self.visualisedComponents.size > 0) {
+    //     let end = self.lastVisualBin;
+
+    //     if (visibleLengthInCols > self.columnsInView) {
+    //       end -= Math.max(
+    //         0,
+    //         visibleLengthInCols - self.columnsInView - lastCompDepartureSize
+    //       );
+    //     }
+
+    //     self.setEndBin(end);
+    //   }
+
+    //   self.calcLinkElevations();
+    //   if (highlight) {
+    //     let comp = self.visibleCompByBin(self.getPosition);
+    //     self.addToSelection(comp.firstCol, comp.lastCol);
+    //   }
+
+    //   self.updatingVisible = false;
+    // },
+
+    mainUpdate(newPos, byCol = false) {
+      let promiseArray = [];
+
+      promiseArray = promiseArray.concat(
+        self.shiftComponentsLeft(
+          Math.max(1, newPos - 2 * self.columnsInView),
+          newPos,
+          false,
+          true
+        )
+      );
+
+      promiseArray = promiseArray.concat(
+        self.shiftComponentsRight(
+          newPos,
+          Math.min(newPos + 2 * self.columnsInView, self.last_bin_pangenome),
+          false,
+          true
+        )
+      );
+
+      Promise.all(promiseArray).then(() => {
+        self.setLoading(false);
+      });
+    },
+
+    updatePosition(
+      newPos,
+      highlight = false,
+      byCol = false,
+      zoomHighlight = []
+    ) {
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
 
       // Need to handle zoom switch somehow.
 
-      // Sometimes, typing new bin, it arrives something that is not a valid integer
-      self.updatingVisible = true;
-      self.updateHighlightedLink(null);
-
-      if (!isInt(newBegin)) {
-        newBegin = 1;
-        // newEnd = 100;
-      }
-
-      // TODO: manage a maxBeginBin based on the width of the last components in the pangenome
-      newBegin = Math.min(
-        self.last_bin_pangenome - 1,
-        Math.max(1, Math.round(newBegin))
-      );
-
-      let sortedKeys = self.sortedComponentsKeys;
-
-      if (sortedKeys.length > 0) {
-        let firstBinInComponents = self.components.get(sortedKeys[0]).firstBin;
-        let lastBinInComponents = self.components.get(
-          sortedKeys[sortedKeys.length - 1]
-        ).lastBin;
-
-        if (lastBinInComponents <= newBegin + self.columnsInView) {
-          self.clearComponents();
-          self.setBeginBin(newBegin);
-          promiseArray = self.shiftComponentsRight(
-            Math.max(newBegin - self.columnsInView, 1),
-            Math.min(
-              newBegin + 2 * self.columnsInView,
-              self.last_bin_pangenome
-            ),
-            false,
-            false
-          );
-
-          Promise.all(promiseArray).then(() => {
-            // self.clearVisualisedComponents();
-            self.shiftVisualisedComponents(highlight);
-            promiseArray = undefined;
-          });
-        } else if (firstBinInComponents >= newBegin) {
-          self.clearComponents();
-          self.setBeginBin(newBegin);
-          promiseArray = self.shiftComponentsRight(
-            Math.max(newBegin - self.columnsInView, 1),
-            Math.min(
-              newBegin + 2 * self.columnsInView,
-              self.last_bin_pangenome
-            ),
-            false,
-            false
-          );
-          Promise.all(promiseArray).then(() => {
-            // self.clearVisualisedComponents();
-            self.shiftVisualisedComponents(highlight);
-            promiseArray = undefined;
-          });
-        } else {
-          self.setBeginBin(newBegin);
-          self.shiftVisualisedComponents(highlight);
-
-          // This function is called 5 times every time the bin number is updated.
-          // console.log("updateBeginEndBin - " + self.getBeginBin + " - " + self.getEndBin);
-
-          // console.debug("[Store.updateBeginEndBin] columnInView", self.columnsInView);
-          // console.debug("[Store.updateBeginEndBin] sortedKeys", sortedKeys);
-
-          let visibleBinsNum = self.getEndBin - self.getBeginBin;
-
-          // console.debug("[Store.updateBeginEndBin] first and last bins in components", firstBinInComponents,lastBinInComponents)
-          // Change to bin size on screen.
-
-          if (
-            visibleBinsNum > lastBinInComponents - self.getEndBin &&
-            lastBinInComponents < self.last_bin_pangenome
-          ) {
-            self.shiftComponentsRight(
-              Math.max(self.getBeginBin - visibleBinsNum, 1),
-              Math.min(self.getEndBin + visibleBinsNum, self.last_bin_pangenome)
-            );
-          }
-
-          if (
-            visibleBinsNum > self.getBeginBin - firstBinInComponents &&
-            firstBinInComponents > 1
-          ) {
-            self.shiftComponentsLeft(
-              Math.max(self.getBeginBin - visibleBinsNum, 1),
-              Math.min(self.getEndBin + visibleBinsNum, self.last_bin_pangenome)
-            );
-          }
-        }
-      } else {
-        self.setBeginBin(newBegin);
-        self.shiftComponentsRight(
-          1,
-          Math.min(
-            self.getBeginBin + 2 * self.columnsInView,
-            self.last_bin_pangenome
-          )
-        );
-      }
-    },
-
-    jumpToCentre(
-      centreBin,
-      moveToRight,
-      highlightedLink = null,
-      marker = false,
-      highlight = false
-    ) {
-      console.debug("[Store.jumpToCentre] highlight", highlight);
-      self.updatingVisible = true;
-      let promiseArray = [];
-
-      if (centreBin >= self.firstLoadedBin && centreBin <= self.lastLoadedBin) {
-        if (moveToRight === 1) {
-          //Arrow to the right
-          promiseArray = promiseArray.concat(
-            self.shiftComponentsRight(
-              Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
-              Math.min(
-                centreBin + Math.round(self.columnsInView * 1.5),
-                self.last_bin_pangenome
-              )
-            )
-          );
-        } else if (moveToRight === -1) {
-          //Arrow to the left
-          promiseArray = promiseArray.concat(
-            self.shiftComponentsLeft(
-              Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
-              Math.min(
-                centreBin + Math.round(self.columnsInView * 1.5),
-                self.last_bin_pangenome
-              )
-            )
-          );
-        } else {
-          // Self loop on single bin component
-          // do nothing with loaded components.
-        }
-      } else {
-        self.clearComponents();
-        promiseArray = promiseArray.concat(
-          self.shiftComponentsRight(
-            Math.max(1, centreBin + 1),
-            Math.min(
-              centreBin + Math.round(self.columnsInView * 1.5),
-              self.last_bin_pangenome
-            ),
-            false,
-            false
-          )
-        );
-        promiseArray = promiseArray.concat(
-          self.shiftComponentsLeft(
-            Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
-            Math.min(centreBin, self.last_bin_pangenome),
-            false,
-            false
-          )
-        );
-      }
-
-      self.updateHighlightedLink(highlightedLink);
-
-      Promise.all(promiseArray).then(() => {
-        self.clearVisualisedComponents();
-        self.shiftVisualisedComponentsCentre(centreBin, undefined, highlight);
-      });
-      setTimeout(() => {
-        self.updateHighlightedLink(null);
-      }, 5000);
-
-      // !!!! marker is never set to true, so, at the moment this procedure is commented.
-      // if (marker) {
-      //   self.setZoomHighlightBoundaries(
-      //     self.visibleColFromBin(centreBin),
-      //     self.visibleColFromBin(centreBin)
-      //   );
-      //   setTimeout(() => {
-      //     self.clearZoomHighlightBoundaries();
-      //   }, 10000);
+      // if (byCol) {
+      //   debugger;
       // }
+
+      self.breakComponentUpdate = true;
+
+      if (self.loading) {
+        setTimeout(() => {
+          self.updatePosition(newPos, highlight, byCol);
+        }, 100);
+      } else {
+        self.breakComponentUpdate = false;
+
+        self.updatingVisible = true;
+        self.updateHighlightedLink(null);
+
+        let promiseArray = [];
+
+        // Sometimes, typing new bin, it arrives something that is not a valid integer
+        if (!isInt(newPos)) {
+          newPos = 1;
+          // newEnd = 100;
+        }
+
+        // TODO: manage a maxPosition based on the width of the last components in the pangenome
+
+        if (byCol) {
+          newPos = Math.min(
+            self.last_col_pangenome,
+            Math.max(1, Math.round(newPos))
+          );
+        } else {
+          newPos = Math.min(
+            self.last_bin_pangenome,
+            Math.max(1, Math.round(newPos))
+          );
+        }
+
+        let sortedKeys = self.sortedComponentsKeys;
+
+        if (sortedKeys.length > 0 && !byCol) {
+          let firstBinInComponents = self.components.get(
+            sortedKeys[0]
+          ).firstBin;
+          let lastBinInComponents = self.components.get(
+            sortedKeys[sortedKeys.length - 1]
+          ).lastBin;
+
+          if (
+            lastBinInComponents <
+            Math.min(newPos + 0.5 * self.columnsInView, self.last_bin_pangenome)
+          ) {
+            self.clearVisualisedComponents();
+            self.setPosition(newPos);
+            promiseArray = promiseArray.concat(
+              self.shiftComponentsRight(
+                newPos,
+                Math.min(
+                  newPos + 0.5 * self.columnsInView,
+                  self.last_bin_pangenome
+                ),
+                false,
+                false
+              )
+            );
+            if (newPos > lastBinInComponents) {
+              promiseArray = promiseArray.concat(
+                self.shiftComponentsLeft(
+                  Math.max(1, newPos - 0.5 * self.columnsInView),
+                  newPos,
+                  false,
+                  false
+                )
+              );
+            }
+
+            Promise.all(promiseArray).then(() => {
+              // self.clearVisualisedComponents();
+              // Probably switch to Central version
+              self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
+              self.mainUpdate(newPos);
+              promiseArray = [];
+            });
+          } else if (
+            firstBinInComponents >
+            Math.max(newPos - 0.5 * self.columnsInView, 1)
+          ) {
+            self.clearVisualisedComponents();
+            self.setPosition(newPos);
+            promiseArray = promiseArray.concat(
+              self.shiftComponentsLeft(
+                Math.max(newPos - 0.5 * self.columnsInView, 1),
+                newPos,
+                false,
+                false
+              )
+            );
+
+            if (newPos < firstBinInComponents) {
+              promiseArray = promiseArray.concat(
+                self.shiftComponentsRight(
+                  newPos,
+                  Math.min(
+                    newPos + 0.5 * self.columnsInView,
+                    self.last_bin_pangenome
+                  ),
+                  false,
+                  false
+                )
+              );
+            }
+            Promise.all(promiseArray).then(() => {
+              // self.clearVisualisedComponents();
+              self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
+              self.mainUpdate(newPos);
+              promiseArray = [];
+            });
+          } else {
+            self.setPosition(newPos);
+            self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
+
+            self.mainUpdate(newPos);
+          }
+        } else {
+          if (!byCol) {
+            self.setPosition(newPos);
+          }
+
+          if (self.components.size > 0) {
+            self.clearComponents();
+          }
+
+          let multiplier = 1;
+          if (byCol) {
+            multiplier = parseInt(
+              self.availableZoomLevels[self.indexSelectedZoomLevel]
+            );
+          }
+
+          promiseArray = promiseArray.concat(
+            self.shiftComponentsLeft(
+              Math.max(1, newPos - 0.5 * self.columnsInView * multiplier),
+              newPos,
+              byCol,
+              false
+            )
+          );
+
+          promiseArray = promiseArray.concat(
+            self.shiftComponentsRight(
+              newPos,
+              Math.min(
+                newPos + 0.5 * self.columnsInView * multiplier,
+                byCol ? self.last_col_pangenome : self.last_bin_pangenome
+              ),
+              byCol,
+              false
+            )
+          );
+
+          Promise.all(promiseArray).then(() => {
+            self.clearVisualisedComponents();
+            self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
+            if (zoomHighlight.length == 2) {
+              self.setZoomHighlightBoundaries(...zoomHighlight);
+              setTimeout(() => {
+                self.clearZoomHighlightBoundaries();
+              }, 10000);
+            }
+            self.mainUpdate(newPos, byCol);
+          });
+        }
+      }
     },
+
+    // jumpToCentre(
+    //   centreBin,
+    //   moveToRight,
+    //   highlightedLink = null,
+    //   marker = false,
+    //   highlight = false
+    // ) {
+    //   console.debug("[Store.jumpToCentre] highlight", highlight);
+    //   self.updatingVisible = true;
+    //   let promiseArray = [];
+
+    //   if (centreBin >= self.firstLoadedBin && centreBin <= self.lastLoadedBin) {
+    //     if (moveToRight === 1) {
+    //       //Arrow to the right
+    //       promiseArray = promiseArray.concat(
+    //         self.shiftComponentsRight(
+    //           Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
+    //           Math.min(
+    //             centreBin + Math.round(self.columnsInView * 1.5),
+    //             self.last_bin_pangenome
+    //           )
+    //         )
+    //       );
+    //     } else if (moveToRight === -1) {
+    //       //Arrow to the left
+    //       promiseArray = promiseArray.concat(
+    //         self.shiftComponentsLeft(
+    //           Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
+    //           Math.min(
+    //             centreBin + Math.round(self.columnsInView * 1.5),
+    //             self.last_bin_pangenome
+    //           )
+    //         )
+    //       );
+    //     } else {
+    //       // Self loop on single bin component
+    //       // do nothing with loaded components.
+    //     }
+    //   } else {
+    //     self.clearComponents();
+    //     promiseArray = promiseArray.concat(
+    //       self.shiftComponentsRight(
+    //         Math.max(1, centreBin + 1),
+    //         Math.min(
+    //           centreBin + Math.round(self.columnsInView * 1.5),
+    //           self.last_bin_pangenome
+    //         ),
+    //         false,
+    //         false
+    //       )
+    //     );
+    //     promiseArray = promiseArray.concat(
+    //       self.shiftComponentsLeft(
+    //         Math.max(1, centreBin - Math.round(self.columnsInView * 1.5)),
+    //         Math.min(centreBin, self.last_bin_pangenome),
+    //         false,
+    //         false
+    //       )
+    //     );
+    //   }
+    //   self.updateHighlightedLink(highlightedLink);
+
+    //   Promise.all(promiseArray).then(() => {
+    //     self.clearVisualisedComponents();
+    //     self.shiftVisualisedComponentsCentre(centreBin, undefined, highlight);
+    //   });
+    //   setTimeout(() => {
+    //     self.updateHighlightedLink(null);
+    //   }, 5000);
+
+    //   // !!!! marker is never set to true, so, at the moment this procedure is commented.
+    //   // if (marker) {
+    //   //   self.setZoomHighlightBoundaries(
+    //   //     self.visibleColFromBin(centreBin),
+    //   //     self.visibleColFromBin(centreBin)
+    //   //   );
+    //   //   setTimeout(() => {
+    //   //     self.clearZoomHighlightBoundaries();
+    //   //   }, 10000);
+    //   // }
+    // },
 
     updateTopOffset(newTopOffset) {
       if (Number.isFinite(newTopOffset) && Number.isSafeInteger(newTopOffset)) {
@@ -1799,7 +1972,7 @@ RootStore = types
       let newPixInCol = checkAndForceMinOrMaxValue(Number(value), 3, 30);
       if (newPixInCol != self.pixelsPerColumn) {
         self.pixelsPerColumn = newPixInCol;
-        self.updateBeginEndBin(self.getBeginBin);
+        self.updatePosition(self.getPosition);
       }
       self.editingPixelsPerColumn = newPixInCol;
     },
@@ -1815,7 +1988,7 @@ RootStore = types
         console.log("STEP#1: New Data Source: " + file);
         self.jsonName = file;
         self.loadIndexFile().then(() => {
-          self.updateBeginEndBin(1);
+          self.updatePosition(1);
         });
       }
     },
@@ -1863,58 +2036,66 @@ RootStore = types
       // Calculating the first column of the begin, central and end bin.
       // It will make it easier to find proper centre and edges on the other zoom level.
 
-      let centralColumn = self.visibleColFromBin(self.centreBin);
-      let leftColumn = self.visibleColFromBin(self.beginBin);
-      let rightColumn = self.visibleColFromBin(self.endBin);
+      let centralColumn = self.visibleColFromBin(self.position);
+      let leftColumn = self.visibleColFromBin(self.getBeginBin, 0);
+      let rightColumn = self.visibleColFromBin(self.getEndBin, 2);
 
-      let scaledBegin = Math.round((self.getBeginBin - 1) * scaleFactor) + 1;
-      let scaledEnd = Math.round(self.getEndBin * scaleFactor);
+      // let scaledBegin = Math.round((self.getPosition - 1) * scaleFactor) + 1;
+      // let scaledEnd = Math.round(self.getEndBin * scaleFactor);
 
-      let centreBin = scaledBegin + Math.round((scaledEnd - scaledBegin) / 2);
+      // let centreBin = scaledBegin + Math.round((scaledEnd - scaledBegin) / 2);
 
       self.indexSelectedZoomLevel = index;
 
       let promiseArray = [];
 
       // self.clearVisualisedComponents();
-      self.clearComponents();
-      promiseArray = promiseArray.concat(
-        self.shiftComponentsRight(
-          Math.max(1, centralColumn + 1),
-          Math.min(
-            centralColumn + Math.round(self.columnsInView * newZoomLevel * 1.5),
-            self.last_col_pangenome
-          ),
-          true,
-          false
-        )
-      );
-      promiseArray = promiseArray.concat(
-        self.shiftComponentsLeft(
-          Math.max(
-            1,
-            centralColumn - Math.round(self.columnsInView * newZoomLevel * 1.5)
-          ),
-          Math.min(centralColumn, self.last_col_pangenome),
-          true,
-          false
-        )
-      );
+      if (scaleFactor < 1) {
+        self.updatePosition(centralColumn, false, true, [
+          leftColumn,
+          rightColumn,
+        ]);
+      } else {
+        self.updatePosition(centralColumn, false, true, false);
+      }
 
-      Promise.all(promiseArray).then(() => {
-        self.shiftVisualisedComponentsCentre(centreBin, centralColumn);
-        if (scaleFactor < 1) {
-          // console.debug(
-          //   `[Store.setIndexSelectedZoomLevel] zoomHighlightBegin: ${scaledBegin} zoomHighlightEnd: ${scaledEnd}`
-          // );
-          self.setZoomHighlightBoundaries(leftColumn, rightColumn);
-          setTimeout(() => {
-            self.clearZoomHighlightBoundaries();
-          }, 10000);
-        } else {
-          self.clearZoomHighlightBoundaries();
-        }
-      });
+      // promiseArray = promiseArray.concat(
+      //   self.shiftComponentsRight(
+      //     Math.max(1, centralColumn + 1),
+      //     Math.min(
+      //       centralColumn + Math.round(self.columnsInView * newZoomLevel * 1.5),
+      //       self.last_col_pangenome
+      //     ),
+      //     true,
+      //     false
+      //   )
+      // );
+      // promiseArray = promiseArray.concat(
+      //   self.shiftComponentsLeft(
+      //     Math.max(
+      //       1,
+      //       centralColumn - Math.round(self.columnsInView * newZoomLevel * 0.5)
+      //     ),
+      //     Math.min(centralColumn, self.last_col_pangenome),
+      //     true,
+      //     false
+      //   )
+      // );
+
+      // Promise.all(promiseArray).then(() => {
+      //   self.shiftVisualisedComponentsCentre(centreBin, centralColumn);
+      //   if (scaleFactor < 1) {
+      //     // console.debug(
+      //     //   `[Store.setIndexSelectedZoomLevel] zoomHighlightBegin: ${scaledBegin} zoomHighlightEnd: ${scaledEnd}`
+      //     // );
+      //     self.setZoomHighlightBoundaries(leftColumn, rightColumn);
+      //     setTimeout(() => {
+      //       self.clearZoomHighlightBoundaries();
+      //     }, 10000);
+      //   } else {
+      //     self.clearZoomHighlightBoundaries();
+      //   }
+      // });
     },
 
     // setAvailableZoomLevels(availableZoomLevels) {
@@ -1924,17 +2105,13 @@ RootStore = types
     //   // self.availableZoomLevels = arr;
     // },
 
-    setBeginBin(newBeginBin) {
-      self.editingBeginBin = newBeginBin;
-      self.beginBin = newBeginBin;
+    setPosition(newPos) {
+      self.editingPosition = newPos;
+      self.position = newPos;
     },
 
-    setEditingBeginBin(newBeginBin) {
-      self.editingBeginBin = newBeginBin;
-    },
-
-    setEndBin(newEndBin) {
-      self.endBin = newEndBin;
+    setEditingPosition(newPos) {
+      self.editingPosition = newPos;
     },
 
     updateSearchTerms(path, searchGenes, search) {
@@ -1959,7 +2136,9 @@ RootStore = types
 
     setLoading(val) {
       self.loading = val;
-      self.updatingVisible = true;
+      // if (val) {
+      //   self.updatingVisible = true; // Is it correct?
+      // }
     },
 
     // setLastBinPangenome(val) {
@@ -2040,7 +2219,7 @@ RootStore = types
     //   addChunkProcessed,
     //   addChunkProcessedFasta,
 
-    //   getBeginBin,
+    //   getPosition,
     //   getEndBin,
     //   updatePathNucPos,
 
@@ -2066,13 +2245,13 @@ RootStore = types
   }))
   .views((self) => ({
     get getBeginBin() {
-      return self.beginBin;
+      return self.beginBinVisual;
     },
     get getEndBin() {
-      return self.endBin;
+      return self.endBinVisual;
     },
-    get centreBin() {
-      return Math.round((self.getBeginBin + self.getEndBin) / 2);
+    get getPosition() {
+      return self.position;
     },
     // Getter and setter for zoom info management
     get getBinWidth() {
@@ -2096,7 +2275,11 @@ RootStore = types
       return a ? a : "1";
     },
     get last_bin_pangenome() {
-      if (self.loading) {
+      // Not sure why it was added...
+      // if (self.loading) {
+      //   return 0;
+      // }
+      if (self.chunkIndex === null) {
         return 0;
       }
 
@@ -2104,7 +2287,12 @@ RootStore = types
     },
 
     get last_col_pangenome() {
-      if (self.loading) {
+      //Not sure why this was added. It should not happen.
+      // if (self.loading) {
+      //   return 0;
+      // }
+
+      if (self.chunkIndex === null) {
         return 0;
       }
 
@@ -2117,7 +2305,7 @@ RootStore = types
       return self.windowWidth - 2;
     },
     get x_navigation() {
-      if (self.getBeginBin === 1) {
+      if (self.getPosition === 1) {
         return 0;
       } else {
         return Math.ceil(
@@ -2137,7 +2325,7 @@ RootStore = types
         widthNav = self.navigation_bar_width - self.x_navigation;
       }
 
-      if (self.getEndBin > self.getEndBin) {
+      if (self.getBeginBin > self.getEndBin) {
         widthNav = 1;
       }
 
