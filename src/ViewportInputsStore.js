@@ -1249,11 +1249,16 @@ RootStore = types
       centreCol = false,
       highlight = false
     ) {
+      // TODO: Try to clear only visual components that are not needed any more before adding new ones.
+      // This should happen after extra components are loaded (DONE)
+      // So, only moving components that remain visible. If need to move out of view, removed from the visible
+      // If not enough to fill, added to visible at the last stage.
+      // But MAIN CHANGE - remove updatingVisible flag!!!
       // console.debug("[Store.shiftVisualisedComponentsCentre] centreBin", centreBin)
-      console.debug(
-        "[Store.shiftVisualisedComponentsCentre] highlight",
-        highlight
-      );
+      // console.debug(
+      //   "[Store.shiftVisualisedComponentsCentre] highlight",
+      //   highlight
+      // );
 
       let visComps = [];
       self.maxArrowHeight = 0;
@@ -2305,7 +2310,7 @@ RootStore = types
       return self.windowWidth - 2;
     },
     get x_navigation() {
-      if (self.getPosition === 1) {
+      if (self.getBeginBin === 1) {
         return 0;
       } else {
         return Math.ceil(

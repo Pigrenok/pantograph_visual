@@ -1198,29 +1198,39 @@ const App = observer(
     }
 
     handleClick = (event) => {
-      this.props.store.updateBeginEndBin(
+      this.props.store.updatePosition(
         Math.max(
           Math.floor(
-            (this.props.store.last_bin_pangenome * event.evt.offsetX) /
-              (event.currentTarget.attrs.width +
-                event.currentTarget.attrs.strokeWidth)
+            ((this.props.store.last_bin_pangenome + 1) * event.evt.clientX) /
+              this.props.store.windowWidth
           ),
           1
         )
       );
     };
     handleMouseMove = (event) => {
+      // this.props.store.updateCellTooltipContent(
+      //   "Go to bin: " +
+      //     Math.max(
+      //       Math.floor(
+      //         ((this.props.store.last_bin_pangenome + 1) * event.evt.offsetX) /
+      //           (event.currentTarget.attrs.width +
+      //             event.currentTarget.attrs.strokeWidth)
+      //       ),
+      //       1
+      //     )
+      // );
       this.props.store.updateCellTooltipContent(
         "Go to bin: " +
           Math.max(
             Math.floor(
-              (this.props.store.last_bin_pangenome * event.evt.offsetX) /
-                (event.currentTarget.attrs.width +
-                  event.currentTarget.attrs.strokeWidth)
+              ((this.props.store.last_bin_pangenome + 1) * event.evt.clientX) /
+                this.props.store.windowWidth
             ),
             1
           )
       );
+      this.props.store.updateMouse(event.evt.clientX, event.evt.clientY);
     };
     handleMouseOut = () => {
       this.props.store.updateCellTooltipContent("");
@@ -1316,6 +1326,9 @@ const App = observer(
                     fill={"orange"}
                     stroke={"brown"}
                     strokeWidth={2}
+                    onMouseMove={this.handleMouseMove}
+                    onMouseOut={this.handleMouseOut}
+                    onClick={this.handleClick}
                     opacity={0.7}
                   />
                 </Layer>
