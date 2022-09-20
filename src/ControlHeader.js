@@ -241,6 +241,26 @@ const ControlHeader = observer(
             >
               &gt;&gt;
             </button>
+            {/*Debuggin fields: need to remove later*/}
+            <span style={{ marginLeft: "10px" }}>
+              Begin Bin:
+              <input
+                type="number"
+                value={this.props.store.getBeginBin}
+                disabled={true}
+                style={{ width: "40px" }}
+              />
+            </span>
+            <span style={{ marginLeft: "10px" }}>
+              End Bin:
+              <input
+                type="number"
+                value={this.props.store.getEndBin}
+                disabled={true}
+                style={{ width: "40px" }}
+              />
+            </span>
+            {/*End of debugging fields*/}
           </span>
           <div className={"row"}>
             Search: {/*Need Extra attention*/}
