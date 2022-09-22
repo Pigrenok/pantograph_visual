@@ -83,6 +83,10 @@ const LinkColumn = observer(
     }
 
     points() {
+      // if (this.props.item.downstream===16) {
+      //   debugger;
+      // }
+
       if (
         this.props.item.key[0] === "d"
         //  &&
@@ -314,7 +318,7 @@ const LinkColumn = observer(
                 </>
               );
 
-              //Add connector here
+              // Add connector here
               // return null;
             }
           }

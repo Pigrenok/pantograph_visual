@@ -553,7 +553,8 @@ RootStore = types
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_2.1_new",
     // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
-    jsonName: "paths_new2",
+    // jsonName: "paths_new2",
+    jsonName: "coregraph_Chr1_new",
 
     // jsonName: "coregraph_genes",
 
@@ -1260,11 +1261,41 @@ RootStore = types
       //   highlight
       // );
 
+      if (centreBin === 39) {
+        debugger;
+      }
+
       let visComps = [];
       self.maxArrowHeight = 0;
 
       let begin = centreBin;
       let end = centreBin;
+
+      let moveExistingLeft = false; // There are existing visualised components to the left of the new position
+      //that need to be moved/removed
+      let moveExistingRight = false; // There are existing visualised components to the right of the new position
+      //that need to be moved/removed
+
+      if (self.visualisedComponents.size > 0 && !centreCol) {
+        if (
+          (self.lastVisualBin -
+            (centreBin - Math.round(self.columnsInView / 2))) *
+            (centreBin - self.firstVisualBin) >=
+          0
+        ) {
+          moveExistingLeft = true;
+        }
+
+        if (
+          (self.lastVisualBin - centreBin) *
+            (centreBin +
+              Math.round(self.columnsInView / 2) -
+              self.firstVisualBin) >=
+          0
+        ) {
+          moveExistingRight = true;
+        }
+      }
 
       let sortedKeys = self.sortedComponentsKeys;
 
@@ -1423,6 +1454,13 @@ RootStore = types
       // } else {
       //   end = curComp.lastBin;
       // }
+
+      self.sortedVisualComponentsKeys.forEach((compId) => {
+        let comp = self.visualisedComponents.get(compId);
+        if (comp.lastBin < begin || comp.firstBin > end) {
+          self.visualisedComponents.delete(compId);
+        }
+      });
 
       visComps.forEach((item) => {
         let curComp = self.components.get(item);
@@ -1702,8 +1740,8 @@ RootStore = types
             lastBinInComponents <
             Math.min(newPos + 0.5 * self.columnsInView, self.last_bin_pangenome)
           ) {
-            self.clearVisualisedComponents();
-            self.setPosition(newPos);
+            // self.clearVisualisedComponents();
+            // self.setPosition(newPos);
             promiseArray = promiseArray.concat(
               self.shiftComponentsRight(
                 newPos,
@@ -1737,8 +1775,8 @@ RootStore = types
             firstBinInComponents >
             Math.max(newPos - 0.5 * self.columnsInView, 1)
           ) {
-            self.clearVisualisedComponents();
-            self.setPosition(newPos);
+            // self.clearVisualisedComponents();
+            // self.setPosition(newPos);
             promiseArray = promiseArray.concat(
               self.shiftComponentsLeft(
                 Math.max(newPos - 0.5 * self.columnsInView, 1),

@@ -913,15 +913,14 @@ const App = observer(
         );
       }
       // next component this.props.store.visualisedComponents[i+1]
-      // debugger;
 
-      if (compInd > 0) {
+      if (compInd > 0 && !leftCut) {
         let prevCompID =
           this.props.store.sortedVisualComponentsKeys[compInd - 1];
         let prevComp = this.props.store.visualisedComponents.get(prevCompID);
         let prevConnectorD = prevComp.connectorDepartures;
         if (prevConnectorD !== null) {
-          resArray.push(
+          resArray = resArray.concat(
             prevConnectorD.participants.map((participant, i) => {
               // return (<>{this.renderConnector(participant,schematizeComponent,false,false)}</>);
               return (
@@ -939,7 +938,7 @@ const App = observer(
 
         let prevConnectorA = prevComp.connectorArrivals;
         if (prevConnectorA !== null) {
-          resArray.push(
+          resArray = resArray.concat(
             prevConnectorA.participants.map((participant, i) => {
               //{/*return (<>{this.renderConnector(participant,schematizeComponent,false,true)}</>);         */}
               return (
@@ -956,40 +955,42 @@ const App = observer(
         }
       }
 
-      let connectorDR = schematizeComponent.connectorDepartures;
-      if (connectorDR !== null) {
-        resArray.push(
-          connectorDR.participants.map((participant, i) => {
-            //{/*return (<>{this.renderConnector(participant,schematizeComponent,true,false)}</>);         */}
-            return (
-              <ConnectorRect
-                participant={participant}
-                item={schematizeComponent}
-                store={this.props.store}
-                isRight={true}
-                isInverse={false}
-              />
-            );
-          })
-        );
-      }
+      if (!rightCut) {
+        let connectorDR = schematizeComponent.connectorDepartures;
+        if (connectorDR !== null) {
+          resArray = resArray.concat(
+            connectorDR.participants.map((participant, i) => {
+              //{/*return (<>{this.renderConnector(participant,schematizeComponent,true,false)}</>);         */}
+              return (
+                <ConnectorRect
+                  participant={participant}
+                  item={schematizeComponent}
+                  store={this.props.store}
+                  isRight={true}
+                  isInverse={false}
+                />
+              );
+            })
+          );
+        }
 
-      let connectorA = schematizeComponent.connectorArrivals;
-      if (connectorA !== null) {
-        resArray.push(
-          connectorA.participants.map((participant, i) => {
-            //{/*return (<>{this.renderConnector(participant,schematizeComponent,true,true)}</>);         */}
-            return (
-              <ConnectorRect
-                participant={participant}
-                item={schematizeComponent}
-                store={this.props.store}
-                isRight={true}
-                isInverse={true}
-              />
-            );
-          })
-        );
+        let connectorA = schematizeComponent.connectorArrivals;
+        if (connectorA !== null) {
+          resArray = resArray.concat(
+            connectorA.participants.map((participant, i) => {
+              //{/*return (<>{this.renderConnector(participant,schematizeComponent,true,true)}</>);         */}
+              return (
+                <ConnectorRect
+                  participant={participant}
+                  item={schematizeComponent}
+                  store={this.props.store}
+                  isRight={true}
+                  isInverse={true}
+                />
+              );
+            })
+          );
+        }
       }
 
       return resArray;
