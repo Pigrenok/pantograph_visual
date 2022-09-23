@@ -17,8 +17,10 @@ export const MatrixCell = observer(
       );
       // console.log(event, this.props.range, relColumnX);
 
-      let item =
-        this.props.range[Math.min(this.props.range.length - 1, relColumnX)];
+      let itemIndex = Math.min(this.props.range.length - 1, relColumnX);
+      let item = this.props.range[itemIndex];
+      let bin = this.props.binRange[itemIndex];
+
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
@@ -49,6 +51,8 @@ export const MatrixCell = observer(
         item.repeats +
         "\nInversion: " +
         item.reversal +
+        "\nBin: " +
+        bin +
         "\nPos: ";
 
       const ranges = item.pos;
@@ -216,23 +220,24 @@ export const MatrixCell = observer(
         }, 0) /
           rangeLength >
         0.5;
-      let floatCopyNumber = this.props.range.reduce((total, element) => {
+      let floatCopyNumber =
+        this.props.range.reduce((total, element) => {
           return total + element.repeats;
-        }, 0) / rangeLength
-      const copyNumber = Math.ceil(floatCopyNumber-0.5);
+        }, 0) / rangeLength;
+      const copyNumber = Math.ceil(floatCopyNumber - 0.5);
 
       // const startBlock = this.props.range.findIndex((element) =>
       //   this.isStartInRange(element.pos)
       // );
       let color = this.props.store.copyNumberColorArray[0];
       if (inverted) {
-        color = this.props.store.invertedColorArray[0]
+        color = this.props.store.invertedColorArray[0];
       }
       // let color = this.props.color;
 
       // let boundaryThickness = 0;
 
-      if (this.props.store.colourRepeats && copyNumber>1) {
+      if (this.props.store.colourRepeats && copyNumber > 1) {
         if (!inverted) {
           // 11 items is number of colors in copyNumberColorArray
           if (copyNumber < 10) {
@@ -408,7 +413,7 @@ export const SpanCell = observer(
         // endPos -= this.props.parent.lastBin - this.props.store.getEndBin;
       }
 
-      if (startPos==endPos) {
+      if (startPos == endPos) {
         return null;
       }
 
@@ -453,6 +458,7 @@ export const SpanCell = observer(
 
       let matrixCells = [];
       let newSpan = [];
+      let binArray = [];
 
       let step;
       let starti;
@@ -475,12 +481,13 @@ export const SpanCell = observer(
           startPos < endPos ? this.props.entry.occupiedBins[startPos] - 1 : 0;
       }
 
-      if (this.props.entry.binData[starti*step] === undefined) {
+      if (this.props.entry.binData[starti * step] === undefined) {
         debugger;
       }
 
-      let prevOcc = Math.round(this.props.entry.binData[starti*step].repeats);
-      let prevInv = this.props.entry.binData[starti*step].reversal > 0.5 ? 1 : 0
+      let prevOcc = Math.round(this.props.entry.binData[starti * step].repeats);
+      let prevInv =
+        this.props.entry.binData[starti * step].reversal > 0.5 ? 1 : 0;
 
       // console.debug("[SpanCell.render] component", this.props.parent);
       // console.debug("[SpanCell.render] pathName", this.props.pathName);
@@ -492,13 +499,14 @@ export const SpanCell = observer(
 
       for (let i = starti; i < endi; i++) {
         let column = this.props.entry.occupiedBins[step * i];
-        let bin = this.props.entry.binData[step * i]
-        let occ = Math.round(bin.repeats)
-        let inv = bin.reversal > 0.5 ? 1 : 0
+        let bin = this.props.entry.binData[step * i];
+        let occ = Math.round(bin.repeats);
+        let inv = bin.reversal > 0.5 ? 1 : 0;
 
-        if (column === prev + step && prevOcc===occ && prevInv===inv ) {
+        if (column === prev + step && prevOcc === occ && prevInv === inv) {
           //contiguous
           newSpan.push(this.props.entry.binData[step * i]);
+          binArray.push(column + this.props.parent.firstBin);
         } else {
           // console.debug("[SpanCell.render] newSpan",newSpan)
           // if (newSpan.length==0) {
@@ -509,6 +517,7 @@ export const SpanCell = observer(
             <MatrixCell
               key={"span" + this.props.entry.pathID + "," + x}
               range={newSpan}
+              binRange={binArray}
               store={this.props.store}
               pathName={this.props.pathName}
               //color={this.props.color}
@@ -532,6 +541,7 @@ export const SpanCell = observer(
             xAdjustment;
           //create new newSpan
           newSpan = [this.props.entry.binData[step * i]];
+          binArray = [column];
         }
         prev = column;
         prevOcc = occ;
@@ -547,6 +557,7 @@ export const SpanCell = observer(
           <MatrixCell
             key={"span" + this.props.entry.pathID + "," + x}
             range={newSpan}
+            binRange={binArray}
             store={this.props.store}
             pathName={this.props.pathName}
             //color={this.props.color}
