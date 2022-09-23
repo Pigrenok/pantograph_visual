@@ -1261,41 +1261,11 @@ RootStore = types
       //   highlight
       // );
 
-      if (centreBin === 39) {
-        debugger;
-      }
-
       let visComps = [];
       self.maxArrowHeight = 0;
 
       let begin = centreBin;
       let end = centreBin;
-
-      let moveExistingLeft = false; // There are existing visualised components to the left of the new position
-      //that need to be moved/removed
-      let moveExistingRight = false; // There are existing visualised components to the right of the new position
-      //that need to be moved/removed
-
-      if (self.visualisedComponents.size > 0 && !centreCol) {
-        if (
-          (self.lastVisualBin -
-            (centreBin - Math.round(self.columnsInView / 2))) *
-            (centreBin - self.firstVisualBin) >=
-          0
-        ) {
-          moveExistingLeft = true;
-        }
-
-        if (
-          (self.lastVisualBin - centreBin) *
-            (centreBin +
-              Math.round(self.columnsInView / 2) -
-              self.firstVisualBin) >=
-          0
-        ) {
-          moveExistingRight = true;
-        }
-      }
 
       let sortedKeys = self.sortedComponentsKeys;
 
