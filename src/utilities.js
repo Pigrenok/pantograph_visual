@@ -14,6 +14,15 @@ export function arraysEqual(A, B) {
   );
 }
 
+export function linkKey(keyPrefix, downstream, upstream, otherSideRight) {
+  return (
+    keyPrefix +
+    String(downstream).padStart(13, "0") +
+    String(upstream).padStart(13, "0") +
+    (otherSideRight ? "osr" : "osl")
+  );
+}
+
 export function argsort(arr, sortFunc, threshold) {
   // Decorate-Sort-Undecorate argsort function
   // Modified version from
@@ -215,7 +224,8 @@ export function range(start, end) {
 }
 
 export function stringToColorAndOpacity(linkColumn, highlightedLink) {
-  const colorKey = (linkColumn.downstreamCol + 1) * (linkColumn.upstreamCol + 1);
+  const colorKey =
+    (linkColumn.downstreamCol + 1) * (linkColumn.upstreamCol + 1);
   if (highlightedLink) {
     // When the mouse in on a Link, all the other ones will become gray and fade out
     let matchColor = (highlightedLink[0] + 1) * (highlightedLink[1] + 1);

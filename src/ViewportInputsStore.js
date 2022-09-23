@@ -8,6 +8,7 @@ import {
   argsort,
   findEqualBins,
   determineAdjacentIntersection,
+  linkKey,
 } from "./utilities";
 
 class JSONCache {
@@ -272,11 +273,16 @@ const Component = types
         }
 
         let linkCol = LinkColumn.create({
-          key:
-            keyPrefix +
-            String(link.downstream).padStart(13, "0") +
-            String(link.upstream).padStart(13, "0") +
-            (link.otherSideRight ? "osr" : "osl"),
+          key: linkKey(
+            keyPrefix,
+            link.downstream,
+            link.upstream,
+            link.otherSideRight
+          ),
+          // keyPrefix +
+          // String(link.downstream).padStart(13, "0") +
+          // String(link.upstream).padStart(13, "0") +
+          // (link.otherSideRight ? "osr" : "osl"),
           order: i,
           ...link,
         });
@@ -2417,6 +2423,14 @@ RootStore = types
         return comp.lastBin >= bin && comp.firstBin <= bin;
       });
     },
+
+    compByBin(bin) {
+      // WIll return undefined if nothing was found.
+      return values(self.components).find((comp) => {
+        return comp.lastBin >= bin && comp.firstBin <= bin;
+      });
+    },
+
     visibleColFromBin(bin, pos = 1) {
       // Pos indicates whether left (0), centre (1) or right (2) of the bin should be taken
       // Default is centre.

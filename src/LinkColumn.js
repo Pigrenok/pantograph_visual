@@ -2,7 +2,12 @@ import React from "react";
 import { Rect, Arrow } from "react-konva";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import { range, stringToColorAndOpacity, arraysEqual } from "./utilities";
+import {
+  range,
+  stringToColorAndOpacity,
+  arraysEqual,
+  linkKey,
+} from "./utilities";
 import { values } from "mobx";
 import ConnectorRect from "./ComponentConnectorRect";
 
@@ -234,187 +239,60 @@ const LinkColumn = observer(
     checkSingleReverse() {
       //Link from first component to second component
 
-      let otherSideBin;
-      if (this.props.item.key.slice(0, 1) === "d") {
-        otherSideBin = this.props.item.downstream;
+      let compLinks;
+      let linkKeyToSearch;
+
+      let isRight;
+
+      // if (this.props.item.key.slice(0, 1) === "d") {
+      // arrival
+      if (this.props.item.key.slice(this.props.item.key.length - 3) === "osr") {
+        // othe side right
+        compLinks = this.props.store.compByBin(
+          this.props.item.upstream + 1
+        ).ldepartures;
+        linkKeyToSearch = linkKey(
+          "d",
+          this.props.item.downstream + 1,
+          this.props.item.upstream + 1,
+          false
+        );
+        isRight = true;
       } else {
-        otherSideBin = this.props.item.upstream;
+        // other side left
+        compLinks = this.props.store.compByBin(
+          this.props.item.downstream - 1
+        ).rarrivals;
+        linkKeyToSearch = linkKey(
+          "a",
+          this.props.item.downstream - 1,
+          this.props.item.upstream - 1,
+          true
+        );
+        isRight = false;
       }
 
       if (
-        this.props.side === "right" &&
-        this.props.item.key.slice(this.props.item.key.length - 3) === "osr" //&&
-        // this.props.item.key.slice(0, 1) === "d"
+        compLinks.has(linkKeyToSearch) &&
+        arraysEqual(
+          this.props.item.participants,
+          compLinks.get(linkKeyToSearch).participants
+        )
       ) {
-        let dComp = this.props.store.linkInView(otherSideBin);
-
-        // First Component side
-        if (dComp && dComp.firstBin - 1 === this.props.parent.lastBin) {
-          // If the other side is in view.
-
-          let otherSideLinks;
-          if (this.props.item.key.slice(0, 1) === "d") {
-            otherSideLinks = dComp.ldepartures;
-          } else {
-            otherSideLinks = dComp.larrivals;
-          }
-
-          for (let link of values(otherSideLinks)) {
-            if (
-              arraysEqual(link.participants, this.props.item.participants) &&
-              !link.otherSideRight &&
-              ((link.downstream - 1 === dComp.lastBin &&
-                this.props.item.key.slice(0, 1) === "d") ||
-                (link.upstream - 1 === dComp.lastBin &&
-                  this.props.item.key.slice(0, 1) === "a"))
-            ) {
-              return null;
-            }
-          }
-        }
-
-        //Second component side
-        if (dComp && dComp.lastBin + 1 === this.props.parent.firstBin) {
-          // If the other side is in view.
-
-          let otherSideLinks;
-          if (this.props.item.key.slice(0, 1) === "a") {
-            otherSideLinks = this.props.parent.ldepartures;
-          } else {
-            otherSideLinks = this.props.parent.larrivals;
-          }
-
-          for (let link of values(otherSideLinks)) {
-            if (
-              arraysEqual(link.participants, this.props.item.participants) &&
-              !link.otherSideRight &&
-              // Change downstream to upstream for departure case.
-              ((link.downstream - 1 === this.props.parent.lastBin &&
-                this.props.item.key.slice(0, 1) === "a") ||
-                (link.upstream - 1 === this.props.parent.lastBin &&
-                  this.props.item.key.slice(0, 1) === "d"))
-            ) {
-              // debugger;
-              return (
-                <>
-                  {this.props.item.participants.map((item) => (
-                    <ConnectorRect
-                      participant={item}
-                      item={this.props.parent}
-                      store={this.props.store}
-                      isRight={false}
-                      isInverse={false}
-                    />
-                  ))}
-                  {this.props.item.participants.map((item) => (
-                    <ConnectorRect
-                      participant={item}
-                      item={dComp}
-                      store={this.props.store}
-                      isRight={true}
-                      isInverse={false}
-                    />
-                  ))}
-                </>
-              );
-
-              // Add connector here
-              // return null;
-            }
-          }
-        }
-
-        // Check if there is a link in view and from next component to after next component the link is from left to left,
-        //then do not draw this arrow.
+        return (
+          <>
+            {this.props.item.participants.map((item) => (
+              <ConnectorRect
+                participant={item}
+                item={this.props.parent}
+                store={this.props.store}
+                isRight={isRight}
+                isInverse={false}
+              />
+            ))}
+          </>
+        );
       }
-
-      //link from second component to third component.
-      if (
-        this.props.side === "left" &&
-        // this.props.item.key.slice(0, 1) === "d" &&
-        this.props.item.key.slice(this.props.item.key.length - 3) === "osl"
-      ) {
-        let dComp = this.props.store.linkInView(otherSideBin);
-
-        //Second component side
-        if (dComp && dComp.firstBin - 1 === this.props.parent.lastBin) {
-          // If the other side is in view.
-
-          let otherSideLinks;
-          if (this.props.item.key.slice(0, 1) === "d") {
-            otherSideLinks = this.props.parent.rarrivals;
-          } else {
-            otherSideLinks = this.props.parent.rdepartures;
-          }
-
-          for (let link of values(otherSideLinks)) {
-            if (
-              arraysEqual(link.participants, this.props.item.participants) &&
-              link.otherSideRight &&
-              ((link.downstream + 1 === this.props.parent.firstBin &&
-                this.props.item.key.slice(0, 1) === "a") ||
-                (link.upstream + 1 === this.props.parent.firstBin &&
-                  this.props.item.key.slice(0, 1) === "d"))
-            ) {
-              return null;
-            }
-          }
-        }
-
-        //Third component side
-        if (dComp && dComp.lastBin + 1 === this.props.parent.firstBin) {
-          // If the other side is in view.
-
-          let otherSideLinks;
-          if (this.props.item.key.slice(0, 1) === "d") {
-            otherSideLinks = dComp.rdepartures;
-          } else {
-            otherSideLinks = dComp.rarrivals;
-          }
-
-          for (let link of values(otherSideLinks)) {
-            if (
-              arraysEqual(link.participants, this.props.item.participants) &&
-              link.otherSideRight &&
-              ((link.upstream + 1 === dComp.firstBin &&
-                this.props.item.key.slice(0, 1) === "a") ||
-                (link.downstream + 1 === dComp.firstBin &&
-                  this.props.item.key.slice(0, 1) === "d"))
-            ) {
-              // debugger;
-              return (
-                <>
-                  {this.props.item.participants.map((item) => (
-                    <ConnectorRect
-                      participant={item}
-                      item={this.props.parent}
-                      store={this.props.store}
-                      isRight={false}
-                      isInverse={false}
-                    />
-                  ))}
-                  {this.props.item.participants.map((item) => (
-                    <ConnectorRect
-                      participant={item}
-                      item={dComp}
-                      store={this.props.store}
-                      isRight={true}
-                      isInverse={false}
-                    />
-                  ))}
-                </>
-              );
-
-              // Add connector here
-              // return null;
-            }
-          }
-        }
-
-        // Check if the link is in view and if the previously linked component has departure from right to right, then do not draw this arrow.
-      }
-
-      //link from second component to third component. (arrival)
 
       return true;
     }
