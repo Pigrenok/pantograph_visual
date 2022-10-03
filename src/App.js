@@ -697,7 +697,7 @@ const App = observer(
 
     renderNucleotidesSchematic = () => {
       if (
-        !this.props.store.loading &&
+        !this.props.store.chunkLoading &&
         // The conditions on binWidht and useWidthCompression are lifted here,
         // avoiding any computation if nucleotides have not to be visualized.
         this.props.store.getBinWidth === 1 &&
@@ -1153,9 +1153,10 @@ const App = observer(
     renderSchematic() {
       // console.debug("[App.renderSchematic]");
 
-      if (this.props.store.loading || this.props.store.updatingVisible) {
+      if (this.props.store.chunkLoading) {
         return null;
       }
+
       // console.log("[App.renderSchematic] component list", this.schematic.components)
       // console.log("[App.renderSchematic] index_to_component_to_visualize_dict", index_to_component_to_visualize_dict)
       // console.debug(
@@ -1174,7 +1175,7 @@ const App = observer(
     }
 
     renderSortedLinks() {
-      if (this.props.store.loading) {
+      if (this.props.store.chunkLoading) {
         return;
       }
 
@@ -1184,7 +1185,7 @@ const App = observer(
     }
 
     loadingMessage() {
-      if (this.props.store.loading) {
+      if (this.props.store.chunkLoading) {
         return (
           <Text
             key="loading"
@@ -1238,9 +1239,9 @@ const App = observer(
     };
 
     render() {
-      // if (this.props.store.loading) {
-      //   return this.loadingMessage();
-      // }
+      if (this.props.store.chunkLoading) {
+        return this.loadingMessage();
+      }
 
       // console.debug("[App.render] loading index status", this.props.store.loading)
       console.log("Start render");
@@ -1337,8 +1338,7 @@ const App = observer(
             ) : null}
           </div>
 
-          {this.props.store.loading ||
-          this.props.store.updatingVisible ? null : (
+          {this.props.store.chunkLoading ? null : (
             <Stage
               x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
               y={2 * this.props.store.pixelsPerColumn * 2} // For some reason, I have to put this, but I'd like to put 0
@@ -1358,6 +1358,7 @@ const App = observer(
               </Layer>
             </Stage>
           )}
+
           <NucleotideTooltip store={this.props.store} />
           <Legend store={this.props.store} />
         </>

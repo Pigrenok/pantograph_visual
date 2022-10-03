@@ -119,9 +119,9 @@ const ComponentRect = observer(
     }
 
     renderMatrix() {
-      if (this.props.store.updatingVisible) {
-        return null;
-      }
+      // if (this.props.store.updatingVisible) {
+      //   return null;
+      // }
 
       let parts = values(this.props.item.matrix).map((entry) => {
         return this.renderMatrixRow(entry);
@@ -139,9 +139,9 @@ const ComponentRect = observer(
       //   this_y = this.props.compressed_row_mapping[uncompressed_y];
       // }
 
-      if (this.props.store.updatingVisible) {
-        return null;
-      }
+      // if (this.props.store.updatingVisible) {
+      //   return null;
+      // }
 
       let this_y = entry.pathID;
 
@@ -239,9 +239,9 @@ const ComponentRect = observer(
     }
 
     renderSeparators() {
-      if (this.props.store.updatingVisible) {
-        return null;
-      }
+      // if (this.props.store.updatingVisible) {
+      //   return null;
+      // }
       const lines = [];
       // console.log("Departures:",this.props.item.departures)
       // console.log("Arrivals:",this.props.item.arrivals)
@@ -305,9 +305,9 @@ const ComponentRect = observer(
     }
 
     renderLinkBoundary() {
-      if (this.props.store.updatingVisible) {
-        return null;
-      }
+      // if (this.props.store.updatingVisible) {
+      //   return null;
+      // }
 
       let colour = "white";
       let lineWidth = 0;
@@ -562,7 +562,7 @@ const ComponentRect = observer(
     // }
 
     render() {
-      if (this.props.store.updatingVisible) {
+      if (this.props.store.chunkLoading) {
         return null;
       }
 

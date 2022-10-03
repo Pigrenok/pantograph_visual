@@ -584,6 +584,7 @@ RootStore = types
     pathIndexServerAddress: "http://localhost:5000", // "http://193.196.29.24:3010/",
 
     loading: false,
+    chunkLoading: true,
     copyNumberColorArray: types.optional(types.array(types.string), [
       //"#6a6a6a",
       "#838383",
@@ -1080,8 +1081,12 @@ RootStore = types
 
     loadIndexFile() {
       console.log("STEP #1: whenever jsonName changes, loadIndexFile");
-      // self.setLoading(true);
-      self.clearComponents();
+      self.setChunkLoading();
+
+      if (self.components.size > 0) {
+        self.clearComponents();
+      }
+
       let indexPath =
         process.env.PUBLIC_URL +
         "/test_data/" +
@@ -1093,10 +1098,9 @@ RootStore = types
         .then((res) => res.json())
         .then((json) => {
           console.log("loadIndexFile - END reading", indexPath);
-
           //STEP #2: chunkIndex contents loaded
           self.setChunkIndex(json);
-          self.setLoading(false);
+          self.unsetChunkLoading();
         });
     },
 
@@ -1664,10 +1668,6 @@ RootStore = types
 
       // Need to handle zoom switch somehow.
 
-      // if (byCol) {
-      //   debugger;
-      // }
-
       self.breakComponentUpdate = true;
 
       if (self.loading) {
@@ -2158,6 +2158,15 @@ RootStore = types
       // if (val) {
       //   self.updatingVisible = true; // Is it correct?
       // }
+    },
+
+    setChunkLoading() {
+      self.chunkLoading = true;
+      // self.setLoading(true)
+    },
+
+    unsetChunkLoading() {
+      self.chunkLoading = false;
     },
 
     // setLastBinPangenome(val) {

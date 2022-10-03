@@ -6,12 +6,10 @@ import { observer } from "mobx-react";
 const ComponentNucleotides = observer(
   class extends React.Component {
     renderMatrixRow() {
-      if (
-        this.props.store.components.size === 0 ||
-        this.props.store.updatingVisible
-      ) {
+      if (this.props.store.components.size === 0) {
         return null;
       }
+
       const parent = this.props.item;
       let x_val = parent.relativePixelX;
       let startPos = 0;

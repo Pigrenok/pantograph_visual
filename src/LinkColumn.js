@@ -300,7 +300,7 @@ const LinkColumn = observer(
     render() {
       //const contents = this.linkCells();
 
-      if (this.props.store.updatingVisible) {
+      if (this.props.store.chunkLoading) {
         return null;
       }
 

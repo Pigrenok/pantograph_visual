@@ -201,7 +201,7 @@ export const MatrixCell = observer(
       );
     }
     render() {
-      if (this.props.store.updatingVisible) {
+      if (this.props.store.chunkLoading) {
         return null;
       }
 
@@ -351,7 +351,7 @@ export const SpanCell = observer(
     }
 
     render() {
-      if (this.props.store.updatingVisible) {
+      if (this.props.store.chunkLoading) {
         return null;
       }
 
