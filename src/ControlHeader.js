@@ -18,8 +18,13 @@ const ControlHeader = observer(
     shift(percentage) {
       const pos = this.props.store.getPosition;
       // const endBin = this.props.store.getEndBin;
-      let size = this.props.store.columnsInView;
-      let diff = Math.floor(size * (percentage / 100));
+      let size;
+      if (percentage > 0) {
+        size = this.props.store.getEndBin - pos;
+      } else {
+        size = pos - this.props.store.getBeginBin;
+      }
+      let diff = Math.round(size * (percentage / 100));
 
       this.props.store.updatePosition(pos + diff);
     }
