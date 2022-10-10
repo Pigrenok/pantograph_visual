@@ -10,6 +10,9 @@ const ConnectorRect = observer(
     }
 
     render() {
+      if (!this.props.store.components.has(this.props.itemIndex)) {
+        return null;
+      }
       let x_val = this.props.item.relativePixelX;
       // x is the (num_bins + num_arrivals + num_departures)*pixelsPerColumn
       let numCols;

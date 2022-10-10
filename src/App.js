@@ -927,6 +927,7 @@ const App = observer(
                 <ConnectorRect
                   participant={participant}
                   item={schematizeComponent}
+                  itemIndex={schematizeComponent.index}
                   store={this.props.store}
                   isRight={false}
                   isInverse={false}
@@ -945,6 +946,7 @@ const App = observer(
                 <ConnectorRect
                   participant={participant}
                   item={schematizeComponent}
+                  itemIndex={schematizeComponent.index}
                   store={this.props.store}
                   isRight={false}
                   isInverse={true}
@@ -965,6 +967,7 @@ const App = observer(
                 <ConnectorRect
                   participant={participant}
                   item={schematizeComponent}
+                  itemIndex={schematizeComponent.index}
                   store={this.props.store}
                   isRight={true}
                   isInverse={false}
@@ -983,6 +986,7 @@ const App = observer(
                 <ConnectorRect
                   participant={participant}
                   item={schematizeComponent}
+                  itemIndex={schematizeComponent.index}
                   store={this.props.store}
                   isRight={true}
                   isInverse={true}

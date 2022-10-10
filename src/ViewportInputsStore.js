@@ -9,6 +9,8 @@ import {
   findEqualBins,
   determineAdjacentIntersection,
   linkKey,
+  compKey,
+  filter_sort_index_array,
 } from "./utilities";
 
 class JSONCache {
@@ -174,7 +176,7 @@ const LinkColumn = types
 
 const Component = types
   .model({
-    index: types.identifierNumber,
+    index: types.identifier,
     // columnX: types.integer,
     // compressedColumnX: types.integer,
     firstBin: types.integer,
@@ -559,8 +561,8 @@ RootStore = types
     cellToolTipContent: "",
     // jsonName: "AT_Chr1_OGOnly_2.1_new",
     // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
-    // jsonName: "paths_new2",
-    jsonName: "coregraph_Chr1_new",
+    jsonName: "paths_presentation_new",
+    // jsonName: "coregraph_Chr1_new",
 
     // jsonName: "coregraph_genes",
 
@@ -691,7 +693,7 @@ RootStore = types
         // columnX: component.x,
         // compressedColumnX: component.compressedX,
 
-        index: component.first_bin,
+        index: compKey(self.selectedZoomLevel, component.first_bin),
         firstBin: component.first_bin,
         lastBin: component.last_bin,
 
@@ -745,7 +747,11 @@ RootStore = types
           break;
         }
 
-        if (!self.components.has(component.first_bin)) {
+        if (
+          !self.components.has(
+            compKey(self.selectedZoomLevel, component.first_bin)
+          )
+        ) {
           let seq = "";
           if (nucleotides.length > 0) {
             seq = nucleotides.slice(
@@ -1062,6 +1068,18 @@ RootStore = types
       }
     },
 
+    clearOldZoomLevelComponents(sep = "_") {
+      return new Promise((resolve, reject) => {
+        resolve();
+      }).then(() => {
+        for (let key of keys(self.components)) {
+          if (key.split(sep)[0] != self.selectedZoomLevel) {
+            self.removeComponent(key);
+          }
+        }
+      });
+    },
+
     setZoomHighlightBoundaries(startBin, endBin) {
       self.zoomHighlightBoundariesCoord = [];
       self.zoomHighlightBoundaries = [startBin, endBin];
@@ -1084,8 +1102,10 @@ RootStore = types
       self.setChunkLoading();
 
       if (self.components.size > 0) {
+        self.clearVisualisedComponents();
         self.clearComponents();
       }
+      self.setLoading(false);
 
       let indexPath =
         process.env.PUBLIC_URL +
@@ -1127,9 +1147,10 @@ RootStore = types
       let visibleLinks = [];
 
       for (let comp of values(self.visualisedComponents)) {
+        let compZoomLevel = comp.index.split("_")[0];
         if (comp.lastBin <= self.getEndBin && comp.departureVisible) {
           for (let link of values(comp.rdepartures)) {
-            let dComp = self.linkInView(link.downstream);
+            let dComp = self.linkInView(link.downstream, compZoomLevel);
             let invertedArrival = link.key.slice(link.key.length - 3) === "osr";
             if (
               dComp &&
@@ -1149,7 +1170,7 @@ RootStore = types
 
         if (comp.firstBin >= self.getBeginBin) {
           for (let link of values(comp.ldepartures)) {
-            let dComp = self.linkInView(link.downstream);
+            let dComp = self.linkInView(link.downstream, compZoomLevel);
             let invertedArrival = link.key.slice(link.key.length - 3) === "osr";
             if (dComp) {
               // let invertedArrival;
@@ -1308,12 +1329,13 @@ RootStore = types
         self.setPosition(centreBin); // Is it correct?
       } else {
         for (let i = 0; i < sortedKeys.length; i++) {
-          if (sortedKeys[i] > centreBin) {
+          if (parseInt(sortedKeys[i].split("_")[1]) > centreBin) {
             centreCompIndex = i - 1;
             break;
           }
         }
       }
+      // Preparation ends
       let curComp = self.components.get(sortedKeys[centreCompIndex]);
 
       let leftSpaceInCols =
@@ -1431,16 +1453,23 @@ RootStore = types
             );
         }
       }
+
+      // Filling visComp and calculation begin and end
       // } else {
       //   end = curComp.lastBin;
       // }
-
-      self.sortedVisualComponentsKeys.forEach((compId) => {
+      keys(self.visualisedComponents).forEach((compId) => {
         let comp = self.visualisedComponents.get(compId);
-        if (comp.lastBin < begin || comp.firstBin > end) {
+        if (
+          compId.split("_")[0] !== self.selectedZoomLevel ||
+          comp.lastBin < begin ||
+          comp.firstBin > end
+        ) {
           self.visualisedComponents.delete(compId);
         }
       });
+
+      // Removing old references
 
       visComps.forEach((item) => {
         let curComp = self.components.get(item);
@@ -1459,6 +1488,8 @@ RootStore = types
         relativePos += leftSize + bodySize + curComp.rightLinkSize;
         self.visualisedComponents.set(item, item);
       });
+
+      // Adding new components to visualised components
 
       self.setBeginBinVisual(begin);
       self.setEndBinVisual(end);
@@ -1792,15 +1823,13 @@ RootStore = types
             self.setPosition(newPos);
           }
 
-          if (self.components.size > 0) {
+          if ((self.components.size > 0) & !byCol) {
             self.clearComponents();
           }
 
           let multiplier = 1;
           if (byCol) {
-            multiplier = parseInt(
-              self.availableZoomLevels[self.indexSelectedZoomLevel]
-            );
+            multiplier = parseInt(self.selectedZoomLevel);
           }
 
           promiseArray = promiseArray.concat(
@@ -1825,7 +1854,9 @@ RootStore = types
           );
 
           Promise.all(promiseArray).then(() => {
-            self.clearVisualisedComponents();
+            if (!byCol) {
+              self.clearVisualisedComponents();
+            }
             self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
             if (zoomHighlight.length == 2) {
               self.setZoomHighlightBoundaries(...zoomHighlight);
@@ -1833,7 +1864,11 @@ RootStore = types
                 self.clearZoomHighlightBoundaries();
               }, 10000);
             }
-            self.mainUpdate(newPos, byCol);
+            setTimeout(() => {
+              self.clearOldZoomLevelComponents().then(() => {
+                self.mainUpdate(newPos, byCol);
+              });
+            }, 0);
           });
         }
       }
@@ -2067,7 +2102,6 @@ RootStore = types
       self.indexSelectedZoomLevel = index;
 
       let promiseArray = [];
-
       // self.clearVisualisedComponents();
       if (scaleFactor < 1) {
         self.updatePosition(centralColumn, false, true, [
@@ -2366,19 +2400,14 @@ RootStore = types
 
     get sortedComponentsKeys() {
       let sortedKeys = keys(self.components);
-      sortedKeys.sort((a, b) => {
-        return Number(a) - Number(b);
-      });
 
-      return sortedKeys;
+      return filter_sort_index_array(sortedKeys, self.selectedZoomLevel);
     },
 
     get sortedVisualComponentsKeys() {
       let sortedKeys = keys(self.visualisedComponents);
-      sortedKeys.sort((a, b) => {
-        return Number(a) - Number(b);
-      });
 
+      // return filter_sort_index_array(sortedKeys,self.selectedZoomLevel);
       return sortedKeys;
     },
 
@@ -2405,7 +2434,7 @@ RootStore = types
       return res;
     },
 
-    linkInView(bin) {
+    linkInView(bin, zoomLevel) {
       // let comp;
       // try {
       // comp = values(self.visualisedComponents).find((comp) => {
@@ -2422,8 +2451,9 @@ RootStore = types
 
       return values(self.visualisedComponents).find((comp) => {
         return (
-          (comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
-          (comp.firstBin === bin && self.getBeginBin <= comp.firstBin)
+          ((comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
+            (comp.firstBin === bin && self.getBeginBin <= comp.firstBin)) &&
+          comp.index.split("_")[0] === zoomLevel
         );
       });
     },

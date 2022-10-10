@@ -91,7 +91,7 @@ const LinkColumn = observer(
       // if (this.props.item.downstream===16) {
       //   debugger;
       // }
-
+      let parentZoomLevel = this.props.parent.index.split("_")[0];
       if (
         this.props.item.key[0] === "d"
         //  &&
@@ -108,7 +108,10 @@ const LinkColumn = observer(
           0,
         ];
 
-        let dComp = this.props.store.linkInView(this.props.item.downstream);
+        let dComp = this.props.store.linkInView(
+          this.props.item.downstream,
+          parentZoomLevel
+        );
         //Check directionality of both upstream and downstream and then decide where to put arrows or not.
         // console.debug("[LinkColumn.points] this.props.item", this.props.item);
         // console.debug("[LinkColumn.points] this.props", this.props);
@@ -153,6 +156,10 @@ const LinkColumn = observer(
           // console.debug("[LinkColumn.points] dComp", dComp);
           // console.debug("[LinkColumn.points] dLink", dLink);
 
+          if (dComp === undefined || dLink == undefined) {
+            debugger;
+          }
+
           let dX =
             dComp.relativePixelX +
             (dLink.order + dOffset) * this.props.store.pixelsPerColumn -
@@ -177,7 +184,8 @@ const LinkColumn = observer(
       if (this.props.item.key[0] === "a") {
         //arrival
         let upstreamComp = this.props.store.linkInView(
-          this.props.item.upstream
+          this.props.item.upstream,
+          parentZoomLevel
         );
         if (upstreamComp) {
           // Check here if the other side is forward ir reverse and check if right or left edge is visible then!!!
@@ -248,9 +256,12 @@ const LinkColumn = observer(
       // arrival
       if (this.props.item.key.slice(this.props.item.key.length - 3) === "osr") {
         // othe side right
-        compLinks = this.props.store.compByBin(
-          this.props.item.upstream + 1
-        ).ldepartures;
+        // check for edge case of upstream == last_bin_pangenome
+        let comp = this.props.store.compByBin(this.props.item.upstream + 1);
+        if (comp === undefined) {
+          return true;
+        }
+        compLinks = comp.ldepartures;
         linkKeyToSearch = linkKey(
           "d",
           this.props.item.downstream + 1,
@@ -260,6 +271,12 @@ const LinkColumn = observer(
         isRight = true;
       } else {
         // other side left
+        // check for edge case of downstream == 1
+        let comp = this.props.store.compByBin(this.props.item.downstream - 1);
+        if (comp === undefined) {
+          return true;
+        }
+
         compLinks = this.props.store.compByBin(
           this.props.item.downstream - 1
         ).rarrivals;
@@ -285,6 +302,7 @@ const LinkColumn = observer(
               <ConnectorRect
                 participant={item}
                 item={this.props.parent}
+                itemIndex={this.props.parent.index}
                 store={this.props.store}
                 isRight={isRight}
                 isInverse={false}

@@ -14,6 +14,19 @@ export function arraysEqual(A, B) {
   );
 }
 
+export function filter_sort_index_array(array, zoom, sep = "_") {
+  let sortedKeys = array.filter((index) => {
+    return index.split(sep)[0] === zoom;
+  });
+  sortedKeys.sort((a, b) => {
+    return Number(a.split(sep)[1]) - Number(b.split(sep)[1]);
+  });
+
+  return sortedKeys;
+}
+export function compKey(zoomLevel, compIndex, sep = "_") {
+  return zoomLevel + sep + compIndex.toString();
+}
 export function linkKey(keyPrefix, downstream, upstream, otherSideRight) {
   return (
     keyPrefix +
