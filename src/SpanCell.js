@@ -83,6 +83,7 @@ export const MatrixCell = observer(
         tooltipContent +=
           "\n" +
           item.annotation
+            .slice()
             .sort((a, b) => {
               return a.length - b.length;
             })
