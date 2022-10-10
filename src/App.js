@@ -1053,7 +1053,7 @@ const App = observer(
 
     renderCentreLine() {
       let x =
-        Math.floor(this.props.store.columnsInView / 2) *
+        Math.round(this.props.store.columnsInView / 2) *
           this.props.store.pixelsPerColumn -
         Math.round(this.props.store.pixelsPerColumn * 0.5);
 
