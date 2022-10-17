@@ -80,9 +80,8 @@ const LinkColumn = observer(
         // do nothing with loaded components.
         linkToRight = 0;
       }
-      this.props.store.jumpToCentre(
+      this.props.store.updatePosition(
         centreBin,
-        linkToRight,
         this.props.store.highlightedLink
       );
     }
