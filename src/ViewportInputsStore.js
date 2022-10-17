@@ -1380,23 +1380,24 @@ RootStore = types
         counter++;
       }
 
-      let relativePos = 0;
+      let relativePos =
+        self.centreBinEndPos - leftSpaceInCols * self.pixelsPerColumn;
 
       if (leftSpaceInCols < self.columnsInView / 2) {
-        relativePos = Math.round(self.columnsInView / 2 - leftSpaceInCols);
         // rightSpaceInCols -= Math.round(
         //   self.columnsInView / 2 - leftSpaceInCols
         // );
         begin = curComp.firstBin;
       } else if (leftSpaceInCols > self.columnsInView / 2) {
-        begin =
-          curComp.firstBin +
-          Math.max(
-            0,
-            Math.ceil(
-              leftSpaceInCols - self.columnsInView / 2 - curComp.leftLinkSize
-            )
-          );
+        let beginAdj = Math.max(
+          0,
+          Math.ceil(
+            leftSpaceInCols - self.columnsInView / 2 - curComp.leftLinkSize
+          )
+        );
+        begin = curComp.firstBin + beginAdj;
+        // + curComp.leftLinkSize transferred to component.moveTo()
+        relativePos += beginAdj * self.pixelsPerColumn;
       } else {
         begin = curComp.firstBin;
       }
@@ -2362,6 +2363,9 @@ RootStore = types
     },
     get columnsInView() {
       return Math.floor(self.windowWidth / self.pixelsPerColumn);
+    },
+    get centreBinEndPos() {
+      return Math.round(self.columnsInView / 2) * self.pixelsPerColumn;
     },
     get navigation_bar_width() {
       return self.windowWidth - 2;

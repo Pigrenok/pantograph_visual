@@ -1057,8 +1057,7 @@ const App = observer(
 
     renderCentreLine() {
       let x =
-        Math.round(this.props.store.columnsInView / 2) *
-          this.props.store.pixelsPerColumn -
+        this.props.store.centreBinEndPos -
         Math.round(this.props.store.pixelsPerColumn * 0.5);
 
       let y =
