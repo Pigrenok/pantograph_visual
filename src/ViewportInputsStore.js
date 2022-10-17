@@ -1493,15 +1493,15 @@ RootStore = types
         if (!curComp.arrivalVisible) {
           relativePos = curComp.relativePixelX;
           leftSize = 0;
-          bodySize = Math.round(curComp.lastBin - begin + 1);
+          bodySize = curComp.lastBin - begin + 1;
         }
 
         relativePos +=
           (leftSize + bodySize + curComp.rightLinkSize) * self.pixelsPerColumn;
 
-        if (curComp.firstBin < begin && index == 0) {
-          self.visualisedComponents.set(item, item);
-        }
+        // if (curComp.firstBin < begin && index == 0) {
+        self.visualisedComponents.set(item, item);
+        // }
       });
 
       // Adding new components to visualised components
