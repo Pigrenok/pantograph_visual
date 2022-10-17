@@ -90,7 +90,7 @@ const LinkColumn = observer(
       // if (this.props.item.downstream===16) {
       //   debugger;
       // }
-      let parentZoomLevel = this.props.parent.index.split("_")[0];
+      let parentZoomLevel = this.props.parent.zoom_level;
       if (
         this.props.item.key[0] === "d"
         //  &&
@@ -259,7 +259,7 @@ const LinkColumn = observer(
         // check for edge case of upstream == last_bin_pangenome
         let comp = this.props.store.compByBin(
           this.props.item.upstream + 1,
-          this.props.parent.index.split("_")[0]
+          this.props.parent.zoom_level
         );
         if (comp === undefined) {
           return true;
@@ -277,7 +277,7 @@ const LinkColumn = observer(
         // check for edge case of downstream == 1
         let comp = this.props.store.compByBin(
           this.props.item.downstream - 1,
-          this.props.parent.index.split("_")[0]
+          this.props.parent.zoom_level
         );
         if (comp === undefined) {
           return true;
@@ -285,7 +285,7 @@ const LinkColumn = observer(
 
         compLinks = this.props.store.compByBin(
           this.props.item.downstream - 1,
-          this.props.parent.index.split("_")[0]
+          this.props.parent.zoom_level
         ).rarrivals;
         linkKeyToSearch = linkKey(
           "a",
@@ -303,20 +303,27 @@ const LinkColumn = observer(
           compLinks.get(linkKeyToSearch).participants
         )
       ) {
-        return (
-          <>
-            {this.props.item.participants.map((item) => (
-              <ConnectorRect
-                participant={item}
-                item={this.props.parent}
-                itemIndex={this.props.parent.index}
-                store={this.props.store}
-                isRight={isRight}
-                isInverse={false}
-              />
-            ))}
-          </>
-        );
+        if (
+          (this.props.side == "left" && this.props.parent.arrivalVisible) ||
+          (this.props.side == "right" && this.props.parent.departureVisible)
+        ) {
+          return (
+            <>
+              {this.props.item.participants.map((item) => (
+                <ConnectorRect
+                  participant={item}
+                  item={this.props.parent}
+                  itemIndex={this.props.parent.index}
+                  store={this.props.store}
+                  isRight={isRight}
+                  isInverse={false}
+                />
+              ))}
+            </>
+          );
+        } else {
+          return null;
+        }
       }
 
       return true;

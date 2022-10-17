@@ -177,6 +177,7 @@ const LinkColumn = types
 const Component = types
   .model({
     index: types.identifier,
+    zoom_level: types.string,
     // columnX: types.integer,
     // compressedColumnX: types.integer,
     firstBin: types.integer,
@@ -705,6 +706,7 @@ RootStore = types
         // compressedColumnX: component.compressedX,
 
         index: compKey(self.selectedZoomLevel, component.first_bin),
+        zoom_level: self.selectedZoomLevel,
         firstBin: component.first_bin,
         lastBin: component.last_bin,
 
@@ -1158,7 +1160,7 @@ RootStore = types
       let visibleLinks = [];
 
       for (let comp of values(self.visualisedComponents)) {
-        let compZoomLevel = comp.index.split("_")[0];
+        let compZoomLevel = comp.zoom_level;
         if (comp.lastBin <= self.getEndBin && comp.departureVisible) {
           for (let link of values(comp.rdepartures)) {
             let dComp = self.linkInView(link.downstream, compZoomLevel);
@@ -2492,7 +2494,7 @@ RootStore = types
             (comp.firstBin === bin &&
               self.getBeginBin <= comp.firstBin &&
               comp.arrivalVisible)) &&
-          comp.index.split("_")[0] === zoomLevel
+          comp.zoom_level === zoomLevel
         );
       });
     },
@@ -2506,7 +2508,7 @@ RootStore = types
         return (
           comp.lastBin >= bin &&
           comp.firstBin <= bin &&
-          comp.index.split("_")[0] == _zoom
+          comp.zoom_level == _zoom
         );
       });
 
@@ -2529,7 +2531,7 @@ RootStore = types
         return (
           comp.lastBin >= bin &&
           comp.firstBin <= bin &&
-          comp.index.split("_")[0] == _zoom
+          comp.zoom_level == _zoom
         );
       });
 
