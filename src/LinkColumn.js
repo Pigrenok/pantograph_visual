@@ -257,7 +257,10 @@ const LinkColumn = observer(
       if (this.props.item.key.slice(this.props.item.key.length - 3) === "osr") {
         // othe side right
         // check for edge case of upstream == last_bin_pangenome
-        let comp = this.props.store.compByBin(this.props.item.upstream + 1);
+        let comp = this.props.store.compByBin(
+          this.props.item.upstream + 1,
+          this.props.parent.index.split("_")[0]
+        );
         if (comp === undefined) {
           return true;
         }
@@ -272,13 +275,17 @@ const LinkColumn = observer(
       } else {
         // other side left
         // check for edge case of downstream == 1
-        let comp = this.props.store.compByBin(this.props.item.downstream - 1);
+        let comp = this.props.store.compByBin(
+          this.props.item.downstream - 1,
+          this.props.parent.index.split("_")[0]
+        );
         if (comp === undefined) {
           return true;
         }
 
         compLinks = this.props.store.compByBin(
-          this.props.item.downstream - 1
+          this.props.item.downstream - 1,
+          this.props.parent.index.split("_")[0]
         ).rarrivals;
         linkKeyToSearch = linkKey(
           "a",

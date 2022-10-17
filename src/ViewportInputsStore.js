@@ -571,12 +571,11 @@ RootStore = types
     // Do we actually need selectedLink or should we use highlighted link even
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
-    // jsonName: "AT_Chr1_OGOnly_2.1_new",
-    // jsonName: "coregraph_genes_f2.1_Ref_v04_new",
-    jsonName: "paths_presentation_new",
-    // jsonName: "coregraph_Chr1_new",
 
-    // jsonName: "coregraph_genes",
+    // jsonName: "paths_presentation_new",
+    jsonName: "coregraph_Chr1_new",
+    // jsonName: "coregraph_genes__new",
+    // jsonName: "AT_Chr1_OGOnly_2.1_new",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -2497,17 +2496,49 @@ RootStore = types
         );
       });
     },
-    visibleCompByBin(bin) {
-      return values(self.visualisedComponents).find((comp) => {
-        return comp.lastBin >= bin && comp.firstBin <= bin;
+    visibleCompByBin(bin, zoom = "auto") {
+      let _zoom = zoom;
+      if (zoom === "auto") {
+        _zoom = self.selectedZoomLevel;
+      }
+
+      let res = values(self.visualisedComponents).find((comp) => {
+        return (
+          comp.lastBin >= bin &&
+          comp.firstBin <= bin &&
+          comp.index.split("_")[0] == _zoom
+        );
       });
+
+      if (res === undefined) {
+        res = values(self.visualisedComponents).find((comp) => {
+          return comp.lastBin >= bin && comp.firstBin <= bin;
+        });
+      }
+      return res;
     },
 
-    compByBin(bin) {
-      // WIll return undefined if nothing was found.
-      return values(self.components).find((comp) => {
-        return comp.lastBin >= bin && comp.firstBin <= bin;
+    compByBin(bin, zoom = "auto") {
+      let _zoom = zoom;
+      if (zoom === "auto") {
+        _zoom = self.selectedZoomLevel;
+      }
+
+      // Will return undefined if nothing was found.
+      let res = values(self.components).find((comp) => {
+        return (
+          comp.lastBin >= bin &&
+          comp.firstBin <= bin &&
+          comp.index.split("_")[0] == _zoom
+        );
       });
+
+      if (res === undefined) {
+        res = values(self.components).find((comp) => {
+          return comp.lastBin >= bin && comp.firstBin <= bin;
+        });
+      }
+      return res;
     },
 
     visibleColFromBin(bin, pos = 1) {
