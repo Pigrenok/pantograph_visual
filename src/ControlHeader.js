@@ -253,7 +253,7 @@ const ControlHeader = observer(
                 type="number"
                 value={this.props.store.getBeginBin}
                 disabled={true}
-                style={{ width: "40px" }}
+                style={{ width: "80px" }}
               />
             </span>
             <span style={{ marginLeft: "10px" }}>
@@ -262,7 +262,7 @@ const ControlHeader = observer(
                 type="number"
                 value={this.props.store.getEndBin}
                 disabled={true}
-                style={{ width: "40px" }}
+                style={{ width: "80px" }}
               />
             </span>
             {/*End of debugging fields*/}
