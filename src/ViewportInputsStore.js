@@ -378,7 +378,7 @@ const Component = types
       }
     },
 
-    moveTo(newRelativePixelX, windowWidth, pixelsPerColumn) {
+    moveTo(newRelativePixelX, windowWidth, pixelsPerColumn, arrivalVis = true) {
       self.relativePixelX = newRelativePixelX;
       self.departureVisible = true;
       if (windowWidth && pixelsPerColumn) {
@@ -391,7 +391,7 @@ const Component = types
           self.departureVisible = false;
         }
 
-        self.arrivalVisible = true;
+        self.arrivalVisible = arrivalVis;
         if (self.relativePixelX < 0) {
           self.arrivalVisible = false;
           self.relativePixelX += self.leftLinkSize * pixelsPerColumn;
@@ -1304,6 +1304,7 @@ RootStore = types
       //   "[Store.shiftVisualisedComponentsCentre] highlight",
       //   highlight
       // );
+      // debugger;
 
       let visComps = [];
       self.maxArrowHeight = 0;
@@ -1396,6 +1397,8 @@ RootStore = types
       let relativePos =
         self.centreBinEndPos - leftSpaceInCols * self.pixelsPerColumn;
 
+      let arrivalVisible = true;
+
       if (leftSpaceInCols < self.columnsInView / 2) {
         // rightSpaceInCols -= Math.round(
         //   self.columnsInView / 2 - leftSpaceInCols
@@ -1411,6 +1414,7 @@ RootStore = types
         begin = curComp.firstBin + beginAdj;
         // + curComp.leftLinkSize transferred to component.moveTo()
         relativePos += beginAdj * self.pixelsPerColumn;
+        arrivalVisible = false;
       } else {
         begin = curComp.firstBin;
       }
@@ -1486,8 +1490,15 @@ RootStore = types
       // Removing old references
 
       visComps.forEach((item, index) => {
+        // debugger;
         let curComp = self.components.get(item);
-        curComp.moveTo(relativePos, self.windowWidth, self.pixelsPerColumn);
+        curComp.moveTo(
+          relativePos,
+          self.windowWidth,
+          self.pixelsPerColumn,
+          index == 0 ? arrivalVisible : true
+        );
+
         let leftSize = curComp.leftLinkSize;
         let bodySize = curComp.numBins;
 

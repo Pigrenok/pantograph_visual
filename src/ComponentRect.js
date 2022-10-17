@@ -188,58 +188,58 @@ const ComponentRect = observer(
       );
     }
 
-    renderAllConnectors() {
-      // debugger;
+    // renderAllConnectors() {
+    //   // debugger;
 
-      let sortedVisualKeys = this.props.store.sortedVisualComponentsKeys;
-      if (
-        Number(sortedVisualKeys[sortedVisualKeys.length - 1]) ===
-        this.props.item.index
-      ) {
-        return null;
-      }
+    //   let sortedVisualKeys = this.props.store.sortedVisualComponentsKeys;
+    //   if (
+    //     Number(sortedVisualKeys[sortedVisualKeys.length - 1]) ===
+    //     this.props.item.index
+    //   ) {
+    //     return null;
+    //   }
 
-      let connectorDeparturesColumn = this.props.item.connectorDepartures;
-      let connectorArrivalsColumn = this.props.item.connectorArrivals;
+    //   let connectorDeparturesColumn = this.props.item.connectorDepartures;
+    //   let connectorArrivalsColumn = this.props.item.connectorArrivals;
 
-      if (
-        connectorDeparturesColumn === null &&
-        connectorArrivalsColumn === null
-      ) {
-        return null;
-      }
+    //   if (
+    //     connectorDeparturesColumn === null &&
+    //     connectorArrivalsColumn === null
+    //   ) {
+    //     return null;
+    //   }
 
-      //count starts at the sum(sum(departure columns)) so that it's clear
-      // adjacent connectors are alternatives to LinkColumns
-      //offset the y to start below link columns when using vertical compression
-      // let yOffset = values(departures)
-      //   .slice(0, -1)
-      //   .map((column) => {
-      //     return column.participants.length;
-      //   })
-      //   .reduce(sum, 0); // sum of trues in all columns
-      return (
-        <>
-          {connectorDeparturesColumn
-            ? connectorDeparturesColumn.participants.map((uncompressed_row) => {
-                {
-                  /*yOffset++; // only used in vertical compression*/
-                }
-                return this.renderComponentConnector(uncompressed_row, true);
-              })
-            : null}
+    //   //count starts at the sum(sum(departure columns)) so that it's clear
+    //   // adjacent connectors are alternatives to LinkColumns
+    //   //offset the y to start below link columns when using vertical compression
+    //   // let yOffset = values(departures)
+    //   //   .slice(0, -1)
+    //   //   .map((column) => {
+    //   //     return column.participants.length;
+    //   //   })
+    //   //   .reduce(sum, 0); // sum of trues in all columns
+    //   return (
+    //     <>
+    //       {connectorDeparturesColumn
+    //         ? connectorDeparturesColumn.participants.map((uncompressed_row) => {
+    //             {
+    //               /*yOffset++; // only used in vertical compression*/
+    //             }
+    //             return this.renderComponentConnector(uncompressed_row, true);
+    //           })
+    //         : null}
 
-          {connectorArrivalsColumn
-            ? connectorArrivalsColumn.participants.map((uncompressed_row) => {
-                {
-                  /*yOffset++; // only used in vertical compression*/
-                }
-                return this.renderComponentConnector(uncompressed_row, false);
-              })
-            : null}
-        </>
-      );
-    }
+    //       {connectorArrivalsColumn
+    //         ? connectorArrivalsColumn.participants.map((uncompressed_row) => {
+    //             {
+    //               /*yOffset++; // only used in vertical compression*/
+    //             }
+    //             return this.renderComponentConnector(uncompressed_row, false);
+    //           })
+    //         : null}
+    //     </>
+    //   );
+    // }
 
     renderSeparators() {
       // if (this.props.store.updatingVisible) {
