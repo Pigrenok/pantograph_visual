@@ -2094,39 +2094,57 @@ RootStore = types
       self.chunksProcessedFasta.push(singleChunkFasta);
     },
 
+    setUpdatingVisible() {
+      self.updatingVisible = true;
+    },
+
+    clearUpdatingVisible() {
+      self.updatingVisible = false;
+    },
+
     setIndexSelectedZoomLevel(index) {
       self.updatingVisible = true;
-      let scaleFactor =
-        self.availableZoomLevels[self.indexSelectedZoomLevel] /
-        self.availableZoomLevels[index];
-      let newZoomLevel = parseInt(self.availableZoomLevels[index]);
-      // console.debug("[Store.setIndexSelectedZoomLevel] scaleFactor ",scaleFactor)
 
-      // Calculating the first column of the begin, central and end bin.
-      // It will make it easier to find proper centre and edges on the other zoom level.
+      self.breakComponentUpdate = true;
 
-      let centralColumn = self.visibleColFromBin(self.position);
-      let leftColumn = self.visibleColFromBin(self.getBeginBin, 0);
-      let rightColumn = self.visibleColFromBin(self.getEndBin, 2);
-
-      // let scaledBegin = Math.round((self.getPosition - 1) * scaleFactor) + 1;
-      // let scaledEnd = Math.round(self.getEndBin * scaleFactor);
-
-      // let centreBin = scaledBegin + Math.round((scaledEnd - scaledBegin) / 2);
-
-      self.indexSelectedZoomLevel = index;
-
-      let promiseArray = [];
-      // self.clearVisualisedComponents();
-      if (scaleFactor < 1) {
-        self.updatePosition(centralColumn, false, true, [
-          leftColumn,
-          rightColumn,
-        ]);
+      if (self.loading) {
+        setTimeout(() => {
+          self.setIndexSelectedZoomLevel(index);
+        }, 100);
       } else {
-        self.updatePosition(centralColumn, false, true, false);
-      }
+        self.breakComponentUpdate = false;
 
+        let scaleFactor =
+          self.availableZoomLevels[self.indexSelectedZoomLevel] /
+          self.availableZoomLevels[index];
+        let newZoomLevel = parseInt(self.availableZoomLevels[index]);
+        // console.debug("[Store.setIndexSelectedZoomLevel] scaleFactor ",scaleFactor)
+
+        // Calculating the first column of the begin, central and end bin.
+        // It will make it easier to find proper centre and edges on the other zoom level.
+
+        let centralColumn = self.visibleColFromBin(self.position);
+        let leftColumn = self.visibleColFromBin(self.getBeginBin, 0);
+        let rightColumn = self.visibleColFromBin(self.getEndBin, 2);
+
+        // let scaledBegin = Math.round((self.getPosition - 1) * scaleFactor) + 1;
+        // let scaledEnd = Math.round(self.getEndBin * scaleFactor);
+
+        // let centreBin = scaledBegin + Math.round((scaledEnd - scaledBegin) / 2);
+
+        self.indexSelectedZoomLevel = index;
+
+        let promiseArray = [];
+        // self.clearVisualisedComponents();
+        if (scaleFactor < 1) {
+          self.updatePosition(centralColumn, false, true, [
+            leftColumn,
+            rightColumn,
+          ]);
+        } else {
+          self.updatePosition(centralColumn, false, true, false);
+        }
+      }
       // promiseArray = promiseArray.concat(
       //   self.shiftComponentsRight(
       //     Math.max(1, centralColumn + 1),

@@ -101,16 +101,22 @@ const ControlHeader = observer(
     }
 
     decIndexSelectedZoomLevel() {
+      this.props.store.setUpdatingVisible();
       let indexSelZoomLevel = this.props.store.indexSelectedZoomLevel;
       if (indexSelZoomLevel > 0) {
         this.props.store.setIndexSelectedZoomLevel(indexSelZoomLevel - 1);
+      } else {
+        this.props.store.clearUpdatingVisible();
       }
     }
 
     incIndexSelectedZoomLevel() {
+      this.props.store.setUpdatingVisible();
       let indexSelZoomLevel = this.props.store.indexSelectedZoomLevel;
       if (indexSelZoomLevel < this.props.store.availableZoomLevels.length - 1) {
         this.props.store.setIndexSelectedZoomLevel(indexSelZoomLevel + 1);
+      } else {
+        this.props.store.clearUpdatingVisible();
       }
     }
 
