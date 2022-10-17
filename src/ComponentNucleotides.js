@@ -17,7 +17,9 @@ const ComponentNucleotides = observer(
       if (parent.firstBin < this.props.store.getBeginBin) {
         startPos = this.props.store.getBeginBin - parent.firstBin;
       } else {
-        x_val += parent.leftLinkSize * this.props.store.pixelsPerColumn;
+        x_val +=
+          (parent.arrivalVisible ? parent.leftLinkSize : 0) *
+          this.props.store.pixelsPerColumn;
       }
 
       let numBins = this.props.item.numBins;

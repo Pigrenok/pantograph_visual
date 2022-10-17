@@ -1006,7 +1006,10 @@ const App = observer(
       let width;
       let leftCut = false;
       let rightCut = false;
-      if (this.props.store.getBeginBin > schematizeComponent.firstBin) {
+      if (
+        this.props.store.getBeginBin > schematizeComponent.firstBin ||
+        !schematizeComponent.arrivalVisible
+      ) {
         width =
           schematizeComponent.lastBin -
           this.props.store.getBeginBin +

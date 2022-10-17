@@ -25,7 +25,10 @@ const ConnectorRect = observer(
             this.props.store.pixelsPerColumn;
         } else {
           x_val +=
-            (this.props.item.leftLinkSize + this.props.item.numBins) *
+            ((this.props.item.arrivalVisible
+              ? this.props.item.leftLinkSize
+              : 0) +
+              this.props.item.numBins) *
             this.props.store.pixelsPerColumn;
         }
         numCols = this.props.item.rightLinkSize;

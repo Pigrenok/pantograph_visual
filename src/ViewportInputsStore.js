@@ -188,7 +188,10 @@ const Component = types
     ldepartures: types.map(LinkColumn),
     rdepartures: types.map(LinkColumn),
     relativePixelX: types.optional(types.integer, -1),
+    // departureVisible shows whether left links should be rendered
     departureVisible: types.optional(types.boolean, true),
+    // arrivalVisible shows whether right links should be rendered
+    arrivalVisible: types.optional(types.boolean, true),
     occupants: types.array(types.integer),
     numBins: types.integer,
     matrix: types.map(ComponentMatrixElement),
@@ -386,6 +389,12 @@ const Component = types
         ) {
           self.departureVisible = false;
         }
+
+        self.arrivalVisible = true;
+        if (self.relativePixelX < 0) {
+          self.arrivalVisible = false;
+          self.relativePixelX += self.leftLinkSize * pixelsPerColumn;
+        }
       }
     },
 
@@ -538,18 +547,21 @@ RootStore = types
     firstVisiblePosition: types.optional(types.integer, 1),
     lastVisiblePosition: types.optional(types.integer, 1),
     position: types.optional(types.integer, 1),
-    breakComponentUpdate: false,
     editingPosition: types.optional(types.integer, 1),
-    editingPixelsPerColumn: types.optional(types.integer, 10),
-    editingPixelsPerRow: types.optional(types.integer, 1),
+    breakComponentUpdate: false,
+
     beginBinVisual: types.optional(types.integer, 1),
     endBinVisual: types.optional(types.integer, 1),
     useVerticalCompression: false,
     useWidthCompression: false,
     binScalingFactor: 3,
     useConnector: true,
+
     pixelsPerColumn: 10,
     pixelsPerRow: 10,
+    editingPixelsPerColumn: types.optional(types.integer, 10),
+    editingPixelsPerRow: types.optional(types.integer, 10),
+
     heightNavigationBar: 25,
     leftOffset: 1,
     maxArrowHeight: types.optional(types.integer, 0),
@@ -1472,22 +1484,24 @@ RootStore = types
 
       // Removing old references
 
-      visComps.forEach((item) => {
+      visComps.forEach((item, index) => {
         let curComp = self.components.get(item);
-        curComp.moveTo(
-          relativePos * self.pixelsPerColumn,
-          self.windowWidth,
-          self.pixelsPerColumn
-        );
+        curComp.moveTo(relativePos, self.windowWidth, self.pixelsPerColumn);
         let leftSize = curComp.leftLinkSize;
         let bodySize = curComp.numBins;
 
-        if (relativePos == 0 && curComp.firstBin < begin) {
+        if (!curComp.arrivalVisible) {
+          relativePos = curComp.relativePixelX;
           leftSize = 0;
           bodySize = Math.round(curComp.lastBin - begin + 1);
         }
-        relativePos += leftSize + bodySize + curComp.rightLinkSize;
-        self.visualisedComponents.set(item, item);
+
+        relativePos +=
+          (leftSize + bodySize + curComp.rightLinkSize) * self.pixelsPerColumn;
+
+        if (curComp.firstBin < begin && index == 0) {
+          self.visualisedComponents.set(item, item);
+        }
       });
 
       // Adding new components to visualised components
@@ -2455,8 +2469,12 @@ RootStore = types
 
       return values(self.visualisedComponents).find((comp) => {
         return (
-          ((comp.lastBin === bin && self.getEndBin >= comp.lastBin) ||
-            (comp.firstBin === bin && self.getBeginBin <= comp.firstBin)) &&
+          ((comp.lastBin === bin &&
+            self.getEndBin >= comp.lastBin &&
+            comp.departureVisible) ||
+            (comp.firstBin === bin &&
+              self.getBeginBin <= comp.firstBin &&
+              comp.arrivalVisible)) &&
           comp.index.split("_")[0] === zoomLevel
         );
       });

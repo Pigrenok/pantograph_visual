@@ -133,7 +133,8 @@ const LinkColumn = observer(
           if (this.props.item.otherSideRight) {
             dLink = dComp.rarrivals.get(arrivalKey);
             if (dComp.firstBin >= this.props.store.getBeginBin) {
-              dOffset = dComp.leftLinkSize + dComp.numBins;
+              dOffset =
+                (dComp.arrivalVisible ? dComp.leftLinkSize : 0) + dComp.numBins;
             } else {
               dOffset = dComp.lastBin - this.props.store.getBeginBin + 1;
             }

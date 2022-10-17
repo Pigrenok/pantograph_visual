@@ -147,7 +147,10 @@ const ComponentRect = observer(
 
       let this_x;
 
-      if (this.props.store.getBeginBin > this.props.item.firstBin) {
+      if (
+        this.props.store.getBeginBin > this.props.item.firstBin ||
+        !this.props.item.arrivalVisible
+      ) {
         this_x = this.props.item.relativePixelX;
       } else {
         this_x =
@@ -274,17 +277,19 @@ const ComponentRect = observer(
 
       return (
         <>
-          <Line
-            points={[
-              this.props.item.relativePixelX,
-              this.props.y,
-              this.props.item.relativePixelX,
-              this.props.y + this.props.height - 1,
-            ]}
-            stroke={colour}
-            strokeWidth={2}
-            key={"LeftSelectionMarker"}
-          />
+          {this.props.item.arrivalVisible ? (
+            <Line
+              points={[
+                this.props.item.relativePixelX,
+                this.props.y,
+                this.props.item.relativePixelX,
+                this.props.y + this.props.height - 1,
+              ]}
+              stroke={colour}
+              strokeWidth={2}
+              key={"LeftSelectionMarker"}
+            />
+          ) : null}
           {this.props.item.departureVisible ? (
             <Line
               points={[
@@ -317,7 +322,8 @@ const ComponentRect = observer(
 
       if (
         this.props.item.firstBin >= this.props.store.getBeginBin &&
-        this.props.item.leftLinkSize > 0
+        this.props.item.leftLinkSize > 0 &&
+        this.props.item.arrivalVisible
       ) {
         // lines.push(
         //   <>
@@ -410,7 +416,10 @@ const ComponentRect = observer(
             key={"d" + this.props.item.index}
             x={
               this.props.item.relativePixelX +
-              (this.props.item.leftLinkSize + this.props.item.numBins) *
+              ((this.props.item.arrivalVisible
+                ? this.props.item.leftLinkSize
+                : 0) +
+                this.props.item.numBins) *
                 this.props.store.pixelsPerColumn
             }
             y={this.props.y}
