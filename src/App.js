@@ -914,6 +914,8 @@ const App = observer(
       }
       // next component this.props.store.visualisedComponents[i+1]
 
+      // debugger;
+
       if (!leftCut) {
         let prevComp;
 
@@ -1205,12 +1207,14 @@ const App = observer(
       if (this.props.store.chunkLoading) {
         return (
           <Text
-            key="loading"
+            key={"loading"}
+            x={10}
             y={100}
             fontSize={60}
             width={300}
-            align="center"
-            text="Loading index... "
+            height={100}
+            align={"center"}
+            text={"Loading index... "}
           />
         );
       }

@@ -574,9 +574,9 @@ RootStore = types
     cellToolTipContent: "",
 
     // jsonName: "paths_presentation_new",
-    jsonName: "coregraph_Chr1_new",
+    // jsonName: "coregraph_Chr1_new",
     // jsonName: "coregraph_genes__new",
-    // jsonName: "AT_Chr1_OGOnly_2.1_new",
+    jsonName: "AT_Chr1_OGOnly_2.1_new",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -1028,31 +1028,31 @@ RootStore = types
       self.components.delete(id);
     },
 
-    removeNucleotides(length, fromBeginning) {
-      console.debug("[Store.removeNucleotides]");
-      if (self.nucleotides.length > 0) {
-        if (fromBeginning) {
-          self.nucleotides.splice(0, length);
-        } else {
-          self.nucleotides.splice(self.nucleotides.length - length, length);
-        }
-        // need to implement, see `removeComponent` for reference.
-      }
-    },
+    // removeNucleotides(length, fromBeginning) {
+    //   console.debug("[Store.removeNucleotides]");
+    //   if (self.nucleotides.length > 0) {
+    //     if (fromBeginning) {
+    //       self.nucleotides.splice(0, length);
+    //     } else {
+    //       self.nucleotides.splice(self.nucleotides.length - length, length);
+    //     }
+    //     // need to implement, see `removeComponent` for reference.
+    //   }
+    // },
 
     removeComponents(lastStop, fromBeginning) {
       for (let index of self.sortedComponentsKeys) {
         let comp = self.components.get(index);
         if (fromBeginning) {
           if (comp.lastBin < lastStop) {
-            self.removeNucleotides(comp.numBins, fromBeginning);
+            // self.removeNucleotides(comp.numBins, fromBeginning);
             self.removeComponent(comp.firstBin);
           } else {
             break;
           }
         } else {
           if (comp.firstBin > lastStop) {
-            self.removeNucleotides(comp.numBins, fromBeginning);
+            // self.removeNucleotides(comp.numBins, fromBeginning);
             self.removeComponent(comp.firstBin);
           }
         }

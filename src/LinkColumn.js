@@ -252,6 +252,8 @@ const LinkColumn = observer(
 
       let isRight;
 
+      // debugger;
+
       // if (this.props.item.key.slice(0, 1) === "d") {
       // arrival
       if (this.props.item.key.slice(this.props.item.key.length - 3) === "osr") {
