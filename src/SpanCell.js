@@ -482,10 +482,6 @@ export const SpanCell = observer(
           startPos < endPos ? this.props.entry.occupiedBins[startPos] - 1 : 0;
       }
 
-      if (this.props.entry.binData[starti * step] === undefined) {
-        debugger;
-      }
-
       let prevOcc = Math.round(this.props.entry.binData[starti * step].repeats);
       let prevInv =
         this.props.entry.binData[starti * step].reversal > 0.5 ? 1 : 0;
@@ -498,6 +494,21 @@ export const SpanCell = observer(
       // console.debug("[SpanCell.render] starti", starti);
       // console.debug("[SpanCell.render] endi", endi);
 
+      // if (this.props.parent.zoom_level=='32' &&
+      //     this.props.pathName=='6069') {
+      //   debugger;
+      // }
+
+      let binArrayStart;
+      let binArrayDir;
+      if (this.props.entry.inverted) {
+        binArrayStart = this.props.parent.lastBin;
+        binArrayDir = -1;
+      } else {
+        binArrayStart = this.props.parent.firstBin;
+        binArrayDir = 1;
+      }
+
       for (let i = starti; i < endi; i++) {
         let column = this.props.entry.occupiedBins[step * i];
         let bin = this.props.entry.binData[step * i];
@@ -507,7 +518,7 @@ export const SpanCell = observer(
         if (column === prev + step && prevOcc === occ && prevInv === inv) {
           //contiguous
           newSpan.push(this.props.entry.binData[step * i]);
-          binArray.push(column + this.props.parent.firstBin);
+          binArray.push(binArrayStart + binArrayDir * column);
         } else {
           // console.debug("[SpanCell.render] newSpan",newSpan)
           // if (newSpan.length==0) {
@@ -542,7 +553,7 @@ export const SpanCell = observer(
             xAdjustment;
           //create new newSpan
           newSpan = [this.props.entry.binData[step * i]];
-          binArray = [column];
+          binArray = [binArrayStart + binArrayDir * column];
         }
         prev = column;
         prevOcc = occ;
