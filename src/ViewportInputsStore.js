@@ -1046,14 +1046,14 @@ RootStore = types
         if (fromBeginning) {
           if (comp.lastBin < lastStop) {
             // self.removeNucleotides(comp.numBins, fromBeginning);
-            self.removeComponent(comp.firstBin);
+            self.removeComponent(comp.index);
           } else {
             break;
           }
         } else {
           if (comp.firstBin > lastStop) {
             // self.removeNucleotides(comp.numBins, fromBeginning);
-            self.removeComponent(comp.firstBin);
+            self.removeComponent(comp.index);
           }
         }
       }
@@ -1340,7 +1340,7 @@ RootStore = types
             break;
           }
         }
-        self.setPosition(centreBin); // Is it correct?
+        // Is it correct?
       } else {
         for (let i = 0; i < sortedKeys.length; i++) {
           if (parseInt(sortedKeys[i].split("_")[1]) > centreBin) {
@@ -1349,6 +1349,8 @@ RootStore = types
           }
         }
       }
+
+      self.setPosition(centreBin);
       // Preparation ends
       let curComp = self.components.get(sortedKeys[centreCompIndex]);
 
@@ -1725,7 +1727,6 @@ RootStore = types
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
 
       // Need to handle zoom switch somehow.
-
       self.breakComponentUpdate = true;
 
       if (self.loading) {
@@ -1840,15 +1841,15 @@ RootStore = types
               promiseArray = [];
             });
           } else {
-            self.setPosition(newPos);
+            // self.setPosition(newPos);
             self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
 
             self.mainUpdate(newPos);
           }
         } else {
-          if (!byCol) {
-            self.setPosition(newPos);
-          }
+          // if (!byCol) {
+          //   self.setPosition(newPos);
+          // }
 
           if ((self.components.size > 0) & !byCol) {
             self.clearComponents();
@@ -2204,7 +2205,7 @@ RootStore = types
     // },
 
     setPosition(newPos) {
-      self.editingPosition = newPos;
+      self.setEditingPosition(newPos);
       self.position = newPos;
     },
 
