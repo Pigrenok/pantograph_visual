@@ -5,11 +5,7 @@ import PropTypes from "prop-types";
 
 export const MatrixCell = observer(
   class extends React.Component {
-    onHover(event) {
-      //tooltip: this.props.item.mean_pos
-
-      // An example: Path_name, Coverage: 0.23, Inversion: 0.0, Pos: 2365-27289
-
+    cellDataCalc(event, tooltip = true) {
       //TODO: calculate relative X and select item from this.props.range
       let relColumnX = Math.floor(
         Math.max(0, event.evt.layerX - this.props.x) /
@@ -24,8 +20,9 @@ export const MatrixCell = observer(
       // let pathName = this.props.pathName.startsWith("NC_045512")
       //   ? "Reference: " + this.props.pathName
       //   : this.props.pathName;
-      let tooltipContent = '"';
-      tooltipContent += this.props.pathName + '"';
+
+      let isStart = false;
+      let isEnd = false;
 
       this.props.store.setHighlightedAccession(this.props.rowNumber);
 
@@ -34,7 +31,7 @@ export const MatrixCell = observer(
           (!this.props.inverted && relColumnX === 0) ||
           (this.props.inverted && relColumnX === this.props.range.length - 1)
         ) {
-          tooltipContent += " [Start]";
+          isStart = true;
         }
       }
 
@@ -43,19 +40,12 @@ export const MatrixCell = observer(
           (this.props.inverted && relColumnX === 0) ||
           (!this.props.inverted && relColumnX === this.props.range.length - 1)
         ) {
-          tooltipContent += " [End]";
+          isEnd = true;
         }
       }
-      tooltipContent +=
-        "\nCoverage: " +
-        item.repeats +
-        "\nInversion: " +
-        item.reversal +
-        "\nBin: " +
-        bin +
-        "\nPos: ";
 
       const ranges = item.pos;
+      let posRanges = "";
       for (let j = 0; j < ranges.length; j++) {
         const start = ranges[j][0];
         const end = ranges[j][1];
@@ -73,35 +63,75 @@ export const MatrixCell = observer(
           new_content = "," + new_content;
         }
 
-        tooltipContent += new_content;
+        posRanges += new_content;
       }
 
-      let maxNumAnnotationToShow = 15;
+      let resultArray = [
+        isStart,
+        isEnd,
+        item.repeats,
+        item.reversal,
+        bin,
+        posRanges,
+      ];
+      if (!tooltip) {
+        // Loading annotation from external sources will go here.
+        let maxNumAnnotationToShow = 15;
 
-      if (item.annotation.length > 0) {
-        // if (item.reversal <= 0.5) {
-        tooltipContent +=
-          "\n" +
-          item.annotation
-            .slice()
-            .sort((a, b) => {
-              return a.length - b.length;
-            })
-            .slice(0, maxNumAnnotationToShow)
-            .join("\n");
+        let annot = "";
 
-        if (item.annotation.length > maxNumAnnotationToShow) {
-          tooltipContent += "\n... (" + item.annotation.length + ")";
+        if (item.annotation.length > 0) {
+          // if (item.reversal <= 0.5) {
+          annot +=
+            // "\nAnnotation for column (" +
+            // item.annotation.length + "):\n" +
+
+            item.annotation
+              .slice()
+              .sort((a, b) => {
+                return a.length - b.length;
+              })
+              // .slice(0, maxNumAnnotationToShow)
+              .join(", ");
         }
-        // } else {
-        // tooltipContent += "\n" + item.annotation.reverse();
-        // }
+
+        resultArray.push(annot);
+        resultArray.push(item.annotation.length);
       }
 
-      if (this.props.store.metaData.get(this.props.pathName) !== undefined) {
-        tooltipContent +=
-          "\n" + this.props.store.metaData.get(this.props.pathName).Info;
+      return resultArray;
+    }
+
+    onHover(event) {
+      let [isStart, isEnd, repeats, reversal, bin, posRanges] =
+        this.cellDataCalc(event);
+
+      let tooltipContent = "";
+      tooltipContent += this.props.pathName;
+
+      if (isStart) {
+        tooltipContent += " [Start]";
       }
+
+      if (isEnd) {
+        tooltipContent += " [End]";
+      }
+
+      tooltipContent +=
+        "\nCoverage: " +
+        repeats +
+        "\nInversion: " +
+        reversal +
+        "\nBin: " +
+        bin +
+        "\nPos: ";
+
+      tooltipContent += posRanges;
+      // if (this.props.store.metaData.get(this.props.pathName) !== undefined) {
+      //   tooltipContent +=
+      //     "\n" + this.props.store.metaData.get(this.props.pathName).Info;
+      // }
+
       this.props.store.updateCellTooltipContent(tooltipContent); //item[2] is array of ranges
       this.props.store.updateMouse(event.evt.clientX, event.evt.clientY);
     }
@@ -109,6 +139,71 @@ export const MatrixCell = observer(
     onLeave() {
       this.props.store.updateCellTooltipContent(""); // we don't want any tooltip displayed if we leave the cell
       this.props.store.clearHighlightedAccession(); // Colour back all accessions.
+
+      let box = document.getElementById("floating");
+      if (box.style.display == "none") {
+        document.getElementById("floating").innerHTML = "";
+      }
+    }
+
+    getFloatWindowContext(event) {
+      let windowContent = "<p>";
+      let [
+        isStart,
+        isEnd,
+        repeats,
+        reversal,
+        bin,
+        posRanges,
+        annotations,
+        annotLen,
+      ] = this.cellDataCalc(event, false);
+
+      windowContent += "Accession:" + this.props.pathName;
+
+      if (isStart) {
+        windowContent += " [Start]";
+      }
+
+      if (isEnd) {
+        windowContent += " [End]";
+      }
+
+      windowContent +=
+        "<br>Coverage: " +
+        repeats +
+        "<br>Inversion: " +
+        reversal +
+        "<br>Bin: " +
+        bin +
+        "<br>Pos: ";
+
+      windowContent += posRanges;
+
+      if (annotations != "") {
+        windowContent += "<br>Annotation (" + annotLen + ")<br>";
+        windowContent += annotations;
+      }
+
+      windowContent += "</p>";
+
+      return windowContent;
+    }
+
+    onClick(e) {
+      if (e.evt.button == 0) {
+        this.props.handleClickMethod();
+      } else if (e.evt.button == 2) {
+        let box = document.getElementById("floating");
+
+        let windowContent = this.getFloatWindowContext(e);
+
+        if (box.style.display == "none") {
+          box.innerHTML = windowContent;
+        }
+
+        box.style.display = "block";
+      }
     }
 
     isStartInRange(array) {
@@ -132,7 +227,10 @@ export const MatrixCell = observer(
             text={inverted ? "<" : " "}
             onMouseMove={this.onHover.bind(this)}
             onMouseLeave={this.onLeave.bind(this)}
-            onClick={this.props.handleClickMethod}
+            onContextMenu={(e) => {
+              e.evt.preventDefault();
+            }}
+            onClick={this.onClick.bind(this)}
           />
         );
       } else {
@@ -168,7 +266,10 @@ export const MatrixCell = observer(
           strokeWidth={2}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
-          onClick={this.props.handleClickMethod}
+          onContextMenu={(e) => {
+            e.evt.preventDefault();
+          }}
+          onClick={this.onClick.bind(this)}
         />
       );
     }
@@ -197,7 +298,10 @@ export const MatrixCell = observer(
           strokeWidth={2}
           onMouseMove={this.onHover.bind(this)}
           onMouseLeave={this.onLeave.bind(this)}
-          onClick={this.props.handleClickMethod}
+          onContextMenu={(e) => {
+            e.evt.preventDefault();
+          }}
+          onClick={this.onClick.bind(this)}
         />
       );
     }
@@ -289,7 +393,10 @@ export const MatrixCell = observer(
             fill={color}
             onMouseMove={this.onHover.bind(this)}
             onMouseLeave={this.onLeave.bind(this)}
-            onClick={this.props.handleClickMethod}
+            onContextMenu={(e) => {
+              e.evt.preventDefault();
+            }}
+            onClick={this.onClick.bind(this)}
           />
           {this.inversionText(inverted)}
           {this.props.isStart

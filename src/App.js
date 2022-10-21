@@ -1359,34 +1359,45 @@ const App = observer(
             ) : null}
           </div>
 
-          {this.props.store.chunkLoading ? null : (
-            <Stage
-              x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
-              y={2 * this.props.store.pixelsPerColumn * 2} // For some reason, I have to put this, but I'd like to put 0
-              width={this.props.store.windowWidth}
-              height={
-                this.props.store.chunkIndex.pathNames.length *
-                  this.props.store.pixelsPerRow +
-                (this.props.store.maxArrowHeight + 5) *
-                  this.props.store.pixelsPerColumn
-              }
-            >
-              <Layer ref={this.layerRef}>
-                {this.renderNucleotidesSchematic()}
-                {this.renderSchematic()}
-                {this.renderZoomRect()}
-                {this.renderCentreLine()}
-              </Layer>
-            </Stage>
-          )}
+          <div id="mainDiv">
+            {this.props.store.chunkLoading ? null : (
+              <Stage
+                x={this.props.store.leftOffset} // removed leftOffset to simplify code. Relative coordinates are always better.
+                y={2 * this.props.store.pixelsPerColumn * 2} // For some reason, I have to put this, but I'd like to put 0
+                width={this.props.store.windowWidth}
+                height={
+                  this.props.store.chunkIndex.pathNames.length *
+                    this.props.store.pixelsPerRow +
+                  (this.props.store.maxArrowHeight + 5) *
+                    this.props.store.pixelsPerColumn
+                }
+              >
+                <Layer ref={this.layerRef}>
+                  {this.renderNucleotidesSchematic()}
+                  {this.renderSchematic()}
+                  {this.renderZoomRect()}
+                  {this.renderCentreLine()}
+                </Layer>
+              </Stage>
+            )}
 
-          <NucleotideTooltip store={this.props.store} />
-          <Legend store={this.props.store} />
+            <NucleotideTooltip store={this.props.store} />
+            <Legend store={this.props.store} />
+            <div id="floating" style={{ display: "none" }}></div>
+          </div>
         </>
       );
     }
   }
 );
 // render(<App />, document.getElementById('root'));
+
+document.addEventListener("click", function handleClickOutsideBox(event) {
+  const box = document.getElementById("floating");
+
+  if (!box.contains(event.target)) {
+    box.style.display = "none";
+  }
+});
 
 export default App;
