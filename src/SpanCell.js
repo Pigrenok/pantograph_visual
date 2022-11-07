@@ -3,9 +3,11 @@ import { Rect, Text } from "react-konva";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
 
+import { jsonCache } from "./ViewportInputsStore";
+
 export const MatrixCell = observer(
   class extends React.Component {
-    cellDataCalc(event, tooltip = true) {
+    cellDataCalc(event) {
       //TODO: calculate relative X and select item from this.props.range
       let relColumnX = Math.floor(
         Math.max(0, event.evt.layerX - this.props.x) /
@@ -74,30 +76,31 @@ export const MatrixCell = observer(
         bin,
         posRanges,
       ];
-      if (!tooltip) {
-        // Loading annotation from external sources will go here.
-        let maxNumAnnotationToShow = 15;
+      // if (!tooltip) {
+      //   // Loading annotation from external sources will go here.
+      //   debugger;
+      //   let maxNumAnnotationToShow = 15;
 
-        let annot = "";
+      //   let annot = "";
 
-        if (item.annotation.length > 0) {
-          // if (item.reversal <= 0.5) {
-          annot +=
-            // "\nAnnotation for column (" +
-            // item.annotation.length + "):\n" +
+      //   if (item.annotation.length > 0) {
+      //     // if (item.reversal <= 0.5) {
+      //     annot +=
+      //       // "\nAnnotation for column (" +
+      //       // item.annotation.length + "):\n" +
 
-            item.annotation
-              .slice()
-              .sort((a, b) => {
-                return a.length - b.length;
-              })
-              // .slice(0, maxNumAnnotationToShow)
-              .join(", ");
-        }
+      //       item.annotation
+      //         .slice()
+      //         .sort((a, b) => {
+      //           return a.length - b.length;
+      //         })
+      //         // .slice(0, maxNumAnnotationToShow)
+      //         .join(", ");
+      //   }
 
-        resultArray.push(annot);
-        resultArray.push(item.annotation.length);
-      }
+      //   resultArray.push(annot);
+      //   resultArray.push(item.annotation.length);
+      // }
 
       return resultArray;
     }
@@ -155,9 +158,9 @@ export const MatrixCell = observer(
         reversal,
         bin,
         posRanges,
-        annotations,
-        annotLen,
-      ] = this.cellDataCalc(event, false);
+        // annotations,
+        // annotLen,
+      ] = this.cellDataCalc(event);
 
       windowContent += "Accession:" + this.props.pathName;
 
@@ -180,14 +183,58 @@ export const MatrixCell = observer(
 
       windowContent += posRanges;
 
-      if (annotations != "") {
-        windowContent += "<br>Annotation (" + annotLen + ")<br>";
-        windowContent += annotations;
-      }
+      // if (annotations != "") {
+      //   windowContent += "<br>Annotation (" + annotLen + ")<br>";
+      //   windowContent += annotations;
+      // }
 
       windowContent += "</p>";
 
-      return windowContent;
+      return [windowContent, bin];
+    }
+
+    loadExtraFromAPI(bin, box) {
+      function recordData(box, res) {
+        let annotationsArray = res.split(",");
+
+        let annotationStr = "";
+
+        if (annotationsArray.length > 0) {
+          // if (item.reversal <= 0.5) {
+          annotationStr +=
+            "<p><br>Annotation (" + annotationsArray.length + ")<br>\n";
+
+          annotationStr += annotationsArray
+            .slice()
+            .sort((a, b) => {
+              return a.length - b.length;
+            })
+            // .slice(0, maxNumAnnotationToShow)
+            .join(", ");
+          annotationStr += "</p>";
+
+          box.innerHTML += annotationStr;
+        }
+      }
+
+      const addr = this.props.store.pathIndexServerAddress;
+      const jsonName = this.props.store.jsonName;
+      const path_name = this.props.pathName;
+      const localBin = bin - this.props.parent.firstBin;
+      const colStart =
+        this.props.parent.firstCol +
+        this.props.parent.binsToCols.slice(0, localBin).reduce((sum, a) => {
+          return sum + a;
+        }, 0) -
+        1;
+      const colEnd = colStart + this.props.parent.binsToCols[localBin] - 1;
+
+      let url = `${addr}/annotation/${jsonName}/${path_name}/${colStart}/${colEnd}`;
+
+      jsonCache
+        .getRaw(url)
+        .then((data) => data.text())
+        .then((res) => recordData(box, res));
     }
 
     onClick(e) {
@@ -196,10 +243,11 @@ export const MatrixCell = observer(
       } else if (e.evt.button == 2) {
         let box = document.getElementById("floating");
 
-        let windowContent = this.getFloatWindowContext(e);
+        let [windowContent, bin] = this.getFloatWindowContext(e);
 
         if (box.style.display == "none") {
           box.innerHTML = windowContent;
+          this.loadExtraFromAPI(bin, box);
         }
 
         box.style.display = "block";
@@ -605,7 +653,6 @@ export const SpanCell = observer(
       //     this.props.pathName=='6069') {
       //   debugger;
       // }
-
       let binArrayStart;
       let binArrayDir;
       if (this.props.entry.inverted) {
@@ -632,6 +679,7 @@ export const SpanCell = observer(
           //   debugger
           // }
           //non-contiguous
+
           matrixCells.push(
             <MatrixCell
               key={"span" + this.props.entry.pathID + "," + x}
@@ -639,6 +687,7 @@ export const SpanCell = observer(
               binRange={binArray}
               store={this.props.store}
               pathName={this.props.pathName}
+              parent={this.props.parent}
               //color={this.props.color}
               x={this.props.x + x * this.props.store.pixelsPerColumn}
               y={this.props.y}
@@ -679,6 +728,7 @@ export const SpanCell = observer(
             binRange={binArray}
             store={this.props.store}
             pathName={this.props.pathName}
+            parent={this.props.parent}
             //color={this.props.color}
             x={this.props.x + x * this.props.store.pixelsPerColumn}
             y={this.props.y}

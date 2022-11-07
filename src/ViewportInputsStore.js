@@ -125,7 +125,6 @@ const BinData = types.model({
   repeats: types.number,
   reversal: types.number,
   pos: types.array(types.array(types.integer)),
-  annotation: types.array(types.string),
 });
 
 const ComponentMatrixElement = types
@@ -142,7 +141,6 @@ const ComponentMatrixElement = types
           repeats: bin[0],
           reversal: bin[1],
           pos: bin[2],
-          annotation: bin[3],
         });
       }
     },
@@ -574,9 +572,9 @@ RootStore = types
     cellToolTipContent: "",
 
     // jsonName: "paths_presentation_new",
-    // jsonName: "coregraph_Chr1_new",
-    // jsonName: "coregraph_genes__new",
-    jsonName: "AT_Chr1_OGOnly_2.1_new",
+    jsonName: "coregraph_Chr1_new",
+    // jsonName: "coregraph_genes_Chr1_new",
+    // jsonName: "AT_Chr1_OGOnly_2.1_new",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -1304,7 +1302,6 @@ RootStore = types
       //   "[Store.shiftVisualisedComponentsCentre] highlight",
       //   highlight
       // );
-      // debugger;
 
       let visComps = [];
       self.maxArrowHeight = 0;
@@ -1364,12 +1361,12 @@ RootStore = types
       let counter = 1;
 
       while (
-        leftSpaceInCols < self.columnsInView / 2 &&
+        leftSpaceInCols < self.leftHalfCols &&
         centreCompIndex - counter >= 0
       ) {
         curComp = self.components.get(sortedKeys[centreCompIndex - counter]);
 
-        if (leftSpaceInCols + curComp.rightLinkSize < self.columnsInView / 2) {
+        if (leftSpaceInCols + curComp.rightLinkSize < self.leftHalfCols) {
           // if (
           //   leftSpaceInCols + curComp.rightLinkSize + curComp.numBins <=
           //   self.columnsInView / 2
@@ -1401,17 +1398,15 @@ RootStore = types
 
       let arrivalVisible = true;
 
-      if (leftSpaceInCols < self.columnsInView / 2) {
+      if (leftSpaceInCols < self.leftHalfCols) {
         // rightSpaceInCols -= Math.round(
         //   self.columnsInView / 2 - leftSpaceInCols
         // );
         begin = curComp.firstBin;
-      } else if (leftSpaceInCols > self.columnsInView / 2) {
+      } else if (leftSpaceInCols > self.leftHalfCols) {
         let beginAdj = Math.max(
           0,
-          Math.ceil(
-            leftSpaceInCols - self.columnsInView / 2 - curComp.leftLinkSize
-          )
+          Math.ceil(leftSpaceInCols - self.leftHalfCols - curComp.leftLinkSize)
         );
         begin = curComp.firstBin + beginAdj;
         // + curComp.leftLinkSize transferred to component.moveTo()
@@ -1421,8 +1416,8 @@ RootStore = types
         begin = curComp.firstBin;
       }
 
-      if (leftSpaceInCols > self.columnsInView / 2) {
-        leftSpaceInCols = self.columnsInView / 2;
+      if (leftSpaceInCols > self.leftHalfCols) {
+        leftSpaceInCols = self.leftHalfCols;
       }
 
       counter = 1;
@@ -1430,13 +1425,13 @@ RootStore = types
       let rightFilled = false;
 
       while (
-        rightSpaceInCols < self.columnsInView / 2 &&
+        rightSpaceInCols < self.rightHalfCols &&
         centreCompIndex + counter < sortedKeys.length
       ) {
         rightFilled = true;
         curComp = self.components.get(sortedKeys[centreCompIndex + counter]);
 
-        if (rightSpaceInCols + curComp.leftLinkSize < self.columnsInView / 2) {
+        if (rightSpaceInCols + curComp.leftLinkSize < self.rightHalfCols) {
           rightSpaceInCols +=
             curComp.leftLinkSize + curComp.numBins + curComp.rightLinkSize;
 
@@ -1455,10 +1450,10 @@ RootStore = types
         curComp = self.components.get(sortedKeys[centreCompIndex]);
       }
 
-      if (rightSpaceInCols < self.columnsInView / 2) {
+      if (rightSpaceInCols < self.rightHalfCols) {
         end = curComp.lastBin;
       } else {
-        if (rightSpaceInCols - curComp.rightLinkSize < self.columnsInView / 2) {
+        if (rightSpaceInCols - curComp.rightLinkSize < self.rightHalfCols) {
           end = curComp.lastBin;
         } else {
           end =
@@ -1466,9 +1461,7 @@ RootStore = types
             Math.max(
               0,
               Math.ceil(
-                rightSpaceInCols -
-                  curComp.rightLinkSize -
-                  self.columnsInView / 2
+                rightSpaceInCols - curComp.rightLinkSize - self.rightHalfCols
               )
             );
         }
@@ -1722,11 +1715,16 @@ RootStore = types
       newPos,
       highlight = false,
       byCol = false,
-      zoomHighlight = []
+      zoomHighlight = [],
+      zoom = false
     ) {
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
 
+      // TODO! Here byCol is also a flag of change of zoom level, which is not true anymore for the case of gene search.
+      // In this case, col should be converted to bin first and then should be processed as usual.
+
       // Need to handle zoom switch somehow.
+
       self.breakComponentUpdate = true;
 
       if (self.loading) {
@@ -1748,12 +1746,21 @@ RootStore = types
         }
 
         // TODO: manage a maxPosition based on the width of the last components in the pangenome
-
+        let newBin;
         if (byCol) {
           newPos = Math.min(
             self.last_col_pangenome,
             Math.max(1, Math.round(newPos))
           );
+
+          if (!zoom) {
+            newBin = self.binByCol(newPos);
+
+            if (newBin !== undefined) {
+              newPos = newBin;
+              byCol = false;
+            }
+          }
         } else {
           newPos = Math.min(
             self.last_bin_pangenome,
@@ -1763,7 +1770,7 @@ RootStore = types
 
         let sortedKeys = self.sortedComponentsKeys;
 
-        if (sortedKeys.length > 0 && !byCol) {
+        if (sortedKeys.length > 0 && !byCol && !zoom) {
           let firstBinInComponents = self.components.get(
             sortedKeys[0]
           ).firstBin;
@@ -1851,12 +1858,12 @@ RootStore = types
           //   self.setPosition(newPos);
           // }
 
-          if ((self.components.size > 0) & !byCol) {
+          if ((self.components.size > 0) & !zoom) {
             self.clearComponents();
           }
 
           let multiplier = 1;
-          if (byCol) {
+          if (zoom) {
             multiplier = parseInt(self.selectedZoomLevel);
           }
 
@@ -1882,7 +1889,7 @@ RootStore = types
           );
 
           Promise.all(promiseArray).then(() => {
-            if (!byCol) {
+            if (!zoom) {
               self.clearVisualisedComponents();
             }
             self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
@@ -2150,12 +2157,15 @@ RootStore = types
         let promiseArray = [];
         // self.clearVisualisedComponents();
         if (scaleFactor < 1) {
-          self.updatePosition(centralColumn, false, true, [
-            leftColumn,
-            rightColumn,
-          ]);
+          self.updatePosition(
+            centralColumn,
+            false,
+            true,
+            [leftColumn, rightColumn],
+            true
+          );
         } else {
-          self.updatePosition(centralColumn, false, true, false);
+          self.updatePosition(centralColumn, false, true, false, true);
         }
       }
       // promiseArray = promiseArray.concat(
@@ -2410,7 +2420,13 @@ RootStore = types
       return Math.floor(self.windowWidth / self.pixelsPerColumn);
     },
     get centreBinEndPos() {
-      return Math.round(self.columnsInView / 2) * self.pixelsPerColumn;
+      return self.leftHalfCols * self.pixelsPerColumn;
+    },
+    get leftHalfCols() {
+      return Math.round(self.columnsInView / 2);
+    },
+    get rightHalfCols() {
+      return self.columnsInView - self.leftHalfCols;
     },
     get navigation_bar_width() {
       return self.windowWidth - 2;
@@ -2530,6 +2546,22 @@ RootStore = types
         });
       }
       return res;
+    },
+
+    binByCol(col) {
+      let res = values(self.components).find((comp) => {
+        return comp.lastCol >= col && comp.firstCol <= col;
+      });
+
+      if (res !== undefined) {
+        let binStart = res.binColStarts.findIndex((colStart) => {
+          return colStart <= col;
+        });
+
+        return binStart + res.firstBin;
+      } else {
+        return res;
+      }
     },
 
     compByBin(bin, zoom = "auto") {

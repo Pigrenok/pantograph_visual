@@ -50,12 +50,13 @@ const ControlHeader = observer(
 
       function handleSearchServerResponse(result) {
         if (result === "-1") {
-          alert(`Did not find position ${search} in accession ${path_name}.`);
-        } else if (result === "-2") {
-          alert(`Did not find case ${jsonName} in database.`);
+          alert(
+            `Did not find position ${search} in accession ${path_name} for case ${jsonName}.`
+          );
         } else {
           // console.log('[ControlHeader.handleJump.handleSearchServerResponse] Found bin',result);
           // go from nucleotide position to bin
+
           result = parseInt(result);
 
           result = Math.max(1, result);
@@ -66,24 +67,26 @@ const ControlHeader = observer(
           // } else {
           //   jumpToRight = 1;
           // }
+          if (doSearchGenes) {
+            store.updatePosition(result + 1, true, true);
+          } else {
+            store.updatePosition(result, true);
+          }
 
-          store.updatePosition(result, true);
           // store.updateBeginEndBin(result, true);
         }
       }
       // httpGetAsync(addr + "hi", printResult);
       // httpGetAsync(addr + "5/1", printResult);
       // httpGetAsync(addr + "4/3", printResult);
-      let url = `${addr}/${
-        doSearchGenes ? "gene" : "pos"
-      }/${jsonName}/${path_name}/${zoomLevel}/${search}`;
-      // if (searchGenes) {
-      //   let url = `${addr}/gene/${jsonName}/${path_name}/${zoomLevel}/${search}`;
-      // } else {
-      //   let url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
-      // }
 
-      //httpGetAsync(`${addr}/${path_name}/${nuc_pos}`, handleOdgiServerResponse);
+      let url;
+      if (doSearchGenes) {
+        url = `${addr}/gene/${jsonName}/${path_name}/${search}`;
+      } else {
+        url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+      }
+
       jsonCache
         .getRaw(url)
         .then((data) => data.text())
