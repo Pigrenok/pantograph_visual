@@ -1685,15 +1685,15 @@ RootStore = types
     //   self.updatingVisible = false;
     // },
 
-    mainUpdate(newPos, byCol = false) {
+    mainUpdate(newPos, byCol = false, clean = true) {
       let promiseArray = [];
 
       promiseArray = promiseArray.concat(
         self.shiftComponentsLeft(
           Math.max(1, newPos - 2 * self.columnsInView),
           newPos,
-          false,
-          true
+          byCol,
+          clean
         )
       );
 
@@ -1701,8 +1701,8 @@ RootStore = types
         self.shiftComponentsRight(
           newPos,
           Math.min(newPos + 2 * self.columnsInView, self.last_bin_pangenome),
-          false,
-          true
+          byCol,
+          clean
         )
       );
 
@@ -1892,6 +1892,7 @@ RootStore = types
             if (!zoom) {
               self.clearVisualisedComponents();
             }
+
             self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
             if (zoomHighlight.length == 2) {
               self.setZoomHighlightBoundaries(...zoomHighlight);
@@ -1901,7 +1902,7 @@ RootStore = types
             }
             setTimeout(() => {
               self.clearOldZoomLevelComponents().then(() => {
-                self.mainUpdate(newPos, byCol);
+                self.mainUpdate(newPos, byCol, !zoom);
               });
             }, 0);
           });
