@@ -2555,7 +2555,7 @@ RootStore = types
       });
 
       if (res !== undefined) {
-        let binStart = res.binColStarts.findIndex((colStart) => {
+        let binStart = res.binColStarts.findLastIndex((colStart) => {
           return colStart <= col;
         });
 
