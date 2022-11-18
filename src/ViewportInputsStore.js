@@ -1023,6 +1023,7 @@ RootStore = types
     },
 
     removeComponent(id) {
+      self.visualisedComponents.delete(id);
       self.components.delete(id);
     },
 
@@ -1485,7 +1486,6 @@ RootStore = types
       // Removing old references
 
       visComps.forEach((item, index) => {
-        // debugger;
         let curComp = self.components.get(item);
         curComp.moveTo(
           relativePos,
