@@ -1400,4 +1400,19 @@ document.addEventListener("click", function handleClickOutsideBox(event) {
   }
 });
 
+document.addEventListener(
+  "keydown",
+  (event) => {
+    var name = event.key;
+
+    if (name === "Escape") {
+      document.getElementById("floating").style.display = "none";
+    }
+    //   var code = event.code;
+    //   // Alert the key name and key code on keydown
+    //   alert(`Key pressed ${name} \r\n Key code value: ${code}`);
+  },
+  false
+);
+
 export default App;
