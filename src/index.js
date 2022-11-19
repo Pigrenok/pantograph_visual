@@ -9,6 +9,32 @@ import { store } from "./ViewportInputsStore";
 
 ReactDOM.render(<App store={store} />, document.getElementById("root"));
 
+function clearFloating() {
+  store.clearHighlightCell();
+  document.getElementById("floating").style.display = "none";
+}
+
+document.addEventListener("click", function handleClickOutsideBox(event) {
+  if (!document.getElementById("floating").contains(event.target)) {
+    clearFloating();
+  }
+});
+
+document.addEventListener(
+  "keydown",
+  (event) => {
+    var name = event.key;
+
+    if (name === "Escape") {
+      clearFloating();
+    }
+    //   var code = event.code;
+    //   // Alert the key name and key code on keydown
+    //   alert(`Key pressed ${name} \r\n Key code value: ${code}`);
+  },
+  false
+);
+
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA

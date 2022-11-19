@@ -1264,7 +1264,6 @@ const App = observer(
         return this.loadingMessage();
       }
 
-      // console.debug("[App.render] loading index status", this.props.store.loading)
       console.log("Start render");
 
       //this.state.actualWidth - 2
@@ -1391,28 +1390,5 @@ const App = observer(
   }
 );
 // render(<App />, document.getElementById('root'));
-
-document.addEventListener("click", function handleClickOutsideBox(event) {
-  const box = document.getElementById("floating");
-
-  if (!box.contains(event.target)) {
-    box.style.display = "none";
-  }
-});
-
-document.addEventListener(
-  "keydown",
-  (event) => {
-    var name = event.key;
-
-    if (name === "Escape") {
-      document.getElementById("floating").style.display = "none";
-    }
-    //   var code = event.code;
-    //   // Alert the key name and key code on keydown
-    //   alert(`Key pressed ${name} \r\n Key code value: ${code}`);
-  },
-  false
-);
 
 export default App;
