@@ -533,6 +533,11 @@ const metaDataModelEntry = types.model({
   Info: types.string,
 });
 
+const cellHighlightClass = types.model({
+  bin: types.integer,
+  accession: types.integer,
+});
+
 let RootStore;
 RootStore = types
   .model({
@@ -636,6 +641,7 @@ RootStore = types
     ),
     zoomHighlightBoundaries: types.array(types.integer),
     zoomHighlightBoundariesCoord: types.array(types.integer),
+    highlightedCell: types.maybeNull(cellHighlightClass),
     components: types.map(Component),
     visualisedComponents: types.map(
       types.reference(types.late(() => Component))
@@ -659,6 +665,17 @@ RootStore = types
 
     toggleColourRepeats() {
       self.colourRepeats = !self.colourRepeats;
+    },
+
+    highlightCell(bin, accession) {
+      self.highlightedCell = cellHighlightClass.create({
+        bin: bin,
+        accession: accession,
+      });
+    },
+
+    clearHighlightCell() {
+      self.highlightedCell = null;
     },
 
     toggleDoHighlightRows() {

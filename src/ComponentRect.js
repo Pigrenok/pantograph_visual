@@ -130,6 +130,22 @@ const ComponentRect = observer(
       return <>{parts}</>;
     }
 
+    calcStartOfCols() {
+      let this_x;
+      if (
+        this.props.store.getBeginBin > this.props.item.firstBin ||
+        !this.props.item.arrivalVisible
+      ) {
+        this_x = this.props.item.relativePixelX;
+      } else {
+        this_x =
+          this.props.item.relativePixelX +
+          this.props.item.leftLinkSize * this.props.store.pixelsPerColumn;
+      }
+
+      return this_x;
+    }
+
     renderMatrixRow(entry) {
       // let this_y = verticalRank;
       // if (!this.props.store.useVerticalCompression) {
@@ -145,18 +161,7 @@ const ComponentRect = observer(
 
       let this_y = entry.pathID;
 
-      let this_x;
-
-      if (
-        this.props.store.getBeginBin > this.props.item.firstBin ||
-        !this.props.item.arrivalVisible
-      ) {
-        this_x = this.props.item.relativePixelX;
-      } else {
-        this_x =
-          this.props.item.relativePixelX +
-          this.props.item.leftLinkSize * this.props.store.pixelsPerColumn;
-      }
+      let this_x = this.calcStartOfCols();
 
       let pathName = this.props.store.chunkIndex.pathNames[entry.pathID];
       // let rowColor = "#838383";
@@ -570,6 +575,23 @@ const ComponentRect = observer(
     //   // }
     // }
 
+    renderHighlightCell() {
+      return (
+        <Rect
+          x={this.calcStartOfCols()}
+          y={
+            this.props.y +
+            this.props.store.highlightedCell.accession *
+              this.props.store.pixelsPerRow
+          }
+          key={this.props.item.index + "highlight"}
+          width={this.props.store.pixelsPerColumn}
+          height={this.props.store.pixelsPerRow} //TODO: change to compressed height
+          fill={"green"}
+        />
+      );
+    }
+
     render() {
       if (this.props.store.chunkLoading) {
         return null;
@@ -585,6 +607,15 @@ const ComponentRect = observer(
       // // console.debug("[ComponentRect.render] widthInColumns", this.props.widthInColumns)
       // // console.debug("[ComponentRect.render] height", this.props.height)
 
+      let highlight = false;
+      if (this.props.store.highlightedCell !== null) {
+        if (
+          this.props.store.highlightedCell.bin >= this.props.item.firstBin &&
+          this.props.store.highlightedCell.bin <= this.props.item.lastBin
+        ) {
+          highlight = true;
+        }
+      }
       if (this.props.store.zoomHighlightBoundaries.length === 2) {
         this.renderZoomBoundary();
       }
@@ -605,9 +636,10 @@ const ComponentRect = observer(
           {/*{this.renderLinkBoundary()}*/}
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
           {/*{this.props.store.useConnector ? this.renderAllConnectors() : null}*/}
-          {this.renderSeparators()}
+          {/*{this.renderSeparators()}*/}
           {this.renderBlockMarker()}
           {/*{this.renderLinkBoundary()}*/}
+          {highlight ? this.renderHighlightCell() : null}
         </>
       );
     }

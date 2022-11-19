@@ -245,6 +245,8 @@ export const MatrixCell = observer(
 
         let [windowContent, bin] = this.getFloatWindowContext(e);
 
+        this.props.store.highlightCell(bin, this.props.rowNumber);
+
         if (box.style.display == "none") {
           box.innerHTML = windowContent;
           this.loadExtraFromAPI(bin, box);
