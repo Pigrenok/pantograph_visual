@@ -18,7 +18,7 @@ class JSONCache {
     this.cacheAvailable = "caches" in window;
 
     if (this.cacheAvailable) {
-      caches.delete("jsonData");
+      // caches.delete("jsonData");
       caches.open("jsonData").then((cache) => {
         this.cache = cache;
       });
@@ -87,6 +87,7 @@ class JSONCache {
   }
 
   getRaw(url) {
+    // Add case when cacheAvailable is false!
     let result = this.cache.match(url).then((response) => {
       if (response) {
         // console.debug("[JSONCache.getJSON] Got from cache");
