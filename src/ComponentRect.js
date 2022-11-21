@@ -636,7 +636,7 @@ const ComponentRect = observer(
           {/*{this.renderLinkBoundary()}*/}
           {!this.props.store.useWidthCompression ? this.renderMatrix() : null}
           {/*{this.props.store.useConnector ? this.renderAllConnectors() : null}*/}
-          {/*{this.renderSeparators()}*/}
+          {this.renderSeparators()}
           {this.renderBlockMarker()}
           {/*{this.renderLinkBoundary()}*/}
           {highlight ? this.renderHighlightCell() : null}
