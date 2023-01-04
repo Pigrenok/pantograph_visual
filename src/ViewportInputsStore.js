@@ -780,8 +780,10 @@ RootStore = types
       if (!fromRight) {
         compArray.reverse();
       }
-      console.debug("[Store.addComponents] compArray", compArray);
-      console.debug("[Store.addComponents] nucleotides", nucleotides);
+      let compBins = [];
+      compArray.forEach((comp) => {
+        compBins.push([comp.first_bin, comp.last_bin]);
+      });
 
       for (const component of compArray.splice(splicing)) {
         // If new update is needed, current update should be interrupted.
