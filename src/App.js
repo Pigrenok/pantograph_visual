@@ -1193,15 +1193,15 @@ const App = observer(
       });
     }
 
-    renderSortedLinks() {
-      if (this.props.store.chunkLoading) {
-        return;
-      }
+    // renderSortedLinks() {
+    //   if (this.props.store.chunkLoading) {
+    //     return;
+    //   }
 
-      return this.distanceSortedLinks.map((record, i) => {
-        return this.renderLink(record);
-      });
-    }
+    //   return this.distanceSortedLinks.map((record, i) => {
+    //     return this.renderLink(record);
+    //   });
+    // }
 
     loadingMessage() {
       if (this.props.store.chunkLoading) {
