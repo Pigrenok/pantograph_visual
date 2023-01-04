@@ -232,6 +232,7 @@ const Component = types
       let linkArray = departures.concat(arrivals);
 
       const sortFunc = (a, isad, b, isbd) => {
+        // isad, isbd - if link a and link b (respectively) are departure links
         let ad;
         if (!isad) {
           ad = a.downstream - a.upstream;
@@ -249,6 +250,12 @@ const Component = types
           return ad - bd;
         } else if (ad * bd < 0) {
           return bd - ad;
+        } else if (ad * bd == 0) {
+          if (ad == 0) {
+            return Math.abs(bd);
+          } else {
+            return Math.abs(ad);
+          }
         } else {
           if (ad === bd) {
             return 0;
@@ -323,6 +330,12 @@ const Component = types
           return bd - ad;
         } else if (ad * bd < 0) {
           return ad - bd;
+        } else if (ad * bd == 0) {
+          if (ad == 0) {
+            return -1 * Math.abs(bd);
+          } else {
+            return -1 * Math.abs(ad);
+          }
         } else {
           if (ad === bd) {
             return 0;
