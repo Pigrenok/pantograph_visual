@@ -682,12 +682,21 @@ RootStore = types
 
       if (checked) {
         self.filterPaths.push(parseInt(pathID));
-        self.filterPaths.sort((a, b) => a - b);
+        self.filterPaths.replace(
+          self.filterPaths.slice().sort((a, b) => a - b)
+        );
       } else {
-        self.filterPaths = self.filterPaths.filter(
-          (a) => a !== parseInt(pathID)
+        self.filterPaths.replace(
+          self.filterPaths
+            .filter((a) => a !== parseInt(pathID))
+            .slice()
+            .sort((a, b) => a - b)
         );
       }
+    },
+
+    clearFilterPathsArray() {
+      self.filterPaths.replace([]);
     },
 
     toggleColourRepeats() {

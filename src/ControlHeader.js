@@ -370,12 +370,21 @@ const ControlHeader = observer(
                     data-bs-auto-close="outside"
                     aria-expanded="false"
                   >
-                    Clickable inside
+                    Accessions
                   </button>
                   <ul
                     class="dropdown-menu"
                     aria-labelledby="filterAccSelection"
                   >
+                    <li>
+                      <button
+                        type="button"
+                        class="btn btn-outline-light"
+                        onClick={this.props.store.clearFilterPathsArray}
+                      >
+                        ❌ Clear
+                      </button>
+                    </li>
                     {this.props.store.chunkIndex !== null
                       ? this.props.store.chunkIndex.pathNames.map(
                           (item, key) => (
@@ -386,6 +395,9 @@ const ControlHeader = observer(
                                   type="checkbox"
                                   value={key}
                                   id={item + "Check"}
+                                  checked={this.props.store.filterPaths.includes(
+                                    key
+                                  )}
                                   onChange={(event) =>
                                     this.props.store.changeFilterPathsArray(
                                       event.target.checked,
