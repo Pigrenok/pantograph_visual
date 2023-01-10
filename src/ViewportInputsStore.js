@@ -653,6 +653,7 @@ RootStore = types
       []
     ),
     filterPaths: types.optional(types.array(types.integer), []),
+    filterMainAccession: types.maybeNull(types.integer),
     zoomHighlightBoundaries: types.array(types.integer),
     zoomHighlightBoundariesCoord: types.array(types.integer),
     highlightedCell: types.maybeNull(cellHighlightClass),
@@ -686,17 +687,31 @@ RootStore = types
           self.filterPaths.slice().sort((a, b) => a - b)
         );
       } else {
+        let iPathID = parseInt(pathID);
         self.filterPaths.replace(
           self.filterPaths
-            .filter((a) => a !== parseInt(pathID))
+            .filter((a) => a !== iPathID)
             .slice()
             .sort((a, b) => a - b)
         );
+        if (iPathID == self.filterMainAccession) {
+          self.filterMainAccession = null;
+        }
       }
     },
 
     clearFilterPathsArray() {
       self.filterPaths.replace([]);
+    },
+
+    changeFilterMainPath(value) {
+      console.debug("[changeFilterMainPath]", value);
+      let iValue = parseInt(value);
+      if (iValue === -1) {
+        self.filterMainAccession = null;
+      } else {
+        self.filterMainAccession = iValue;
+      }
     },
 
     toggleColourRepeats() {

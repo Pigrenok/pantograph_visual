@@ -419,6 +419,36 @@ const ControlHeader = observer(
                       : null}
                   </ul>
                 </div>
+                <select
+                  class="form-select"
+                  id="mainAccSelect"
+                  aria-label="Main Accession Select"
+                  onChange={(event) =>
+                    this.props.store.changeFilterMainPath(event.target.value)
+                  }
+                >
+                  <option
+                    value={-1}
+                    selected={this.props.store.filterMainAccession === null}
+                  >
+                    No main accession
+                  </option>
+                  {this.props.store.filterPaths.map((item) => (
+                    <option
+                      value={item}
+                      selected={this.props.store.filterMainAccession === item}
+                    >
+                      {this.props.store.chunkIndex.pathNames.get(item)}
+                    </option>
+                  ))}
+                </select>
+
+                {/* <select class='form-select' >
+                  <option selected label='Select main accession'>Open this select menu</option>
+                  <option value="1">One</option>
+                  <option value="2">Two</option>
+                  <option value="3">Three</option>
+                </select>*/}
 
                 {/*<select multiple name='accessions' id='accFilter'>
                     {this.props.store.chunkIndex !== null
