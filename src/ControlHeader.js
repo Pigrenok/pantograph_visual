@@ -350,6 +350,7 @@ const ControlHeader = observer(
                   // disabled
                 />
                 <button
+                  class="btn btn-secondary"
                   onClick={() => this.handleJump()}
                   // disabled
                 >
