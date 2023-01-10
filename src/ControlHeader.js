@@ -164,290 +164,371 @@ const ControlHeader = observer(
 
     render() {
       return (
-        <div id="button-container">
-          {/*<button className="button" id="btn-download">*/}
-          {/*  Save Image*/}
-          {/*</button>*/}
-          <input
-            type="text"
-            defaultValue={this.props.store.jsonName}
-            style={{ width: "330px" }}
-            onChange={(event) => {
-              this.props.store.tryJSONpath(event.target.value);
-            }}
-            title={"File:"}
-            disabled={this.props.store.updatingVisible}
-          />
-          <span style={{ marginLeft: "30px" }}>
-            <>
-              Bin width:
-              <button
-                className="button"
-                onClick={() => this.decIndexSelectedZoomLevel()}
-                disabled={this.props.store.updatingVisible}
-              >
-                -
-              </button>
-              <select
-                id="select_bin_width"
-                onChange={(event) => this.change_zoom_level(event.target)}
-                value={this.props.store.indexSelectedZoomLevel}
-                disabled={this.props.store.updatingVisible}
-              >
-                {this.props.store.availableZoomLevels.map((item, i) => (
-                  <option key={i} value={i}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="button"
-                onClick={() => this.incIndexSelectedZoomLevel()}
-                disabled={this.props.store.updatingVisible}
-              >
-                +
-              </button>
-            </>
-          </span>
-
-          <span style={{ marginLeft: "30px" }}>
-            <button
-              className="button"
-              onClick={() => this.shift(-100)}
-              disabled={this.props.store.updatingVisible}
-            >
-              &lt;&lt;
-            </button>
-            <button
-              className="button"
-              onClick={() => this.shift(-50)}
-              disabled={this.props.store.updatingVisible}
-            >
-              &lt;
-            </button>{" "}
-            Pangenome Bin Position:
-            <>
+        <div id="button-container" class="container-fluid">
+          <div class="row">
+            {/*<button className="button" id="btn-download">*/}
+            {/*  Save Image*/}
+            {/*</button>*/}
+            <div class="col-auto">
               <input
-                type="number"
-                value={this.props.store.editingPosition} // TODO Get methods don't work here, but I don't know why. Need to ask Robert Buels.
-                onChange={this.handleShift.bind(this)}
-                style={{ width: "80px" }}
+                type="text"
+                defaultValue={this.props.store.jsonName}
+                style={{ width: "330px" }}
+                onChange={(event) => {
+                  this.props.store.tryJSONpath(event.target.value);
+                }}
+                title={"File:"}
                 disabled={this.props.store.updatingVisible}
               />
-              {/*-
-              <input
-                type="number"
-                value={this.props.store.getEndBin}
-                readOnly
-                style={{ width: "80px" }}
-              />*/}
-            </>
-            <button
-              className="button"
-              onClick={() => this.shift(50)}
-              disabled={this.props.store.updatingVisible}
-            >
-              &gt;
-            </button>
-            <button
-              className="button"
-              onClick={() => this.shift(100)}
-              disabled={this.props.store.updatingVisible}
-            >
-              &gt;&gt;
-            </button>
+            </div>
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Bin width:</span>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onClick={() => this.incIndexSelectedZoomLevel()}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  -
+                </button>
+                <select
+                  id="select_bin_width"
+                  onChange={(event) => this.change_zoom_level(event.target)}
+                  value={this.props.store.indexSelectedZoomLevel}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  {this.props.store.availableZoomLevels.map((item, i) => (
+                    <option key={i} value={i}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onClick={() => this.decIndexSelectedZoomLevel()}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Pangenome Bin Position:</span>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onClick={() => this.shift(-100)}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  &lt;&lt;
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onClick={() => this.shift(-50)}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  &lt;
+                </button>
+
+                <input
+                  type="number"
+                  value={this.props.store.editingPosition} // TODO Get methods don't work here, but I don't know why. Need to ask Robert Buels.
+                  onChange={this.handleShift.bind(this)}
+                  style={{ width: "80px" }}
+                  disabled={this.props.store.updatingVisible}
+                />
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onClick={() => this.shift(50)}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  &gt;
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onClick={() => this.shift(100)}
+                  disabled={this.props.store.updatingVisible}
+                >
+                  &gt;&gt;
+                </button>
+              </div>
+            </div>
+
             {/*Debuggin fields: need to remove later*/}
-            <span style={{ marginLeft: "10px" }}>
-              Begin Bin:
-              <input
-                type="number"
-                value={this.props.store.getBeginBin}
-                disabled={true}
-                style={{ width: "80px" }}
-              />
-            </span>
-            <span style={{ marginLeft: "10px" }}>
-              End Bin:
-              <input
-                type="number"
-                value={this.props.store.getEndBin}
-                disabled={true}
-                style={{ width: "80px" }}
-              />
-            </span>
-            {/*End of debugging fields*/}
-          </span>
-          <div className={"row"}>
-            Search: {/*Need Extra attention*/}
-            <span className="myarrow">
-              <input
-                type="checkbox"
-                checked={this.props.store.searchTerms.searchGenes}
-                onChange={(event) =>
-                  this.props.store.updateSearchTerms(
-                    this.props.store.searchTerms.path,
-                    event.target.checked,
-                    this.props.store.searchTerms.search
-                  )
-                }
-              />
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Begin Bin:</span>
+                <input
+                  type="number"
+                  value={this.props.store.getBeginBin}
+                  disabled={true}
+                  style={{ width: "80px" }}
+                />
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">End Bin:</span>
+                <input
+                  type="number"
+                  value={this.props.store.getEndBin}
+                  disabled={true}
+                  style={{ width: "80px" }}
+                />
+                {/*End of debugging fields*/}
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-auto">
+              <div class="input-group">
+                <div class="input-group-prepend">
+                  <span class="input-group-text">Search:</span>
+                </div>
 
-              <input
-                type="string"
-                list="path"
-                name="path"
-                placeholder={"Path"}
-                id="#show-suggestions"
-                onChange={(event) =>
-                  this.props.store.updateSearchTerms(
-                    event.target.value,
-                    this.props.store.searchTerms.searchGenes,
-                    this.props.store.searchTerms.search
-                  )
-                }
-                value={this.props.store.searchTerms.path}
-                style={{ width: "80px" }}
-                // disabled
-              />
-            </span>
-            <datalist id="path">
-              {this.props.store.chunkIndex !== null
-                ? this.props.store.chunkIndex.pathNames.map((item, key) => (
-                    <option key={key} value={item} />
-                  ))
-                : null}
-            </datalist>
-            -
-            <input
-              type="search"
-              placeholder={
-                this.props.store.searchTerms.searchGenes
-                  ? "Gene name"
-                  : "Position"
-              }
-              onChange={(event) =>
-                this.props.store.updateSearchTerms(
-                  this.props.store.searchTerms.path,
-                  this.props.store.searchTerms.searchGenes,
-                  event.target.value
-                )
-              }
-              style={{ width: "120px" }}
-              // disabled
-            />
-            <span style={{ marginLeft: "2px" }}>
-              <button
-                className="button"
-                onClick={() => this.handleJump()}
-                // disabled
-              >
-                Jump
-              </button>
-            </span>
-            <span style={{ marginLeft: "30px" }}>
-              Pangenome Last Bin: {this.props.store.last_bin_pangenome}
-            </span>
-            <span style={{ marginLeft: "30px" }}>
-              Num. of individuals:{" "}
-              {this.props.store.chunkIndex === null
-                ? 0
-                : this.props.store.chunkIndex.pathNames.length}
-            </span>
+                <input
+                  class="form-control"
+                  type="text"
+                  list="path"
+                  name="path"
+                  placeholder={"Path"}
+                  id="show-suggestions"
+                  onChange={(event) =>
+                    this.props.store.updateSearchTerms(
+                      event.target.value,
+                      this.props.store.searchTerms.searchGenes,
+                      this.props.store.searchTerms.search
+                    )
+                  }
+                  value={this.props.store.searchTerms.path}
+                  style={{ width: "150px" }}
+                  // disabled
+                />
+                <datalist id="path">
+                  {this.props.store.chunkIndex !== null
+                    ? this.props.store.chunkIndex.pathNames.map((item, key) => (
+                        <option key={key} value={item} />
+                      ))
+                    : null}
+                </datalist>
+
+                <input
+                  type="checkbox"
+                  class="form-check-input"
+                  checked={this.props.store.searchTerms.searchGenes}
+                  onChange={(event) =>
+                    this.props.store.updateSearchTerms(
+                      this.props.store.searchTerms.path,
+                      event.target.checked,
+                      this.props.store.searchTerms.search
+                    )
+                  }
+                />
+                <input
+                  class="form-control"
+                  type="text"
+                  placeholder={
+                    this.props.store.searchTerms.searchGenes
+                      ? "Gene name"
+                      : "Position"
+                  }
+                  onChange={(event) =>
+                    this.props.store.updateSearchTerms(
+                      this.props.store.searchTerms.path,
+                      this.props.store.searchTerms.searchGenes,
+                      event.target.value
+                    )
+                  }
+                  style={{ width: "200px" }}
+                  // disabled
+                />
+                <button
+                  onClick={() => this.handleJump()}
+                  // disabled
+                >
+                  Jump
+                </button>
+              </div>
+            </div>
+
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Filter rearrangements:</span>
+                <div class="btn-group">
+                  <button
+                    class="btn btn-secondary dropdown-toggle"
+                    type="button"
+                    id="filterAccSelection"
+                    data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside"
+                    aria-expanded="false"
+                  >
+                    Clickable inside
+                  </button>
+                  <ul
+                    class="dropdown-menu"
+                    aria-labelledby="filterAccSelection"
+                  >
+                    {this.props.store.chunkIndex !== null
+                      ? this.props.store.chunkIndex.pathNames.map(
+                          (item, key) => (
+                            <li>
+                              <div class="form-check">
+                                <input
+                                  class="form-check-input"
+                                  type="checkbox"
+                                  value={key}
+                                  id={item + "Check"}
+                                  onChange={(event) =>
+                                    this.props.store.changeFilterPathsArray(
+                                      event.target.checked,
+                                      event.target.value
+                                    )
+                                  }
+                                />
+                                <label
+                                  class="form-check-label"
+                                  for={item + "Check"}
+                                >
+                                  {item}
+                                </label>
+                              </div>
+                            </li>
+                          )
+                        )
+                      : null}
+                  </ul>
+                </div>
+
+                {/*<select multiple name='accessions' id='accFilter'>
+                    {this.props.store.chunkIndex !== null
+                    ? this.props.store.chunkIndex.pathNames.map((item, key) => (
+                        <option key={key} value={item} />
+                      ))
+                    : null}
+                  </select>*/}
+              </div>
+            </div>
+
+            <div class="col-auto">
+              <label class="form-label">
+                Pangenome Last Bin: {this.props.store.last_bin_pangenome}
+              </label>
+            </div>
+            <div class="col-auto">
+              <label class="form-label">
+                Num. of individuals:{" "}
+                {this.props.store.chunkIndex === null
+                  ? 0
+                  : this.props.store.chunkIndex.pathNames.length}
+              </label>
+            </div>
             {/* This block prints array with selected components. Can be used for any other parameters.
               DEBUG ONLY!!!
             <span style={{ marginLeft: "30px" }}>
               [{this.props.store.selectedComponents.map(pair => {return pair.toString()}).join('], [') }]
             </span>*/}
           </div>
-          <div className={"row"}>
-            <span>
+          <div class="row">
+            <div class="col-auto">
               {" "}
-              Hide inversion links:
-              <input
-                type="checkbox"
-                checked={this.props.store.hideInversionLinks}
-                onChange={this.props.store.toggleHideInversionLinks}
-              />
-            </span>
-            <span>
-              {" "}
-              Highlight accessions:
-              <input
-                type="checkbox"
-                checked={this.props.store.doHighlightRows}
-                onChange={this.props.store.toggleDoHighlightRows}
-              />
-            </span>
-            <span>
-              {" "}
-              Dimmed by default:
-              <input
-                type="checkbox"
-                checked={this.props.store.preferHighlight}
-                onChange={this.props.store.togglePreferHighlight}
-                disabled={!this.props.store.doHighlightRows}
-              />
-            </span>
-            <span>
-              {" "}
-              Show copies:
-              <input
-                type="checkbox"
-                checked={this.props.store.colourRepeats}
-                onChange={this.props.store.toggleColourRepeats}
-              />
-            </span>
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="hideInvCheck"
+                  checked={this.props.store.hideInversionLinks}
+                  onChange={this.props.store.toggleHideInversionLinks}
+                />
+                <label class="form-check-label" for="flexCheckDefault">
+                  Hide inversion links
+                </label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="highlightAccCHeck"
+                  checked={this.props.store.doHighlightRows}
+                  onChange={this.props.store.toggleDoHighlightRows}
+                />
+                <label class="form-check-label" for="flexCheckDefault">
+                  Highlight accessions
+                </label>
+              </div>
+            </div>
+            <div class="col-auto align-middle">
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="dimmedByDefaultCheck"
+                  checked={this.props.store.preferHighlight}
+                  onChange={this.props.store.togglePreferHighlight}
+                  disabled={!this.props.store.doHighlightRows}
+                />
+                <label class="form-check-label" for="flexCheckDefault">
+                  Dimmed by default
+                </label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-check form-switch">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="flexCheckDefault"
+                  checked={this.props.store.colourRepeats}
+                  onChange={this.props.store.toggleColourRepeats}
+                />
+                <label class="form-check-label" for="flexCheckDefault">
+                  Show copies
+                </label>
+              </div>
+            </div>
 
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Row Height:</span>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  min={1}
+                  value={this.props.store.pixelsPerRow}
+                  onChange={this.props.store.updateHeight}
+                  style={{ width: "50px" }}
+                />
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="input-group">
+                <span class="input-group-text">Column Width:</span>
+                <input
+                  type="number"
+                  class="form-control form-control-sm"
+                  min={1}
+                  value={this.props.store.editingPixelsPerColumn}
+                  onChange={this.handleChangeWidth.bind(this)}
+                  style={{ width: "50px" }}
+                />
+              </div>
+            </div>
+
+            <div class="col-auto">
+              <label class="form-label">
+                [{this.props.store.filterPaths.join(", ")}]
+              </label>
+            </div>
             {/*<span>
-              {" "}
-              Show Only Rearrangements:
-              <WidthCompressedViewSwitch store={this.props.store} />
-            </span>
-            {this.props.store.useWidthCompression ? (
-              <React.Fragment>
-                <span>
-                  {" "}
-                  Render Connectors:
-                  <RenderConnectorSwitch store={this.props.store} />
-                </span>
-              </React.Fragment>
-            ) : (
-              <></>
-              /*
-              // At the moment the gene annotation will be always displayed if present
-              <span>
-                {" "}
-                    Display gene annotations:
-                <Observer>
-                  {() => <ColorGeoSwitch store={this.props.store} />}
-                </Observer>
-              </span>
-              
-            )}*/}
-            <span>
-              {" "}
-              Row Height:
-              <input
-                type="number"
-                min={1}
-                value={this.props.store.pixelsPerRow}
-                onChange={this.props.store.updateHeight}
-                style={{ width: "50px" }}
-              />
-            </span>
-            <span>
-              {" "}
-              Column Width:
-              <input
-                type="number"
-                min={1}
-                value={this.props.store.editingPixelsPerColumn}
-                onChange={this.handleChangeWidth.bind(this)}
-                style={{ width: "50px" }}
-              />
-            </span>
-
-            <span>
               &nbsp;
               <a
                 href={"https://github.com/graph-genome/Schematize/wiki"}
@@ -456,13 +537,8 @@ const ControlHeader = observer(
               >
                 <strong>Pantograph Tutorial</strong>
               </a>
-              {/*<button className="button" onClick={() => this.testJSON()}>
-              Test json cache!
-            </button>
-            <button className="button" onClick={() => this.testChunkIndex()}>
-              Test chunk index!
-            </button>*/}
-            </span>
+              
+            </span>*/}
           </div>
         </div>
       );
