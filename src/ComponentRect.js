@@ -254,6 +254,13 @@ const ComponentRect = observer(
       // console.log("Departures:",this.props.item.departures)
       // console.log("Arrivals:",this.props.item.arrivals)
       for (let h = 0; h <= this.props.store.chunkIndex.pathNames.length; h++) {
+        let colour = "black";
+        if (
+          h === this.props.store.filterMainAccession ||
+          h - 1 === this.props.store.filterMainAccession
+        ) {
+          colour = "blue";
+        }
         lines.push(
           <Line
             points={[
@@ -263,7 +270,7 @@ const ComponentRect = observer(
                 this.props.widthInColumns * this.props.store.pixelsPerColumn,
               this.props.y + h * this.props.store.pixelsPerRow,
             ]}
-            stroke={"black"}
+            stroke={colour}
             strokeWidth={1}
             key={"LineHeight" + h}
           />

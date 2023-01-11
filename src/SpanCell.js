@@ -26,8 +26,6 @@ export const MatrixCell = observer(
       let isStart = false;
       let isEnd = false;
 
-      this.props.store.setHighlightedAccession(this.props.rowNumber);
-
       if (this.props.isStart) {
         if (
           (!this.props.inverted && relColumnX === 0) ||
@@ -137,6 +135,12 @@ export const MatrixCell = observer(
 
       this.props.store.updateCellTooltipContent(tooltipContent); //item[2] is array of ranges
       this.props.store.updateMouse(event.evt.clientX, event.evt.clientY);
+      if (
+        this.props.store.filterPaths.length === 0 ||
+        this.props.store.filterPaths.includes(this.props.rowNumber)
+      ) {
+        this.props.store.setHighlightedAccession(this.props.rowNumber);
+      }
     }
 
     onLeave() {
@@ -409,16 +413,27 @@ export const MatrixCell = observer(
           }
         }
       }
-      if (this.props.store.preferHighlight) {
-        if (this.props.store.highlightedAccession == null) {
+
+      let dehighlighted = false;
+      if (this.props.store.filterPaths.length > 0) {
+        if (!this.props.store.filterPaths.includes(this.props.rowNumber)) {
           color = color + "4C";
+          dehighlighted = true;
         }
       }
 
-      if (this.props.store.doHighlightRows) {
+      if (this.props.store.preferHighlight && !dehighlighted) {
+        if (this.props.store.highlightedAccession == null) {
+          color = color + "4C";
+          dehighlighted = true;
+        }
+      }
+
+      if (this.props.store.doHighlightRows && !dehighlighted) {
         if (this.props.store.highlightedAccession != null) {
           if (this.props.store.highlightedAccession != this.props.rowNumber) {
             color = color + "4C";
+            dehighlighted = true;
           }
         }
       }
