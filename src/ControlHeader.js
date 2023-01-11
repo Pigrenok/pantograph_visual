@@ -426,6 +426,7 @@ const ControlHeader = observer(
                   onChange={(event) =>
                     this.props.store.changeFilterMainPath(event.target.value)
                   }
+                  disabled={this.props.store.filterPaths.length === 0}
                 >
                   <option
                     value={-1}
@@ -517,7 +518,10 @@ const ControlHeader = observer(
                   id="dimmedByDefaultCheck"
                   checked={this.props.store.preferHighlight}
                   onChange={this.props.store.togglePreferHighlight}
-                  disabled={!this.props.store.doHighlightRows}
+                  disabled={
+                    !this.props.store.doHighlightRows |
+                    (this.props.store.filterPaths.length > 0)
+                  }
                 />
                 <label class="form-check-label" for="flexCheckDefault">
                   Dimmed by default

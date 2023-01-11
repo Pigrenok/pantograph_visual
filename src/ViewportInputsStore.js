@@ -698,6 +698,10 @@ RootStore = types
           self.filterMainAccession = null;
         }
       }
+
+      if (self.filterPaths.length > 0) {
+        self.preferHighlight = false;
+      }
     },
 
     clearFilterPathsArray() {
@@ -737,7 +741,11 @@ RootStore = types
     },
 
     togglePreferHighlight() {
-      self.preferHighlight = !self.preferHighlight;
+      if (self.filterPaths.length === 0) {
+        self.preferHighlight = !self.preferHighlight;
+      } else {
+        self.preferHighlight = false;
+      }
     },
 
     setHighlightedAccession(accessionNumber) {
