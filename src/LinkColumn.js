@@ -214,7 +214,7 @@ const LinkColumn = observer(
               this.props.store.highlightedAccession
             )
           ) {
-            arrowOpacity = 0.3;
+            arrowOpacity = this.props.store.hiddenElementOpacity;
           }
         }
       }
@@ -332,8 +332,13 @@ const LinkColumn = observer(
     }
 
     render() {
-      //const contents = this.linkCells();
-
+      // if (this.props.store.filterMainAccession != null &&
+      //   this.props.store.doHighlightRows &&
+      //   this.props.store.highlightedAccession != null &&
+      //   this.props.item.upstream == 40 &&
+      //   this.props.item.downstream == 38) {
+      //   debugger;
+      // }
       if (this.props.store.chunkLoading) {
         return null;
       }
@@ -348,12 +353,47 @@ const LinkColumn = observer(
 
       let [localColor, localOpacity, localStroke] = stringToColorAndOpacity(
         this.props.item,
-        this.props.store.highlightedLink
+        this.props.store.highlightedLink,
+        this.props.store.hiddenElementOpacity
       );
 
+      let hideLink = false;
+      if (this.props.store.filterPaths.length > 0) {
+        if (this.props.store.filterMainAccession === null) {
+          // If main accession is not selected
+          let interactionsN = this.props.store.filterPaths.filter((el) =>
+            this.props.item.participants.includes(el)
+          ).length;
+          let filterLength = this.props.store.filterPaths.length;
+          // Checking if this link is a diff between selected accessions
+          if (interactionsN === 0 || interactionsN === filterLength) {
+            // If not, hide the link.
+            hideLink = true;
+          }
+        } else {
+          // If main accession is selected
+          let otherAcc = this.props.store.filterPaths.filter(
+            (el) => el !== this.props.store.filterMainAccession
+          );
+          let otherInvolved = otherAcc.some((el) =>
+            this.props.item.participants.includes(el)
+          );
+          let mainInvolved = this.props.item.participants.includes(
+            this.props.store.filterMainAccession
+          );
+
+          if (mainInvolved === otherInvolved) {
+            hideLink = true;
+          }
+        }
+      }
+
+      // This does not work if filter is used
+      // because preferHighlight is disabled when filter is activated.
       if (this.props.store.preferHighlight) {
         if (this.props.store.highlightedAccession == null) {
-          localOpacity = 0.3;
+          hideLink = true;
+          // localOpacity = this.props.store.hiddenElementOpacity;
         }
       }
 
@@ -363,19 +403,84 @@ const LinkColumn = observer(
       return (
         <>
           {points.length > 0
-            ? this.renderArrow(points, localColor, localOpacity)
+            ? this.renderArrow(
+                points,
+                localColor,
+                hideLink ? this.props.store.hiddenElementOpacity : localOpacity
+              )
             : null}
           {this.props.item.participants.map((pathID) => {
             let rowOpacity = localOpacity;
-            if (this.props.store.doHighlightRows) {
-              if (this.props.store.highlightedAccession != null) {
-                if (this.props.store.highlightedAccession != pathID) {
-                  rowOpacity = 0.3;
+
+            {
+              /*if (this.props.store.filterMainAccession != null &&
+              this.props.store.doHighlightRows &&
+              this.props.store.highlightedAccession != null &&
+              this.props.item.upstream == 40 &&
+              this.props.item.downstream == 38 &&
+              pathID === 3) {
+              debugger;
+            }*/
+            }
+
+            if (!hideLink) {
+              if (
+                this.props.store.doHighlightRows &&
+                this.props.store.highlightedAccession != null
+              ) {
+                // Highlighting works and an accession should be highlighted
+                if (
+                  (this.props.store.filterPaths.includes(pathID) ||
+                    this.props.store.filterPaths.length === 0) &&
+                  this.props.store.highlightedAccession === pathID
+                ) {
+                  rowOpacity = 1;
+                } else {
+                  rowOpacity = this.props.store.hiddenElementOpacity;
+                }
+              } else {
+                // Either highlighting is deactivated or mouse is not over an accession
+                if (
+                  this.props.store.filterPaths.includes(pathID) ||
+                  this.props.store.filterPaths.length === 0
+                ) {
+                  rowOpacity = 1;
+                } else {
+                  rowOpacity = this.props.store.hiddenElementOpacity;
+                }
+              }
+            } else if (this.props.store.preferHighlight) {
+              if (
+                this.props.store.doHighlightRows &&
+                this.props.store.highlightedAccession !== null
+              ) {
+                if (this.props.store.highlightedAccession !== pathID) {
+                  rowOpacity = this.props.store.hiddenElementOpacity;
+                } else {
+                  rowOpacity = 1.0;
+                }
+              }
+            } else {
+              rowOpacity = this.props.store.hiddenElementOpacity;
+            }
+
+            {
+              /*if (this.props.store.doHighlightRows) {
+              if (this.props.store.highlightedAccession != null && 
+                (this.props.store.filterPaths.includes(
+                            this.props.store.highlightedAccession) ||
+                this.props.store.filterPaths.length === 0)) {
+                if (this.props.store.highlightedAccession != pathID ) {
+                  rowOpacity = this.props.store.hiddenElementOpacity;
                 } else {
                   rowOpacity = 1.0;
                 }
               }
             }
+
+            if (this.props.store)*/
+            }
+
             return (
               <Rect
                 key={"dot" + pathID}

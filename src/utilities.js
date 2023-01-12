@@ -236,7 +236,11 @@ export function range(start, end) {
   return [...Array(1 + end - start).keys()].map((v) => start + v);
 }
 
-export function stringToColorAndOpacity(linkColumn, highlightedLink) {
+export function stringToColorAndOpacity(
+  linkColumn,
+  highlightedLink,
+  hiddenOpacity
+) {
   const colorKey =
     (linkColumn.downstreamCol + 1) * (linkColumn.upstreamCol + 1);
   if (highlightedLink) {
@@ -250,7 +254,7 @@ export function stringToColorAndOpacity(linkColumn, highlightedLink) {
         highlightedLink ? "black" : null,
       ];
     } else {
-      return [stringToColourSave(colorKey), 0.3, null]; // used to be "gray"
+      return [stringToColourSave(colorKey), hiddenOpacity, null]; // used to be "gray"
     }
   } else {
     return [stringToColourSave(colorKey), 1.0, null];

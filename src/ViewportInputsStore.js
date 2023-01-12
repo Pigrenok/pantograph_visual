@@ -643,7 +643,7 @@ RootStore = types
       "#160705",
       "#000000",
     ]),
-
+    hiddenElementOpacity: 0.1,
     colorByGeneAnnotation: true,
     metaDataKey: "Path",
     metaData: types.map(metaDataModelEntry),
