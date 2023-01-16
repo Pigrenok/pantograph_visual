@@ -205,7 +205,7 @@ const LinkColumn = observer(
       return [];
     }
 
-    renderArrow(points, color, opacity) {
+    renderArrow(points, color, opacity, hideLink) {
       let arrowOpacity = opacity;
       if (this.props.store.doHighlightRows) {
         if (this.props.store.highlightedAccession != null) {
@@ -234,11 +234,15 @@ const LinkColumn = observer(
           pointerLength={1}
           pointerWidth={1}
           tension={0}
-          onMouseOver={() => {
-            this.handleMouseOver();
-          }}
-          onMouseOut={this.handleMouseOut}
-          onClick={this.handleClick}
+          onMouseOver={
+            hideLink
+              ? null
+              : () => {
+                  this.handleMouseOver();
+                }
+          }
+          onMouseOut={hideLink ? null : this.handleMouseOut}
+          onClick={hideLink ? null : this.handleClick}
           // lineCap={'round'}
         />
       );
@@ -333,10 +337,10 @@ const LinkColumn = observer(
 
     render() {
       // if (this.props.store.filterMainAccession != null &&
-      //   this.props.store.doHighlightRows &&
-      //   this.props.store.highlightedAccession != null &&
-      //   this.props.item.upstream == 40 &&
-      //   this.props.item.downstream == 38) {
+      // this.props.store.doHighlightRows &&
+      // this.props.store.highlightedAccession != null &&
+      // if(this.props.item.upstream == 36 &&
+      //   this.props.item.downstream == 43) {
       //   debugger;
       // }
       if (this.props.store.chunkLoading) {
@@ -406,19 +410,24 @@ const LinkColumn = observer(
             ? this.renderArrow(
                 points,
                 localColor,
-                hideLink ? this.props.store.hiddenElementOpacity : localOpacity
+                hideLink ? this.props.store.hiddenElementOpacity : localOpacity,
+                hideLink
               )
             : null}
           {this.props.item.participants.map((pathID) => {
             let rowOpacity = localOpacity;
 
-            {
-              /*if (this.props.store.filterMainAccession != null &&
+            /*if (this.props.store.filterMainAccession != null &&
               this.props.store.doHighlightRows &&
               this.props.store.highlightedAccession != null &&
               this.props.item.upstream == 40 &&
               this.props.item.downstream == 38 &&
               pathID === 3) {
+              debugger;
+            }*/
+            {
+              /*if(this.props.item.upstream == 36 &&
+              this.props.item.downstream == 43) {
               debugger;
             }*/
             }
@@ -492,9 +501,11 @@ const LinkColumn = observer(
                 opacity={rowOpacity}
                 stroke={localStroke}
                 // onClick={this.handleClick}
-                onMouseOver={() => this.handleMouseOver(pathID)}
-                onMouseOut={this.handleMouseOut}
-                onClick={this.handleClick}
+                onMouseOver={
+                  rowOpacity == 1 ? () => this.handleMouseOver(pathID) : null
+                }
+                onMouseOut={rowOpacity == 1 ? this.handleMouseOut : null}
+                onClick={rowOpacity == 1 ? this.handleClick : null}
               />
             );
           })}
