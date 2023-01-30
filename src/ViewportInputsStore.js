@@ -591,9 +591,9 @@ RootStore = types
     cellToolTipContent: "",
 
     // jsonName: "paths_presentation_new",
-    jsonName: "coregraph_Chr1_new",
+    // jsonName: "coregraph_v2_Chr1_new",
     // jsonName: "coregraph_genes_Chr1_new",
-    // jsonName: "AT_Chr1_OGOnly_2.1_new",
+    jsonName: "AT_Chr1_OGOnly_2.1_new",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -1803,7 +1803,6 @@ RootStore = types
       // In this case, col should be converted to bin first and then should be processed as usual.
 
       // Need to handle zoom switch somehow.
-
       self.breakComponentUpdate = true;
 
       if (self.loading) {
