@@ -198,8 +198,42 @@ export const MatrixCell = observer(
     }
 
     loadExtraFromAPI(bin, box) {
-      function recordData(box, res) {
-        let annotationsArray = res.split(",");
+      function recordData(box, acc, res) {
+        let [ann, genpos, altgenpos] = res.split(";");
+        if (genpos !== "") {
+          let genPosArray = genpos.split(",");
+
+          let genPosString = "<p><br>Genomic positions:<br>";
+
+          for (let genposblock of genPosArray) {
+            // Accession this.props.pathName
+            genPosString += `<a 
+            href='https://tools.1001genomes.org/jbrowse/1001G+/browser.html?data=${acc}_base_ref&loc=${genposblock}&tracks=Gene%20Models%2CDNA&highlight='
+            target='_blank'>${genposblock}</a><br>`;
+          }
+
+          genPosString += "</p>";
+
+          box.innerHTML += genPosString;
+        }
+
+        if (altgenpos !== "") {
+          let altGenPosArray = altgenpos.split(",");
+
+          let altGenPosString = "<p><br>Positions on other chromosomes:<br>";
+
+          for (let altGenPosBlock of altGenPosArray) {
+            altGenPosString += `<a 
+            href='https://tools.1001genomes.org/jbrowse/1001G+/browser.html?data=${acc}_base_ref&loc=${altGenPosBlock}&tracks=Gene%20Models%2CDNA&highlight='
+            target='_blank'>${altGenPosBlock}</a><br>`;
+          }
+
+          altGenPosString += "</p>";
+
+          box.innerHTML += altGenPosString;
+        }
+
+        let annotationsArray = ann.split(",");
 
         let annotationStr = "";
 
@@ -238,7 +272,7 @@ export const MatrixCell = observer(
       jsonCache
         .getRaw(url)
         .then((data) => data.text())
-        .then((res) => recordData(box, res));
+        .then((res) => recordData(box, this.props.pathName, res));
     }
 
     onClick(e) {
