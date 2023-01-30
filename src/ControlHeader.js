@@ -571,6 +571,16 @@ const ControlHeader = observer(
             </div>
 
             <div class="col-auto">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                onClick={jsonCache.clear()}
+              >
+                Clear cache
+              </button>
+            </div>
+
+            <div class="col-auto">
               <label class="form-label">
                 [{this.props.store.filterPaths.join(", ")}]
               </label>
