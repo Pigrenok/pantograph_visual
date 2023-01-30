@@ -1937,9 +1937,9 @@ RootStore = types
           //   self.setPosition(newPos);
           // }
 
-          if ((self.components.size > 0) & !zoom) {
-            self.clearComponents();
-          }
+          // if ((self.components.size > 0) & !zoom) {
+          //   self.clearComponents();
+          // }
 
           let multiplier = 1;
           if (zoom) {
