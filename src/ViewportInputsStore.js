@@ -2558,9 +2558,10 @@ RootStore = types
 
     get sortedVisualComponentsKeys() {
       let sortedKeys = keys(self.visualisedComponents);
-
-      // return filter_sort_index_array(sortedKeys,self.selectedZoomLevel);
-      return sortedKeys;
+      // debugger;
+      // sortedKeys = filter_sort_index_array(sortedKeys,self.selectedZoomLevel);
+      return filter_sort_index_array(sortedKeys, self.selectedZoomLevel);
+      // return sortedKeys;
     },
 
     get firstLoadedBin() {
