@@ -585,7 +585,11 @@ const ComponentRect = observer(
     renderHighlightCell() {
       return (
         <Rect
-          x={this.calcStartOfCols()}
+          x={
+            this.calcStartOfCols() +
+            (this.props.store.highlightedCell.bin - this.props.item.firstBin) *
+              this.props.store.pixelsPerColumn
+          }
           y={
             this.props.y +
             this.props.store.highlightedCell.accession *
@@ -594,7 +598,7 @@ const ComponentRect = observer(
           key={this.props.item.index + "highlight"}
           width={this.props.store.pixelsPerColumn}
           height={this.props.store.pixelsPerRow} //TODO: change to compressed height
-          fill={"green"}
+          fill={"lawngreen"}
         />
       );
     }
