@@ -923,11 +923,12 @@ const App = observer(
           let prevCompID =
             this.props.store.sortedVisualComponentsKeys[compInd - 1];
           prevComp = this.props.store.visualisedComponents.get(prevCompID);
-        } else {
-          prevComp = this.props.store.compByBin(
-            schematizeComponent.firstBin - 1,
-            schematizeComponent.zoom_level
-          );
+        } else if (schematizeComponent.firstBin > 1) {
+          prevComp = this.props.store.leftCompInvisible;
+          // prevComp = this.props.store.compByBin(
+          //   schematizeComponent.firstBin - 1,
+          //   schematizeComponent.zoom_level
+          // );
         }
         if (prevComp !== undefined) {
           let prevConnectorD = prevComp.connectorDepartures;

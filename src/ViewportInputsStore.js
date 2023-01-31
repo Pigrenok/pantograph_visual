@@ -661,6 +661,7 @@ RootStore = types
     visualisedComponents: types.map(
       types.reference(types.late(() => Component))
     ),
+    leftCompInvisible: types.safeReference(types.late(() => Component)),
     // columnsInView: types.optional(types.integer,0),
     windowWidth: types.optional(types.integer, 0),
     mouseX: types.optional(types.integer, 0),
@@ -677,6 +678,12 @@ RootStore = types
     // },
 
     // jumpLink(link) {},
+
+    setLeftCompInvisible(comp) {
+      if (comp !== undefined) {
+        self.leftCompInvisible = comp.index;
+      }
+    },
 
     changeFilterPathsArray(checked, pathID) {
       // console.debug('[changeFilterPathsArray]',pathID,checked);
@@ -1589,8 +1596,9 @@ RootStore = types
         self.visualisedComponents.set(item, item);
         // }
       });
-
       // Adding new components to visualised components
+
+      self.setLeftCompInvisible(self.compByBin(self.firstVisualBin - 1));
 
       self.setBeginBinVisual(begin);
       self.setEndBinVisual(end);
