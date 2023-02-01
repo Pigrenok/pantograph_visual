@@ -60,7 +60,7 @@ export const MatrixCell = observer(
         }
 
         if (j > 0) {
-          new_content = "," + new_content;
+          new_content = ", " + new_content;
         }
 
         posRanges += new_content;
@@ -103,35 +103,82 @@ export const MatrixCell = observer(
       return resultArray;
     }
 
+    basicDataString(
+      accession,
+      isStart,
+      isEnd,
+      repeats,
+      reversal,
+      bin,
+      posRanges,
+      floatWin = false
+    ) {
+      let imgInfo = (text) => {
+        return `<img src='${process.env.PUBLIC_URL}/info.png' height=15 title="${text}"/>`;
+      };
+
+      let dataString = "";
+
+      dataString += (floatWin ? "Accession" : "") + accession;
+      if (isStart) {
+        dataString += " [Start]";
+      }
+
+      if (isEnd) {
+        dataString += " [End]";
+      }
+
+      dataString +=
+        (floatWin
+          ? "<br>" +
+            imgInfo(
+              "Average copy number over all nucleotides/genes in the cell. For the maximum zoom level copy number of a gene/nucleotide."
+            )
+          : "\n") +
+        " Average Copy Number: " +
+        repeats +
+        (floatWin
+          ? "<br>" +
+            imgInfo(
+              "Average fraction of all nucleotides/genes (including all copies) within in the cell that are inverted. For the maximum zoom level fraction of copies of the given nucleotide/gene that are inverted."
+            )
+          : "\n") +
+        " Average Inversion Fraction: " +
+        reversal +
+        (floatWin
+          ? "<br>" +
+            imgInfo(
+              "Column number in the given pangenome at the given zoom level. Debug only."
+            )
+          : "\n") +
+        " Column number: " +
+        bin +
+        (floatWin
+          ? "<br>" +
+            imgInfo(
+              "The same as genomic position for nucleotide graphs and number of gene in sequence of genes for gene graph. Debug only"
+            )
+          : "\n") +
+        " Path position: " +
+        posRanges;
+
+      return dataString;
+    }
+
     onHover(event) {
       let [isStart, isEnd, repeats, reversal, bin, posRanges] =
         this.cellDataCalc(event);
 
-      let tooltipContent = "";
-      tooltipContent += this.props.pathName;
-
-      if (isStart) {
-        tooltipContent += " [Start]";
-      }
-
-      if (isEnd) {
-        tooltipContent += " [End]";
-      }
-
-      tooltipContent +=
-        "\nCoverage: " +
-        repeats +
-        "\nInversion: " +
-        reversal +
-        "\nBin: " +
-        bin +
-        "\nPos: ";
-
-      tooltipContent += posRanges;
-      // if (this.props.store.metaData.get(this.props.pathName) !== undefined) {
-      //   tooltipContent +=
-      //     "\n" + this.props.store.metaData.get(this.props.pathName).Info;
-      // }
+      let tooltipContent = this.basicDataString(
+        this.props.pathName,
+        isStart,
+        isEnd,
+        repeats,
+        reversal,
+        bin,
+        posRanges,
+        false
+      );
 
       this.props.store.updateCellTooltipContent(tooltipContent); //item[2] is array of ranges
       this.props.store.updateMouse(event.evt.clientX, event.evt.clientY);
@@ -166,26 +213,16 @@ export const MatrixCell = observer(
         // annotLen,
       ] = this.cellDataCalc(event);
 
-      windowContent += "Accession:" + this.props.pathName;
-
-      if (isStart) {
-        windowContent += " [Start]";
-      }
-
-      if (isEnd) {
-        windowContent += " [End]";
-      }
-
-      windowContent +=
-        "<br>Coverage: " +
-        repeats +
-        "<br>Inversion: " +
-        reversal +
-        "<br>Bin: " +
-        bin +
-        "<br>Pos: ";
-
-      windowContent += posRanges;
+      windowContent += this.basicDataString(
+        this.props.pathName,
+        isStart,
+        isEnd,
+        repeats,
+        reversal,
+        bin,
+        posRanges,
+        true
+      );
 
       // if (annotations != "") {
       //   windowContent += "<br>Annotation (" + annotLen + ")<br>";
