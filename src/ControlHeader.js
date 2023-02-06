@@ -44,14 +44,14 @@ const ControlHeader = observer(
       const addr = store.pathIndexServerAddress;
       const path_name = store.searchTerms.path;
       const search = store.searchTerms.search;
-      const doSearchGenes = store.searchTerms.searchGenes;
+      const searchType = store.searchTerms.searchType;
       const jsonName = store.jsonName;
       const zoomLevel = store.selectedZoomLevel;
 
       function handleSearchServerResponse(result) {
         if (result === "-1") {
           alert(
-            `Did not find position ${search} in accession ${path_name} for case ${jsonName}.`
+            `The search for ${search} in accession ${path_name} for case ${jsonName} did not return any results.`
           );
         } else {
           // console.log('[ControlHeader.handleJump.handleSearchServerResponse] Found bin',result);
@@ -67,7 +67,7 @@ const ControlHeader = observer(
           // } else {
           //   jumpToRight = 1;
           // }
-          if (doSearchGenes) {
+          if (searchType === 0 || searchType === 2) {
             store.updatePosition(result + 1, true, true);
           } else {
             store.updatePosition(result, true);
@@ -81,11 +81,28 @@ const ControlHeader = observer(
       // httpGetAsync(addr + "4/3", printResult);
 
       let url;
-      if (doSearchGenes) {
-        url = `${addr}/gene/${jsonName}/${path_name}/${search}`;
-      } else {
-        url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+      switch (searchType) {
+        case 0:
+          // Search gene names
+          url = `${addr}/gene/${jsonName}/${path_name}/${search}`;
+          break;
+        case 1:
+          // Search path position
+          url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+          break;
+        case 2:
+          // Search genomic position
+          url = `${addr}/genpos/${jsonName}/${path_name}/${search}`;
+          break;
+        default:
+          alert("Unrecognisable search type. Something went wrong.");
+          break;
       }
+      // if (doSearchGenes) {
+      //   url = `${addr}/gene/${jsonName}/${path_name}/${search}`;
+      // } else {
+      //   url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
+      // }
 
       jsonCache
         .getRaw(url)
@@ -303,8 +320,8 @@ const ControlHeader = observer(
                   onChange={(event) =>
                     this.props.store.updateSearchTerms(
                       event.target.value,
-                      this.props.store.searchTerms.searchGenes,
-                      this.props.store.searchTerms.search
+                      undefined,
+                      undefined
                     )
                   }
                   value={this.props.store.searchTerms.path}
@@ -318,8 +335,39 @@ const ControlHeader = observer(
                       ))
                     : null}
                 </datalist>
-
-                <input
+                <select
+                  class="form-select"
+                  id="searchTypeSelect"
+                  aria-label="Type of Search Select"
+                  style={{ width: "200px" }}
+                  onChange={(event) =>
+                    this.props.store.updateSearchTerms(
+                      undefined,
+                      event.target.value,
+                      undefined
+                    )
+                  }
+                >
+                  <option
+                    value={0}
+                    selected={this.props.store.searchTerms.searchType === 0}
+                  >
+                    Gene name
+                  </option>
+                  <option
+                    value={1}
+                    selected={this.props.store.searchTerms.searchType === 1}
+                  >
+                    Path position
+                  </option>
+                  <option
+                    value={2}
+                    selected={this.props.store.searchTerms.searchType === 2}
+                  >
+                    Genomic position
+                  </option>
+                </select>
+                {/*<input
                   type="checkbox"
                   class="form-check-input"
                   checked={this.props.store.searchTerms.searchGenes}
@@ -330,19 +378,15 @@ const ControlHeader = observer(
                       this.props.store.searchTerms.search
                     )
                   }
-                />
+                />*/}
                 <input
                   class="form-control"
                   type="text"
-                  placeholder={
-                    this.props.store.searchTerms.searchGenes
-                      ? "Gene name"
-                      : "Position"
-                  }
+                  placeholder="Search term"
                   onChange={(event) =>
                     this.props.store.updateSearchTerms(
-                      this.props.store.searchTerms.path,
-                      this.props.store.searchTerms.searchGenes,
+                      undefined,
+                      undefined,
                       event.target.value
                     )
                   }

@@ -536,7 +536,7 @@ const ChunkIndex = types.model({
 
 const searchTermsStruct = types.model({
   path: types.string,
-  searchGenes: types.boolean,
+  searchType: types.integer,
   search: types.string,
 });
 
@@ -609,9 +609,14 @@ RootStore = types
 
     searchTerms: types.optional(searchTermsStruct, {
       path: "",
-      searchGenes: true,
+      searchType: 0,
       search: "",
     }), // OR: types.maybe(PathNucPos)
+    // searchTypes: types.optional(types.map(types.string), {
+    //   0: "Gene name",
+    //   1: "Path position"
+    //   2: "Genome position"
+    // }),
     pathIndexServerAddress: "http://localhost:5000", // "http://193.196.29.24:3010/",
 
     loading: false,
@@ -2310,22 +2315,22 @@ RootStore = types
       self.editingPosition = newPos;
     },
 
-    updateSearchTerms(path, searchGenes, search) {
+    updateSearchTerms(path, searchType, search) {
       //console.log('updatePathNucPos: ' + path + ' --- ' + nucPos)
 
       console.debug("[Store.updateSearchTerms] path", path);
-      console.debug("[Store.updateSearchTerms] searchGenes", searchGenes);
+      console.debug("[Store.updateSearchTerms] searchType", searchType);
       console.debug("[Store.updateSearchTerms] search", search);
 
       if (path !== undefined) {
         self.searchTerms.path = path;
       }
 
-      if (search !== undefined) {
-        self.searchTerms.searchGenes = searchGenes;
+      if (searchType !== undefined) {
+        self.searchTerms.searchType = parseInt(searchType);
       }
 
-      if (searchGenes !== undefined) {
+      if (search !== undefined) {
         self.searchTerms.search = search;
       }
     },
