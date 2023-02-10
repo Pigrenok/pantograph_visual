@@ -518,6 +518,8 @@ const Chunk = types.model({
   first_col: types.integer,
   last_bin: types.integer,
   last_col: types.integer,
+  compVisCol: types.map(types.integer),
+  chunkVisCol: types.integer,
   // x: types.integer,
   // compressedX: types.integer,
 });
@@ -926,191 +928,158 @@ RootStore = types
     // Done
     shiftComponentsRight(
       windowStart,
-      windowEnd,
+      numColsToFill,
       byCols = false,
       doClean = true
     ) {
       // This function loads components from windowStart to the right
-      // towards windowEnd
-      // If there are components to the right from windowEnd (before loading),
-      // it will remove them.
+      // to fill numColsToFill columns in the view.
+      // If there are components to the right from last loaded bin,
+      // they will be removed if doClean is `true`.
+      // If byCols is `true`, the windowStart is considered to be cols (bottom level bins), otherwise it is in current level bins.
 
       if (self.breakComponentUpdate) {
         return;
       }
-
       self.setLoading(true);
 
-      let lastBin = 0;
+      let firstLoadedBin;
+      let lastLoadedBin;
 
-      if (doClean && self.components.size > 0) {
-        // for (let [index,comp] of entries(self.components)) {
-        //   if (comp.lastBin<windowStart) {
-        //     // console.debug("[Store.shiftComponentsRight] component to remove",comp)
-        //     if (self.nucleotides.length>0) {
-        //       self.removeNucleotides(comp.numBins,false);
-        //     }
-        //     self.removeComponent(index);
-        //   }
-        // }
-        self.removeComponents(windowEnd, false);
-
-        if (byCols) {
-          lastBin = Array.from(
-            self.components.values(),
-            (comp) => comp.lastCol
-          ).pop();
-        } else {
-          lastBin = Array.from(
-            self.components.values(),
-            (comp) => comp.lastBin
-          ).pop();
-        }
-
-        lastBin = lastBin ? lastBin : 0;
+      if (self.components.size > 0) {
+        firstLoadedBin = self.firstLoadedBin;
+        lastLoadedBin = self.lastLoadedBin;
+      } else {
+        firstLoadedBin = self.last_bin_pangenome;
+        lastLoadedBin = 0;
       }
 
-      let doUpdateVisual = false;
+      let chunkArray = self.chunkIndex.zoom_levels
+        .get(self.selectedZoomLevel)
+        .files.slice();
 
-      // console.debug("[Store.shiftComponentsRight] component store before adding new components",self.components);
-      // console.debug("[Store.shiftComponentsRight] index files for zoom level",self.chunkIndex.zoom_levels.get(self.selectedZoomLevel).files);
+      let startChunkIndex;
 
-      // console.debug("[Store.shiftComponentsRight] window start and end",windowStart,windowEnd);
-      // console.debug("[Store.shiftComponentsRight] lastbin",lastBin);
+      if (byCols) {
+        startChunkIndex = chunkArray.findIndex(
+          (chunk) => chunk.first_col > windowStart
+        );
+      } else {
+        startChunkIndex = chunkArray.findIndex(
+          (chunk) => chunk.first_bin > windowStart
+        );
+      }
+
+      startChunkIndex -= 1;
+
       let promiseArray = [];
+      let loadedCols = 0;
+      let startCounting = false;
+      let newLoadedEndBin = lastLoadedBin;
 
-      for (let chunkFile of self.chunkIndex.zoom_levels.get(
-        self.selectedZoomLevel
-      ).files) {
-        let loadChunk;
-        if (byCols) {
-          loadChunk =
-            lastBin < chunkFile.last_col &&
-            (windowEnd - chunkFile.first_col) *
-              (chunkFile.last_col - windowStart) >=
-              0;
-        } else {
-          loadChunk =
-            lastBin < chunkFile.last_bin &&
-            (windowEnd - chunkFile.first_bin) *
-              (chunkFile.last_bin - windowStart) >=
-              0;
-        }
-        if (loadChunk) {
-          // TODO: Should this condition be switched to getBeginBin and getEndBin???
-          if (
-            (self.getBeginBin - chunkFile.first_bin) *
-              (chunkFile.last_bin - self.getEndBin) >=
-            0
-            // &&
-            // self.getEndBin >= self.getPosition
-          ) {
-            doUpdateVisual = true;
-          }
-          //remove addNucleotideFromFasta
+      for (let chunkFile of chunkArray.slice(startChunkIndex)) {
+        if (
+          (chunkFile.first_bin < firstLoadedBin ||
+            chunkFile.last_bin > lastLoadedBin) &&
+          loadedCols <= numColsToFill
+        ) {
           promiseArray.push(
             self.addComponentsFromURL(chunkFile.file, chunkFile.fasta, true)
           );
-          // if (chunkFile.fasta !== null) {
-          //   promiseArray.push(self.addNucleotidesFromFasta(`${process.env.PUBLIC_URL}/test_data/${self.jsonName}/${self.selectedZoomLevel}/${chunkFile.fasta}`,doClean));
-          // }
+          if (startCounting) {
+            loadedCols += chunkFile.chunkVisCol;
+          } else {
+            startCounting = true;
+          }
+          newLoadedEndBin = chunkFile.last_bin;
         }
       }
 
-      // Do we remove it outright or leave in some specific conditions?
-      // if (doUpdateVisual && doClean && !byCols) {
-      //   Promise.all(promiseArray).then((values) => {
-      //     self.shiftVisualisedComponentsCentre(windowStart,byCols);
-      //   });
-      // }
+      if (doClean && self.components.size > 0) {
+        self.removeComponents(newLoadedEndBin + 1, false);
+      }
 
-      // if (!doClean) {
       return promiseArray;
-      // }
     },
 
     // Done
     shiftComponentsLeft(
-      windowStart,
       windowEnd,
+      numColsToFill,
       byCols = false,
       doClean = true
     ) {
+      // This function loads components from windowEnd to the left
+      // to fill numColsToFill columns in the view.
+      // If there are components to the left from loaded components,
+      // they will remove them if doClean is `true`.
+      // If byCols is `true`, the windowEnd is considered to be cols (bottom level bins), otherwise it is in current level bins.
+
       if (self.breakComponentUpdate) {
         return;
       }
 
       self.setLoading(true);
 
-      let firstBin = byCols ? self.last_col_pangenome : self.last_bin_pangenome;
+      let firstLoadedBin;
+      let lastLoadedBin;
 
-      // console.debug("[Store.shiftComponentsLeft] windowStart windowEnd",windowStart, windowEnd)
-      if (doClean && self.components.size > 0) {
-        // for (let [index,comp] of entries(self.components)) {
-        //   if (comp.firstBin>windowEnd) {
-        //     self.removeNucleotides(comp.lastBin-comp.firstBin,true);
-        //     self.removeComponent(index);
-        //   }
-        // }
-        let oldFirstBin = firstBin;
-        self.removeComponents(windowStart, true);
-        if (byCols) {
-          firstBin = self.components.values().next().value.firstCol;
-        } else {
-          firstBin = self.components.values().next().value.firstBin;
-        }
-        firstBin = firstBin ? firstBin : oldFirstBin;
+      if (self.components.size > 0) {
+        firstLoadedBin = self.firstLoadedBin;
+        lastLoadedBin = self.lastLoadedBin;
+      } else {
+        firstLoadedBin = self.last_bin_pangenome;
+        lastLoadedBin = 0;
       }
 
-      let doUpdateVisual = false;
-      promiseArray = [];
+      let reversedChunkArray = self.chunkIndex.zoom_levels
+        .get(self.selectedZoomLevel)
+        .files.slice()
+        .reverse();
 
-      for (let chunkFile of self.chunkIndex.zoom_levels.get(
-        self.selectedZoomLevel
-      ).files) {
-        let loadChunk;
-        if (byCols) {
-          loadChunk =
-            firstBin > chunkFile.first_col &&
-            (windowEnd - chunkFile.first_col) *
-              (chunkFile.last_col - windowStart) >=
-              0;
-        } else {
-          loadChunk =
-            firstBin > chunkFile.first_bin &&
-            (windowEnd - chunkFile.first_bin) *
-              (chunkFile.last_bin - windowStart) >=
-              0;
-        }
-        if (loadChunk) {
-          if (
-            (self.getEndBin - chunkFile.first_bin) *
-              (chunkFile.last_bin - self.getBeginBin) >=
-            0
-          ) {
-            doUpdateVisual = true;
-          }
+      let endChunkIndex;
+
+      if (byCols) {
+        endChunkIndex = reversedChunkArray.findIndex(
+          (chunk) => chunk.first_col <= windowEnd
+        );
+      } else {
+        endChunkIndex = reversedChunkArray.findIndex(
+          (chunk) => chunk.first_bin <= windowEnd
+        );
+      }
+
+      let promiseArray = [];
+
+      let loadedCols = 0;
+      let startCounting = false;
+      let newLoadedStartBin = firstLoadedBin;
+
+      for (let chunkFile of reversedChunkArray.slice(endChunkIndex)) {
+        if (
+          (chunkFile.first_bin < firstLoadedBin ||
+            chunkFile.last_bin > lastLoadedBin) &&
+          loadedCols <= numColsToFill
+        ) {
           promiseArray.push(
             self.addComponentsFromURL(chunkFile.file, chunkFile.fasta, false)
           );
 
-          // if (chunkFile.fasta !== null) {
-          //   promiseArray.push(self.addNucleotidesFromFasta(`${process.env.PUBLIC_URL}/test_data/${self.jsonName}/${self.selectedZoomLevel}/${chunkFile.fasta}`,false));
-          // }
+          if (startCounting) {
+            loadedCols += chunkFile.chunkVisCol;
+          } else {
+            startCounting = true;
+          }
+          newLoadedStartBin = chunkFile.first_bin;
         }
       }
 
-      // Do we remove it outright or leave in some specific conditions?
-      // if (doUpdateVisual && doClean) {
-      //   Promise.all(promiseArray).then((values) => {
-      //     self.shiftVisualisedComponentsCentre(windowEnd,byCols);
-      //     promiseArray = [];
-      //   });
-      // }
+      // console.debug("[Store.shiftComponentsLeft] windowStart windowEnd",windowStart, windowEnd)
+      if (doClean && self.components.size > 0) {
+        self.removeComponents(newLoadedStartBin - 1, true);
+      }
 
-      // if (!doClean) {
       return promiseArray;
-      // }
     },
 
     removeComponent(id) {
@@ -1781,21 +1750,11 @@ RootStore = types
       let promiseArray = [];
 
       promiseArray = promiseArray.concat(
-        self.shiftComponentsLeft(
-          Math.max(1, newPos - 2 * self.columnsInView),
-          newPos,
-          byCol,
-          clean
-        )
+        self.shiftComponentsLeft(newPos, 2 * self.columnsInView, byCol, clean)
       );
 
       promiseArray = promiseArray.concat(
-        self.shiftComponentsRight(
-          newPos,
-          Math.min(newPos + 2 * self.columnsInView, self.last_bin_pangenome),
-          byCol,
-          clean
-        )
+        self.shiftComponentsRight(newPos, 2 * self.columnsInView, byCol, clean)
       );
 
       Promise.all(promiseArray).then(() => {
@@ -1878,10 +1837,7 @@ RootStore = types
             promiseArray = promiseArray.concat(
               self.shiftComponentsRight(
                 newPos,
-                Math.min(
-                  newPos + 0.5 * self.columnsInView,
-                  self.last_bin_pangenome
-                ),
+                0.5 * self.columnsInView,
                 false,
                 false
               )
@@ -1889,8 +1845,8 @@ RootStore = types
             if (newPos > lastBinInComponents) {
               promiseArray = promiseArray.concat(
                 self.shiftComponentsLeft(
-                  Math.max(1, newPos - 0.5 * self.columnsInView),
                   newPos,
+                  0.5 * self.columnsInView,
                   false,
                   false
                 )
@@ -1912,8 +1868,9 @@ RootStore = types
             // self.setPosition(newPos);
             promiseArray = promiseArray.concat(
               self.shiftComponentsLeft(
-                Math.max(newPos - 0.5 * self.columnsInView, 1),
                 newPos,
+                0.5 * self.columnsInView,
+                1,
                 false,
                 false
               )
@@ -1923,10 +1880,7 @@ RootStore = types
               promiseArray = promiseArray.concat(
                 self.shiftComponentsRight(
                   newPos,
-                  Math.min(
-                    newPos + 0.5 * self.columnsInView,
-                    self.last_bin_pangenome
-                  ),
+                  0.5 * self.columnsInView,
                   false,
                   false
                 )
@@ -1960,8 +1914,8 @@ RootStore = types
 
           promiseArray = promiseArray.concat(
             self.shiftComponentsLeft(
-              Math.max(1, newPos - 0.5 * self.columnsInView * multiplier),
               newPos,
+              0.5 * self.columnsInView,
               byCol,
               false
             )
@@ -1970,10 +1924,7 @@ RootStore = types
           promiseArray = promiseArray.concat(
             self.shiftComponentsRight(
               newPos,
-              Math.min(
-                newPos + 0.5 * self.columnsInView * multiplier,
-                byCol ? self.last_col_pangenome : self.last_bin_pangenome
-              ),
+              0.5 * self.columnsInView,
               byCol,
               false
             )
@@ -2672,7 +2623,7 @@ RootStore = types
         );
       });
 
-      if (res === undefined) {
+      if (res === undefined && zoom !== "auto") {
         res = values(self.components).find((comp) => {
           return comp.lastBin >= bin && comp.firstBin <= bin;
         });
