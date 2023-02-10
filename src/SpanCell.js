@@ -119,7 +119,7 @@ export const MatrixCell = observer(
 
       let dataString = "";
 
-      dataString += (floatWin ? "Accession" : "") + accession;
+      dataString += (floatWin ? "Accession: " : "") + accession;
       if (isStart) {
         dataString += " [Start]";
       }
