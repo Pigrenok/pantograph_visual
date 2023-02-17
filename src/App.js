@@ -19,21 +19,78 @@ import { arraysEqual, calculateEndBinFromScreen } from "./utilities";
 // TO_DO: improve the management of visualized components
 let index_to_component_to_visualize_dict;
 
-function Legend() {
+function Legend(props) {
+  // <img
+  //   src={process.env.PUBLIC_URL + "/Schematize legend.gif"}
+  //   alt="legend"
+  //   style={{
+  //     position: "fixed",
+  //     bottom: "20px",
+  //     left: "20px",
+  //     background: "white",
+  //     align: "right",
+  //     width: "100px",
+  //     height: "200px",
+  //   }}
+  // />
+  //this.props.store.copyNumberColorArray[0]
+  //stroke={'black'} strokeWidth=0.5
   return (
-    <img
-      src={process.env.PUBLIC_URL + "/Schematize legend.gif"}
-      alt="legend"
-      style={{
-        position: "fixed",
-        bottom: "20px",
-        left: "20px",
-        background: "white",
-        align: "right",
-        width: "100px",
-        height: "200px",
-      }}
-    />
+    <Stage
+      width={120}
+      height={45 + 15 * props.store.copyNumberColorArray.length}
+    >
+      <Layer>
+        <Text x={10} y={0} fontSize={10} text={"Copy Number Legend"} />
+        <Text x={20} y={15} fontSize={10} text={"Normal"} />
+        <Text x={60} y={15} fontSize={10} text={"Inverted"} />
+
+        {/*Copy 0*/}
+        <Text x={20} y={30} fontSize={10} text={"0"} />
+        <Rect
+          x={35}
+          y={30}
+          width={10}
+          height={10}
+          stroke="gray"
+          fill={"white"}
+        />
+
+        <Text x={63} y={30} fontSize={10} text={"0"} />
+        <Rect
+          x={78}
+          y={30}
+          width={10}
+          height={10}
+          stroke="gray"
+          fill={"white"}
+        />
+
+        {props.store.copyNumberColorArray.map((colour, i) => (
+          <>
+            <Text
+              x={i === 9 ? 15 : 20}
+              y={45 + i * 15}
+              fontSize={10}
+              text={(i === 9 ? "≥" : "") + (i + 1).toString()}
+            />
+            <Rect x={35} y={45 + i * 15} width={10} height={10} fill={colour} />
+          </>
+        ))}
+
+        {props.store.invertedColorArray.map((colour, i) => (
+          <>
+            <Text
+              x={i === 9 ? 58 : 63}
+              y={45 + i * 15}
+              fontSize={10}
+              text={(i === 9 ? "≥" : "") + (i + 1).toString()}
+            />
+            <Rect x={78} y={45 + i * 15} width={10} height={10} fill={colour} />
+          </>
+        ))}
+      </Layer>
+    </Stage>
   );
 }
 
@@ -1381,8 +1438,17 @@ const App = observer(
               </Stage>
             )}
 
+            <div
+              id="Legend"
+              style={{
+                display: "block",
+                position: "absolute",
+                bottom: 0,
+              }}
+            >
+              <Legend store={this.props.store} />
+            </div>
             <NucleotideTooltip store={this.props.store} />
-            <Legend store={this.props.store} />
             <div id="floating" style={{ display: "none" }}></div>
           </div>
         </>

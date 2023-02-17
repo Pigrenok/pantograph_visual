@@ -475,16 +475,16 @@ export const MatrixCell = observer(
         if (!inverted) {
           // 11 items is number of colors in copyNumberColorArray
           if (copyNumber < 10) {
-            color = this.props.store.copyNumberColorArray[copyNumber];
+            color = this.props.store.copyNumberColorArray[copyNumber - 1];
           } else {
-            color = this.props.store.copyNumberColorArray[10];
+            color = this.props.store.copyNumberColorArray[9];
           }
         } else {
           // 11 items is number of colors in invertedColorArray
           if (copyNumber < 10) {
-            color = this.props.store.invertedColorArray[copyNumber];
+            color = this.props.store.invertedColorArray[copyNumber - 1];
           } else {
-            color = this.props.store.invertedColorArray[10];
+            color = this.props.store.invertedColorArray[9];
           }
         }
       }
