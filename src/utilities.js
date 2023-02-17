@@ -236,16 +236,27 @@ export function range(start, end) {
   return [...Array(1 + end - start).keys()].map((v) => start + v);
 }
 
+function colourKeyCalc(from, to) {
+  // return ((from+1)*(to+1)).toString(); // Current option
+  return (
+    from.toString().padStart(13, 0) +
+    to.toString().padStart(13, 0) +
+    ((from + 1) * (to + 1)).toString()
+  );
+}
+
 export function stringToColorAndOpacity(
   linkColumn,
   highlightedLink,
   hiddenOpacity
 ) {
-  const colorKey =
-    (linkColumn.downstreamCol + 1) * (linkColumn.upstreamCol + 1);
+  const colorKey = colourKeyCalc(
+    linkColumn.upstreamCol,
+    linkColumn.downstreamCol
+  );
   if (highlightedLink) {
     // When the mouse in on a Link, all the other ones will become gray and fade out
-    let matchColor = (highlightedLink[0] + 1) * (highlightedLink[1] + 1);
+    let matchColor = colourKeyCalc(highlightedLink[0], highlightedLink[1]);
     // Check if the mouse in on a Link (highlightedLinkColumn) or if a Link was clicked (selectedLink)
     if (colorKey === matchColor) {
       return [
@@ -262,11 +273,12 @@ export function stringToColorAndOpacity(
 }
 
 export function stringToColourSave(colorKey) {
-  colorKey = colorKey.toString();
+  // colorKey = colorKey.toString();
   let hash = 0;
   for (let i = 0; i < colorKey.length; i++) {
     hash = colorKey.charCodeAt(i) + ((hash << 5) - hash);
   }
+  // hash = hash & hash;
   let colour = "#";
   for (let j = 0; j < 3; j++) {
     const value = (hash >> (j * 8)) & 0xff;
