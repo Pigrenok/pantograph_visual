@@ -237,38 +237,42 @@ export const MatrixCell = observer(
     loadExtraFromAPI(bin, box) {
       function recordData(box, acc, res) {
         let [ann, genpos, altgenpos] = res.split(";");
+
+        let genPosString = "";
+
         if (genpos !== "") {
           let genPosArray = genpos.split(",");
 
-          let genPosString = "<p><br>Genomic positions:<br>";
+          genPosString += "<p><br>Genomic positions:<br>";
 
           for (let genposblock of genPosArray) {
             // Accession this.props.pathName
             genPosString += `<a 
-            href='https://tools.1001genomes.org/jbrowse/1001G+/browser.html?data=${acc}_base_ref&loc=${genposblock}&tracks=Gene%20Models%2CDNA&highlight='
+            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${genposblock}&tracks=DNA%2C${acc}&highlight='
             target='_blank'>${genposblock}</a><br>`;
           }
 
           genPosString += "</p>";
-
-          box.innerHTML += genPosString;
         }
+
+        let altGenPosString = "";
 
         if (altgenpos !== "") {
           let altGenPosArray = altgenpos.split(",");
 
-          let altGenPosString = "<p><br>Positions on other chromosomes:<br>";
+          altGenPosString += "<p><br>Positions on other chromosomes:<br>";
 
           for (let altGenPosBlock of altGenPosArray) {
             altGenPosString += `<a 
-            href='https://tools.1001genomes.org/jbrowse/1001G+/browser.html?data=${acc}_base_ref&loc=${altGenPosBlock}&tracks=Gene%20Models%2CDNA&highlight='
+            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${altGenPosBlock}&tracks=DNA%2C${acc}&highlight='
             target='_blank'>${altGenPosBlock}</a><br>`;
           }
 
           altGenPosString += "</p>";
-
-          box.innerHTML += altGenPosString;
         }
+
+        box.innerHTML += genPosString;
+        box.innerHTML += altGenPosString;
 
         let annotationsArray = ann.split(",");
 
