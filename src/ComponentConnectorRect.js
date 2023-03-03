@@ -37,8 +37,8 @@ const ConnectorRect = observer(
       }
 
       let y =
-        (this.props.store.maxArrowHeight + this.props.participant) *
-        this.props.store.pixelsPerColumn;
+        this.props.store.maxArrowHeight * this.props.store.pixelsPerColumn +
+        this.props.participant * this.props.store.pixelsPerRow;
 
       let connectingRow = [];
 
@@ -58,11 +58,15 @@ const ConnectorRect = observer(
             }
             x={x_val + c * this.props.store.pixelsPerColumn}
             y={y}
-            width={this.props.store.pixelsPerColumn}
             height={this.props.store.pixelsPerRow}
+            width={this.props.store.pixelsPerColumn}
             align={"center"}
-            verticalAlign={"center"}
+            verticalAlign={"middle"}
             text={arrow}
+            fontSize={Math.min(
+              this.props.store.pixelsPerColumn,
+              this.props.store.pixelsPerRow
+            )}
           />
         );
       }
