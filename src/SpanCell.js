@@ -236,7 +236,7 @@ export const MatrixCell = observer(
 
     loadExtraFromAPI(bin, box) {
       function recordData(box, acc, res) {
-        let [ann, genpos, altgenpos] = res.split(";");
+        let [ann, genpos, altgenpos, pangenpos] = res.split(";");
 
         let genPosString = "";
 
@@ -253,6 +253,23 @@ export const MatrixCell = observer(
           }
 
           genPosString += "</p>";
+        }
+
+        let pangenPosString = "";
+
+        if (pangenpos !== "") {
+          let pangenPosArray = pangenpos.split(",");
+
+          pangenPosString += "<p><br>Pangenomic positions:<br>";
+
+          for (let pangenposblock of pangenPosArray) {
+            // Accession this.props.pathName
+            pangenPosString += `<a 
+            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${pangenposblock}&tracks=DNA%2C${acc}&highlight='
+            target='_blank'>${pangenposblock}</a><br>`;
+          }
+
+          pangenPosString += "</p>";
         }
 
         let altGenPosString = "";
@@ -272,6 +289,7 @@ export const MatrixCell = observer(
         }
 
         box.innerHTML += genPosString;
+        box.innerHTML += pangenPosString;
         box.innerHTML += altGenPosString;
 
         let annotationsArray = ann.split(",");
