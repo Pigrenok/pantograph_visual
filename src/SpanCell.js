@@ -297,7 +297,7 @@ export const MatrixCell = observer(
       }
 
       const addr = this.props.store.pathIndexServerAddress;
-      const jsonName = this.props.store.jsonName;
+      const jsonName = this.props.store.selectedProjectCase;
       const path_name = this.props.pathName;
       const localBin = bin - this.props.parent.firstBin;
       const colStart =

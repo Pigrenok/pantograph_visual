@@ -108,7 +108,6 @@ const App = observer(
       console.debug("[App.constructor] app being constructed");
 
       super(props);
-
       // this.state = {
       //   schematize: [],
       //   pathNames: [],
@@ -116,7 +115,19 @@ const App = observer(
       //   buttonsHeight: 0,
       // };
       // this.schematic = new PangenomeSchematic({ store: this.props.store }); //Read file, parse nothing
-      this.props.store.loadIndexFile().then(() => {
+
+      let selectedProject = null;
+      if (this.props.selectedProject !== undefined) {
+        selectedProject = this.props.selectedProject;
+      }
+
+      let selectedCase = null;
+      if (this.props.selectedProjectCase !== undefined) {
+        selectedCase = this.props.selectedProjectCase;
+      }
+
+      this.props.store.loadProjects(selectedProject, selectedCase).then(() => {
+        this.props.store.setLoading(false);
         this.props.store.updateWindow(window.innerWidth);
         window.addEventListener("resize", () =>
           this.props.store.updateWindow(window.innerWidth)

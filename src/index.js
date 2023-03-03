@@ -7,7 +7,10 @@ import { store } from "./ViewportInputsStore";
 
 // console.debug("[index.js]", store)
 
-ReactDOM.render(<App store={store} />, document.getElementById("root"));
+ReactDOM.render(
+  <App store={store} selectedProject={"genegraph_tutorial"} />,
+  document.getElementById("root")
+);
 
 function clearFloating() {
   store.clearHighlightCell();

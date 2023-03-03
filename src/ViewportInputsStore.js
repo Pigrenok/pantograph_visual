@@ -1,4 +1,4 @@
-import { types } from "mobx-state-tree";
+import { types, cast } from "mobx-state-tree";
 import { entries, keys, values } from "mobx";
 import { urlExists } from "./URL";
 import {
@@ -42,7 +42,8 @@ class JSONCache {
           return this.cache.match(url);
         });
       } else {
-        // console.error(`File ${url} does not exist`);
+        window.alert(`URL ${url} does not exist`);
+        console.error(`URL ${url} does not exist`);
         throw `URL ${url} does not exist`;
       }
     } else {
@@ -53,7 +54,12 @@ class JSONCache {
           return response;
         })
         .catch((error) => {
-          // console.error(`Fetch error: URL ${url} did not return expected format file - ${error}`);
+          window.alert(
+            `Fetch error: URL ${url} did not return expected format file (JSON) - ${error}`
+          );
+          console.error(
+            `Fetch error: URL ${url} did not return expected format file (JSON) - ${error}`
+          );
           throw `Fetch error: URL ${url} did not return expected format file (JSON) - ${error}`;
         });
       return res;
@@ -592,10 +598,17 @@ RootStore = types
     // if we jump? Just use setTimeout to clear it after some time.
     cellToolTipContent: "",
 
+    projects: types.map(types.string),
+    selectedProject: types.maybeNull(types.string),
+    projectCases: types.map(types.string),
+    selectedProjectCase: types.maybeNull(types.string),
+
     // jsonName: "paths_presentation_new",
     // jsonName: "coregraph_v2_Chr1_new",
     // jsonName: "coregraph_genes_Chr1_new",
-    jsonName: "AT_Chr1_OGOnly_2.1_new",
+    // jsonName: "AT_Chr1_OGOnly_2.1_new",
+    // jsonName: "AT_Chr1_OGOnly_2.1_viscol",
+    // jsonName: "genegraph_tutorial",
 
     // Added attributes for the zoom level management
     // availableZoomLevels: types.optional(types.array(types.string), ["1"]),
@@ -874,7 +887,7 @@ RootStore = types
       }
       return jsonCache
         .getJSON(
-          `${process.env.PUBLIC_URL}/test_data/${self.jsonName}/${self.selectedZoomLevel}/${url}`
+          `${process.env.PUBLIC_URL}/data/${self.selectedProject}/${self.selectedProjectCase}/${self.selectedZoomLevel}/${url}`
         )
         .then((data) => {
           if (fastaURL === null) {
@@ -882,7 +895,7 @@ RootStore = types
           } else {
             return self
               .addNucleotidesFromFasta(
-                `${process.env.PUBLIC_URL}/test_data/${self.jsonName}/${self.selectedZoomLevel}/${fastaURL}`
+                `${process.env.PUBLIC_URL}/data/${self.selectedProject}/${self.selectedProjectCase}/${self.selectedZoomLevel}/${fastaURL}`
               )
               .then((sequence) => {
                 return Promise.resolve([data.components, sequence, fromRight]);
@@ -1169,7 +1182,122 @@ RootStore = types
       self.zoomHighlightBoundariesCoord.push(xPos);
     },
 
-    loadIndexFile() {
+    loadProjects(selectedProject = null, selectedCase = null) {
+      self.setChunkLoading();
+
+      let url = process.env.PUBLIC_URL + "/data/" + "index.json";
+
+      if (!urlExists(url)) {
+        window.alert(
+          `Data index index.json at ${url} was not found. Without it, Pantograph will not work.`
+        );
+        console.error(
+          `Data index index.json at ${url} was not found. Without it, Pantograph will not work.`
+        );
+        return;
+      }
+
+      return fetch(url)
+        .then((res) => res.json())
+        .then((json) => {
+          console.log("Loading projects", url);
+
+          return self.setProjectsMap(
+            json.projects,
+            selectedProject,
+            selectedCase
+          );
+        });
+    },
+
+    setProjectsMap(projects, selectedProject = null, selectedCase = null) {
+      self.projects = cast(projects);
+      if (selectedProject !== null && self.projects.has(selectedProject)) {
+        return self.setSelectedProject(selectedProject, selectedCase);
+      } else if (
+        self.selectedProject === null ||
+        !self.projects.has(self.selectedProject)
+      ) {
+        return self.setSelectedProject(
+          self.projects.keys().next().value,
+          selectedCase
+        );
+      } else {
+        return self.loadCases(selectedCase);
+      }
+    },
+
+    setSelectedProject(selectedProject, selectedCase = null) {
+      if (self.projects.has(selectedProject)) {
+        self.selectedProject = selectedProject;
+        return self.loadCases(selectedCase);
+      }
+    },
+
+    loadCases(selectedCase = null) {
+      let url =
+        process.env.PUBLIC_URL +
+        "/data/" +
+        self.selectedProject +
+        "/" +
+        self.selectedProject +
+        "_project.json";
+
+      if (!urlExists(url)) {
+        window.alert(
+          `Project index file ${self.selectedProject}_project.json at ${url} was not found. Without it, the project cannot be loaded.`
+        );
+        console.error(
+          `Project index file ${self.selectedProject}_project.json at ${url} was not found. Without it, the project cannot be loaded.`
+        );
+        return;
+      }
+
+      return fetch(url)
+        .then((res) => res.json())
+        .then((json) => {
+          console.log("Loading cases for project", self.selectedProject);
+
+          return self.setCasesMap(json, selectedCase);
+        });
+    },
+
+    setCasesMap(cases, selectedCase = null) {
+      self.projectCases = cast(cases);
+      if (selectedCase !== null && self.projectCases.has(selectedCase)) {
+        return self.setSelectedProjectCase(selectedCase);
+      } else if (
+        self.selectedProjectCase === null ||
+        !self.projectCases.has(self.selectedProjectCase)
+      ) {
+        return self.setSelectedProjectCase(
+          self.projectCases.keys().next().value
+        );
+      } else {
+        return self.loadIndexFile();
+      }
+    },
+
+    setSelectedProjectCase(selectedCase) {
+      if (self.projectCases.has(selectedCase)) {
+        self.selectedProjectCase = selectedCase;
+        return self.loadIndexFile();
+      }
+    },
+
+    // tryJSONpath(file, zoomIndex = 0, defaultPosition = 1) {
+    //   const url =
+    //     process.env.PUBLIC_URL + "/test_data/" + file + "/bin2file.json";
+    //   if (urlExists(url)) {
+    //     console.log("STEP#1: New Data Source: " + file);
+    //     self.jsonName = file;
+    //     self.loadIndexFile(zoomIndex).then(() => {
+    //       self.updatePosition(defaultPosition);
+    //     });
+    //   }
+    // },
+
+    loadIndexFile(zoomIndex = 0) {
       console.log("STEP #1: whenever jsonName changes, loadIndexFile");
       self.setChunkLoading();
 
@@ -1181,25 +1309,36 @@ RootStore = types
 
       let indexPath =
         process.env.PUBLIC_URL +
-        "/test_data/" +
-        self.jsonName +
-        "/bin2file.json";
+        "/data/" +
+        self.selectedProject +
+        "/" +
+        self.selectedProjectCase +
+        "/" +
+        "bin2file.json";
       //console.log("loadIndexFile - START reading", indexPath);
+
+      if (!urlExists(indexPath)) {
+        window.alert(`Case index file bin2file.json for case ${self.selectedProjectCase} of project ${self.selectedProject} at ${indexPath} was not found. 
+          Without it, the project cannot be loaded.`);
+        console.error(`Case index file bin2file.json for case ${self.selectedProjectCase} of project ${self.selectedProject} at ${indexPath} was not found. 
+          Without it, the project cannot be loaded.`);
+        return;
+      }
 
       return fetch(indexPath)
         .then((res) => res.json())
         .then((json) => {
           console.log("loadIndexFile - END reading", indexPath);
           //STEP #2: chunkIndex contents loaded
-          self.setChunkIndex(json);
+          self.setChunkIndex(json, zoomIndex);
           self.unsetChunkLoading();
         });
     },
 
-    setChunkIndex(json) {
+    setChunkIndex(json, zoomIndex = 0) {
       console.log("STEP #2: chunkIndex contents loaded");
       //console.log("Index updated with content:", json);
-      self.indexSelectedZoomLevel = 0;
+      self.indexSelectedZoomLevel = zoomIndex;
       self.chunkIndex = null; // Needed to clear out the reference. Otherwise previos and new chunks can potentially mix.
 
       self.chunkIndex = { ...json };
@@ -1770,7 +1909,6 @@ RootStore = types
       zoom = false
     ) {
       /*This method needs to be atomic to avoid spurious updates and out of date validation.*/
-
       // TODO! Here byCol is also a flag of change of zoom level, which is not true anymore for the case of gene search.
       // In this case, col should be converted to bin first and then should be processed as usual.
 
@@ -2111,18 +2249,6 @@ RootStore = types
 
     updateEditingWidth(value) {
       self.editingPixelsPerColumn = Number(value);
-    },
-
-    tryJSONpath(file) {
-      const url =
-        process.env.PUBLIC_URL + "/test_data/" + file + "/bin2file.json";
-      if (urlExists(url)) {
-        console.log("STEP#1: New Data Source: " + file);
-        self.jsonName = file;
-        self.loadIndexFile().then(() => {
-          self.updatePosition(1);
-        });
-      }
     },
 
     // Lifted down the control of the emptyness of the arrays
@@ -2514,7 +2640,6 @@ RootStore = types
 
     get sortedVisualComponentsKeys() {
       let sortedKeys = keys(self.visualisedComponents);
-      // debugger;
       // sortedKeys = filter_sort_index_array(sortedKeys,self.selectedZoomLevel);
       return filter_sort_index_array(sortedKeys, self.selectedZoomLevel);
       // return sortedKeys;
@@ -2555,7 +2680,6 @@ RootStore = types
       // } catch(err) {
       //   console.debug(err);
       //   // console.debug(values(self.visualisedComponents));
-      //   debugger;
       // }
 
       return values(self.visualisedComponents).find((comp) => {

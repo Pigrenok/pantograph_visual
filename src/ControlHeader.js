@@ -1,5 +1,6 @@
 import React from "react";
 import { Observer, observer } from "mobx-react";
+import { entries, keys, values } from "mobx";
 import { httpGetAsync } from "./URL";
 import PropTypes from "prop-types";
 import "./App.css";
@@ -45,7 +46,7 @@ const ControlHeader = observer(
       const path_name = store.searchTerms.path;
       const search = store.searchTerms.search;
       const searchType = store.searchTerms.searchType;
-      const jsonName = store.jsonName;
+      const jsonName = store.selectedProjectCase;
       const zoomLevel = store.selectedZoomLevel;
 
       function handleSearchServerResponse(result) {
@@ -187,16 +188,48 @@ const ControlHeader = observer(
             {/*  Save Image*/}
             {/*</button>*/}
             <div class="col-auto">
-              <input
-                type="text"
-                defaultValue={this.props.store.jsonName}
-                style={{ width: "330px" }}
-                onChange={(event) => {
-                  this.props.store.tryJSONpath(event.target.value);
-                }}
-                title={"File:"}
-                disabled={this.props.store.updatingVisible}
-              />
+              {/*This should be changed from text to a select with projects and select with chromosome in each project.*/}
+              <div class="input-group">
+                <select
+                  id="select_project"
+                  class="form-select"
+                  onChange={(event) =>
+                    this.props.store
+                      .setSelectedProject(event.target.value)
+                      .then(() => this.props.store.updatePosition(1))
+                  }
+                  value={this.props.store.selectedProject}
+                  disabled={this.props.store.chunkLoading}
+                >
+                  {entries(this.props.store.projects).map(([key, value]) => (
+                    <option key={key} value={key}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  id="select_case"
+                  class="form-select"
+                  onChange={(event) =>
+                    this.props.store
+                      .setSelectedProjectCase(event.target.value)
+                      .then(() => this.props.store.updatePosition(1))
+                  }
+                  value={this.props.store.selectedProjectCase}
+                  disabled={
+                    this.props.store.chunkLoading ||
+                    this.props.store.projectCases.size == 1
+                  }
+                >
+                  {entries(this.props.store.projectCases).map(
+                    ([key, value]) => (
+                      <option key={key} value={key}>
+                        {value}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
             </div>
             <div class="col-auto">
               <div class="input-group">
