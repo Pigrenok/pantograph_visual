@@ -952,7 +952,7 @@ RootStore = types
       // If byCols is `true`, the windowStart is considered to be cols (bottom level bins), otherwise it is in current level bins.
 
       if (self.breakComponentUpdate) {
-        return;
+        return [[], 0];
       }
       self.setLoading(true);
 
@@ -1012,7 +1012,7 @@ RootStore = types
         self.removeComponents(newLoadedEndBin + 1, false);
       }
 
-      return promiseArray;
+      return [promiseArray, newLoadedEndBin];
     },
 
     // Done
@@ -1029,7 +1029,7 @@ RootStore = types
       // If byCols is `true`, the windowEnd is considered to be cols (bottom level bins), otherwise it is in current level bins.
 
       if (self.breakComponentUpdate) {
-        return;
+        return [[], 0];
       }
 
       self.setLoading(true);
@@ -1092,7 +1092,7 @@ RootStore = types
         self.removeComponents(newLoadedStartBin - 1, true);
       }
 
-      return promiseArray;
+      return [promiseArray, newLoadedStartBin];
     },
 
     removeComponent(id) {
@@ -1885,18 +1885,37 @@ RootStore = types
     //   self.updatingVisible = false;
     // },
 
-    mainUpdate(newPos, byCol = false, clean = true) {
+    mainUpdate(newPos, leftLoaded, rightLoaded, byCol = false, clean = true) {
+      if (leftLoaded !== -1) {
+        self.removeComponents(leftLoaded, true);
+      }
+
+      if (rightLoaded !== -1) {
+        self.removeComponents(rightLoaded, false);
+      }
+
       let promiseArray = [];
 
-      promiseArray = promiseArray.concat(
-        self.shiftComponentsLeft(newPos, 2 * self.columnsInView, byCol, clean)
+      let pa = self.shiftComponentsLeft(
+        newPos,
+        2 * self.columnsInView,
+        byCol,
+        clean
       );
 
-      promiseArray = promiseArray.concat(
-        self.shiftComponentsRight(newPos, 2 * self.columnsInView, byCol, clean)
+      promiseArray = promiseArray.concat(pa[0]);
+
+      pa = self.shiftComponentsRight(
+        newPos,
+        2 * self.columnsInView,
+        byCol,
+        clean
       );
+
+      promiseArray = promiseArray.concat(pa[0]);
 
       Promise.all(promiseArray).then(() => {
+        console.debug("Main update finished.");
         self.setLoading(false);
       });
     },
@@ -1956,6 +1975,9 @@ RootStore = types
           );
         }
 
+        let leftLoaded = -1;
+        let rightLoaded = -1;
+
         let sortedKeys = self.sortedComponentsKeys;
 
         if (sortedKeys.length > 0 && !byCol && !zoom) {
@@ -1972,30 +1994,31 @@ RootStore = types
           ) {
             // self.clearVisualisedComponents();
             // self.setPosition(newPos);
-            promiseArray = promiseArray.concat(
-              self.shiftComponentsRight(
+            let pa;
+            [pa, rightLoaded] = self.shiftComponentsRight(
+              newPos,
+              0.5 * self.columnsInView,
+              false,
+              false
+            );
+            promiseArray = promiseArray.concat(pa);
+
+            if (newPos > lastBinInComponents) {
+              let pa;
+              [pa, leftLoaded] = self.shiftComponentsLeft(
                 newPos,
                 0.5 * self.columnsInView,
                 false,
                 false
-              )
-            );
-            if (newPos > lastBinInComponents) {
-              promiseArray = promiseArray.concat(
-                self.shiftComponentsLeft(
-                  newPos,
-                  0.5 * self.columnsInView,
-                  false,
-                  false
-                )
               );
+              promiseArray = promiseArray.concat(pa);
             }
 
             Promise.all(promiseArray).then(() => {
               // self.clearVisualisedComponents();
               // Probably switch to Central version
               self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
-              self.mainUpdate(newPos);
+              self.mainUpdate(newPos, leftLoaded, rightLoaded);
               promiseArray = [];
             });
           } else if (
@@ -2004,37 +2027,35 @@ RootStore = types
           ) {
             // self.clearVisualisedComponents();
             // self.setPosition(newPos);
-            promiseArray = promiseArray.concat(
-              self.shiftComponentsLeft(
-                newPos,
-                0.5 * self.columnsInView,
-                1,
-                false,
-                false
-              )
+            let pa;
+            [pa, leftLoaded] = self.shiftComponentsLeft(
+              newPos,
+              0.5 * self.columnsInView,
+              false,
+              false
             );
+            promiseArray = promiseArray.concat(pa);
 
             if (newPos < firstBinInComponents) {
-              promiseArray = promiseArray.concat(
-                self.shiftComponentsRight(
-                  newPos,
-                  0.5 * self.columnsInView,
-                  false,
-                  false
-                )
+              let pa;
+              [pa, rightLoaded] = self.shiftComponentsRight(
+                newPos,
+                0.5 * self.columnsInView,
+                false,
+                false
               );
+              promiseArray = promiseArray.concat(pa);
             }
             Promise.all(promiseArray).then(() => {
               // self.clearVisualisedComponents();
               self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
-              self.mainUpdate(newPos);
+              self.mainUpdate(newPos, leftLoaded, rightLoaded);
               promiseArray = [];
             });
           } else {
             // self.setPosition(newPos);
             self.shiftVisualisedComponentsCentre(newPos, byCol, highlight);
-
-            self.mainUpdate(newPos);
+            self.mainUpdate(newPos, leftLoaded, rightLoaded);
           }
         } else {
           // if (!byCol) {
@@ -2050,23 +2071,22 @@ RootStore = types
             multiplier = parseInt(self.selectedZoomLevel);
           }
 
-          promiseArray = promiseArray.concat(
-            self.shiftComponentsLeft(
-              newPos,
-              0.5 * self.columnsInView,
-              byCol,
-              false
-            )
+          let pa;
+          [pa, leftLoaded] = self.shiftComponentsLeft(
+            newPos,
+            0.5 * self.columnsInView,
+            byCol,
+            false
           );
+          promiseArray = promiseArray.concat(pa);
 
-          promiseArray = promiseArray.concat(
-            self.shiftComponentsRight(
-              newPos,
-              0.5 * self.columnsInView,
-              byCol,
-              false
-            )
+          [pa, rightLoaded] = self.shiftComponentsRight(
+            newPos,
+            0.5 * self.columnsInView,
+            byCol,
+            false
           );
+          promiseArray = promiseArray.concat(pa);
 
           Promise.all(promiseArray).then(() => {
             if (!zoom) {
@@ -2082,7 +2102,7 @@ RootStore = types
             }
             setTimeout(() => {
               self.clearOldZoomLevelComponents().then(() => {
-                self.mainUpdate(newPos, byCol, !zoom);
+                self.mainUpdate(newPos, leftLoaded, rightLoaded, byCol, !zoom);
               });
             }, 0);
           });
