@@ -2450,7 +2450,27 @@ RootStore = types
     },
 
     addToSelection(colStart, colEnd) {
-      self.selectedComponents.push([colStart, colEnd]);
+      let newSelection = [];
+
+      let numIntersections = 0;
+
+      self.selectedComponents.forEach((val) => {
+        if ((colEnd - val[0]) * (val[1] - colStart) > 0) {
+          numIntersections += 1;
+          newSelection.push([
+            Math.min(colStart, val[0]),
+            Math.max(colEnd, val[1]),
+          ]);
+        } else {
+          newSelection.push(val);
+        }
+      });
+
+      if (numIntersections === 0) {
+        newSelection.push([colStart, colEnd]);
+      }
+
+      self.selectedComponents = cast(newSelection);
     },
 
     delFromSelection(colStart, colEnd) {
@@ -2458,7 +2478,7 @@ RootStore = types
       const newSelection = [];
 
       self.selectedComponents.forEach((val) => {
-        if ((colEnd - val[0]) * (val[1] - colStart) > 0) {
+        if ((colEnd - val[0]) * (val[1] - colStart) >= 0) {
           const intersection = [
             Math.max(colStart, val[0]),
             Math.min(colEnd, val[1]),

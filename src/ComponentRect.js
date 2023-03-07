@@ -111,7 +111,7 @@ const ComponentRect = observer(
         this.props.store.selectedComponents.filter((val) => {
           return (
             (this.props.item.lastCol - val[0]) *
-              (val[1] - this.props.item.firstCol) >
+              (val[1] - this.props.item.firstCol) >=
             0
           );
         }).length > 0
