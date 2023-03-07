@@ -1716,10 +1716,10 @@ RootStore = types
       self.setBeginBinVisual(begin);
       self.setEndBinVisual(end);
       self.calcLinkElevations();
-      if (highlight) {
-        let comp = self.visibleCompByBin(centreBin);
-        self.addToSelection(comp.firstCol, comp.lastCol);
-      }
+      // if (highlight) {
+      //   let comp = self.visibleCompByBin(centreBin);
+      //   self.addToSelection(comp.firstCol, comp.lastCol);
+      // }
 
       self.updatingVisible = false;
     },
