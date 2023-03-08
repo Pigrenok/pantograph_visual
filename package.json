@@ -13,7 +13,7 @@
     "npm": "^6.14.5",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
-    "react-konva": "^16.12.0-0",
+    "react-konva": "^16.13.0-6",
     "react-scripts": "^3.4.4",
     "react-sticky-mouse-tooltip": "0.0.1",
     "yargs-parser": "^18.1.3"
