@@ -35,8 +35,6 @@ class PangenomeSchematic extends React.Component {
     //STEP #7: JsonCache causes processArray to update chunksProcessed
     // observe(this.props.store.jsonCache,
     //     this.processArray.bind(this));
-
-    // console.log("public ", process.env.PUBLIC_URL ) //PUBLIC_URL is empty
   }
   componentDidUpdate() {
     // console.log("#components: " + this.components);
@@ -74,9 +72,9 @@ class PangenomeSchematic extends React.Component {
     if (data.json_version !== 17) {
       throw MediaError(
         "Wrong Data JSON version: was expecting version 17, got " +
-        data.json_version +
-        ".  " +
-        "This version added x and compressedX fields for the chunks too.  " + // KEEP THIS UP TO DATE!
+          data.json_version +
+          ".  " +
+          "This version added x and compressedX fields for the chunks too.  " + // KEEP THIS UP TO DATE!
           "Using a mismatched data file and renderer will cause unpredictable behavior," +
           " instead generate a new data file using github.com/graph-genome/component_segmentation."
       );

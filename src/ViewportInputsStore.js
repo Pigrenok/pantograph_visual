@@ -1285,18 +1285,6 @@ RootStore = types
       }
     },
 
-    // tryJSONpath(file, zoomIndex = 0, defaultPosition = 1) {
-    //   const url =
-    //     process.env.PUBLIC_URL + "/test_data/" + file + "/bin2file.json";
-    //   if (urlExists(url)) {
-    //     console.log("STEP#1: New Data Source: " + file);
-    //     self.jsonName = file;
-    //     self.loadIndexFile(zoomIndex).then(() => {
-    //       self.updatePosition(defaultPosition);
-    //     });
-    //   }
-    // },
-
     loadIndexFile(zoomIndex = 0) {
       console.log("STEP #1: whenever jsonName changes, loadIndexFile");
       self.setChunkLoading();
