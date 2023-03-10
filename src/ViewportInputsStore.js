@@ -632,7 +632,7 @@ RootStore = types
     //   1: "Path position"
     //   2: "Genome position"
     // }),
-    pathIndexServerAddress: "http://localhost:5000", // "http://193.196.29.24:3010/",
+    pathIndexServerAddress: process.env.API_SERVER,
 
     loading: false,
     chunkLoading: true,
