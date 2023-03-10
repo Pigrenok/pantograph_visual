@@ -632,7 +632,7 @@ RootStore = types
     //   1: "Path position"
     //   2: "Genome position"
     // }),
-    pathIndexServerAddress: process.env.API_SERVER,
+    pathIndexServerAddress: process.env.REACT_APP_API_SERVER,
 
     loading: false,
     chunkLoading: true,
