@@ -1,18 +1,8 @@
-## Schematise issues
+## Schematise features
 
-- Colouring of arrows should stay consistent irrespective of zoom level (still not sure how to do it).
-
-- Joining should happen in terms of components and not nodes.
-
-?- Deal with cases where several arrows coming from one side of one node, but goes to both sides of another node.
-
-- (??? Cannot repeat, possibly fixed by other changes) Check tooltip update on link column. Sometimes, it jumps to the wrong one after the mouse float to the main component. (e.g. first component, the arrival link for accession 6909)
+- Notion of link order (in a given path) for components with multiple in/out links should be added in floating window, i.e.
+  in floating window a notion of by which incoming link corresponds to which output link. This will also automatically add multiplicity of links.
 
 
+- Floating window should actually become floating, use some external library which implements functional floating window.
 
-## Component_segmentation issues
-
-- Sometimes zoom levels are inconsistent between each other. For example, on zoom level "1" component for bins 451-468 (last in chunk001) has some parts in the left and some in the right (in some genomes one gene is present, in others another gene is present). In zoom level "9" the same component occupies bins 51-52, but in the file (chunk000) all occupied columns are on the left and none on the right. This inconsistency needs to be tackled!
-- Some components can have 3 repeats and only two links coming and going. E.g. component 50905-50913 (zoom level "1") for accession 4 (0-based) called "1741".
-- Some of the components can have links with zero participants (???). E.g. 50896-50904 (zoom level "1") has one departure without participants.
-- Notion of order of links needs to be added here (e.g. from genomic position and to genomic position.
