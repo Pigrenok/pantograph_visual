@@ -1,5 +1,8 @@
 public/data/*
 
+API/data/db/*
+API/sessionData/*
+
 .idea/
 *.js.swp
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
