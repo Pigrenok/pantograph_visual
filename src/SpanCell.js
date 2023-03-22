@@ -236,7 +236,7 @@ export const MatrixCell = observer(
 
           for (let genposblock of genPosArray) {
             // Accession this.props.pathName
-            genPosString += getLinkToJBrowse(acc, genposblock);
+            genPosString += this.getLinkToJBrowse(acc, genposblock);
           }
 
           genPosString += "</p>";
@@ -251,7 +251,7 @@ export const MatrixCell = observer(
 
           for (let pangenposblock of pangenPosArray) {
             // Accession this.props.pathName
-            pangenPosString += getLinkToJBrowse(acc, pangenposblock);
+            pangenPosString += this.getLinkToJBrowse(acc, pangenposblock);
           }
 
           pangenPosString += "</p>";
@@ -265,7 +265,7 @@ export const MatrixCell = observer(
           altGenPosString += "<p><br>Positions on other chromosomes:<br>";
 
           for (let altGenPosBlock of altGenPosArray) {
-            altGenPosString += getLinkToJBrowse(acc, altGenPosBlock);
+            altGenPosString += this.getLinkToJBrowse(acc, altGenPosBlock);
           }
 
           altGenPosString += "</p>";
