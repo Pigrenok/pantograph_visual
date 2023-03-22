@@ -1,27 +1,23 @@
 import React from "react";
 import { Rect, Text } from "react-konva";
 import { observer } from "mobx-react";
-import PropTypes from "prop-types";
 
 import { jsonCache } from "./ViewportInputsStore";
 
 export const MatrixCell = observer(
   class extends React.Component {
+    // This component draws a continuous uninterrupted row of cells with identical properties (e.g. inversion, copy number, etc).
     cellDataCalc(event) {
-      //TODO: calculate relative X and select item from this.props.range
+      // Calculating data for clicked (or moused over) cell for tool tip and for floating window
+
       let relColumnX = Math.floor(
         Math.max(0, event.evt.layerX - this.props.x) /
           this.props.store.pixelsPerColumn
       );
-      // console.log(event, this.props.range, relColumnX);
 
       let itemIndex = Math.min(this.props.range.length - 1, relColumnX);
       let item = this.props.range[itemIndex];
       let bin = this.props.binRange[itemIndex];
-
-      // let pathName = this.props.pathName.startsWith("NC_045512")
-      //   ? "Reference: " + this.props.pathName
-      //   : this.props.pathName;
 
       let isStart = false;
       let isEnd = false;
@@ -74,31 +70,6 @@ export const MatrixCell = observer(
         bin,
         posRanges,
       ];
-      // if (!tooltip) {
-      //   // Loading annotation from external sources will go here.
-      //   debugger;
-      //   let maxNumAnnotationToShow = 15;
-
-      //   let annot = "";
-
-      //   if (item.annotation.length > 0) {
-      //     // if (item.reversal <= 0.5) {
-      //     annot +=
-      //       // "\nAnnotation for column (" +
-      //       // item.annotation.length + "):\n" +
-
-      //       item.annotation
-      //         .slice()
-      //         .sort((a, b) => {
-      //           return a.length - b.length;
-      //         })
-      //         // .slice(0, maxNumAnnotationToShow)
-      //         .join(", ");
-      //   }
-
-      //   resultArray.push(annot);
-      //   resultArray.push(item.annotation.length);
-      // }
 
       return resultArray;
     }
@@ -113,6 +84,8 @@ export const MatrixCell = observer(
       posRanges,
       floatWin = false
     ) {
+      // Generating HTML string for tooltip and for floating window.
+
       let imgInfo = (text) => {
         return `<img src='${process.env.PUBLIC_URL}/info.png' height=15 title="${text}"/>`;
       };
@@ -166,6 +139,9 @@ export const MatrixCell = observer(
     }
 
     onHover(event) {
+      // Getting tooltip text filled up and shown when a mouse is over specific cell.
+      // This function also highlights specific accession if this option is selected.
+
       let [isStart, isEnd, repeats, reversal, bin, posRanges] =
         this.cellDataCalc(event);
 
@@ -191,6 +167,8 @@ export const MatrixCell = observer(
     }
 
     onLeave() {
+      // Clearing tooltip and highlighted accession/row when mouse leave it.
+
       this.props.store.updateCellTooltipContent(""); // we don't want any tooltip displayed if we leave the cell
       this.props.store.clearHighlightedAccession(); // Colour back all accessions.
 
@@ -201,6 +179,8 @@ export const MatrixCell = observer(
     }
 
     getFloatWindowContext(event) {
+      // Preparing floating window HTML string.
+
       let windowContent = "<p>";
       let [
         isStart,
@@ -224,17 +204,26 @@ export const MatrixCell = observer(
         true
       );
 
-      // if (annotations != "") {
-      //   windowContent += "<br>Annotation (" + annotLen + ")<br>";
-      //   windowContent += annotations;
-      // }
-
       windowContent += "</p>";
 
       return [windowContent, bin];
     }
 
+    getLinkToJBrowse(acc, genposblock) {
+      // This function generates `a` tag with link to 1001G+ JBrowse instance. One need to change the link if you want to use different JBrowse
+      // (or any other genomic browser).
+      // This function gets `acc`, which is a string containing accession ID and `genposblock`, which is a string defining the position
+      // At the moment it is in the following format: `<chromosome>:<start position>..<end position>`
+      // The format of the position is defined in the API, not in this app. This function just substitute any string passed without validation.
+      // If it needs to be separated (chromosome separate from start and end position), then this and `loadExtraFromAPI` functions need to be changed.
+      return `<a 
+            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${genposblock}&tracks=DNA%2C${acc}&highlight='
+            target='_blank'>${genposblock}</a><br>`;
+    }
+
     loadExtraFromAPI(bin, box) {
+      // Obtaining extra information from external API for floating window and preparing HTML block to show this info.
+
       function recordData(box, acc, res) {
         let [ann, genpos, altgenpos, pangenpos] = res.split(";");
 
@@ -247,9 +236,7 @@ export const MatrixCell = observer(
 
           for (let genposblock of genPosArray) {
             // Accession this.props.pathName
-            genPosString += `<a 
-            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${genposblock}&tracks=DNA%2C${acc}&highlight='
-            target='_blank'>${genposblock}</a><br>`;
+            genPosString += getLinkToJBrowse(acc, genposblock);
           }
 
           genPosString += "</p>";
@@ -264,9 +251,7 @@ export const MatrixCell = observer(
 
           for (let pangenposblock of pangenPosArray) {
             // Accession this.props.pathName
-            pangenPosString += `<a 
-            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${pangenposblock}&tracks=DNA%2C${acc}&highlight='
-            target='_blank'>${pangenposblock}</a><br>`;
+            pangenPosString += getLinkToJBrowse(acc, pangenposblock);
           }
 
           pangenPosString += "</p>";
@@ -280,9 +265,7 @@ export const MatrixCell = observer(
           altGenPosString += "<p><br>Positions on other chromosomes:<br>";
 
           for (let altGenPosBlock of altGenPosArray) {
-            altGenPosString += `<a 
-            href='https://tools.1001genomes.org/jbrowse/1001G+/accessions/current/index.html?data=${acc}&loc=${acc}_${altGenPosBlock}&tracks=DNA%2C${acc}&highlight='
-            target='_blank'>${altGenPosBlock}</a><br>`;
+            altGenPosString += getLinkToJBrowse(acc, altGenPosBlock);
           }
 
           altGenPosString += "</p>";
@@ -336,8 +319,13 @@ export const MatrixCell = observer(
 
     onClick(e) {
       if (e.evt.button == 0) {
+        // Left mouse click
+        // Select a component
         this.props.handleClickMethod();
       } else if (e.evt.button == 2) {
+        // Right mouse click
+        // Open floating window.
+
         let box = document.getElementById("floating");
 
         let [windowContent, bin] = this.getFloatWindowContext(e);
@@ -359,9 +347,8 @@ export const MatrixCell = observer(
       );
     }
 
-    /**Reduced number of Text elements generated for inversions,
-     * mouse events restored**/
     inversionText(inverted) {
+      // Shows "less" symbol as aninversion symbol in the cells (do not mix up with continuity arrow between two inversion components, which is the same symbol).
       if (this.props.store.pixelsPerRow > 9 && inverted) {
         return (
           <Text
@@ -387,7 +374,7 @@ export const MatrixCell = observer(
     }
 
     renderEnd(color, isSplit) {
-      // console.debug("[MatrixCell.renderEnd] isStart ",isStart)
+      // Draw red rectangle around cell marking the end of the path/sequence.
       let this_x = this.props.x;
       if (this.props.inverted) {
         this_x += 1;
@@ -423,8 +410,7 @@ export const MatrixCell = observer(
     }
 
     renderStart(color, isSplit) {
-      // console.debug("[MatrixCell.renderStart] startPos ",startPos)
-      // console.debug("[MatrixCell.renderStart] isEnd ",isEnd)
+      // Draw green rectangle around cell marking the start of the path/sequence.
       let this_x = this.props.x;
       if (this.props.inverted) {
         this_x +=
@@ -453,19 +439,17 @@ export const MatrixCell = observer(
         />
       );
     }
+
     render() {
       if (this.props.store.chunkLoading) {
         return null;
       }
 
       if (this.props.range === undefined || this.props.range.length === 0) {
-        return null; //giving up
+        return null;
       }
 
       const rangeLength = this.props.range.length;
-
-      // console.log('[MatrixCell.render] this.props.pathName', this.props.pathName)
-      // console.log('[MatrixCell.render] this.props.range', this.props.range)
 
       const inverted =
         this.props.range.reduce((total, element) => {
@@ -479,27 +463,19 @@ export const MatrixCell = observer(
         }, 0) / rangeLength;
       const copyNumber = Math.ceil(floatCopyNumber - 0.5);
 
-      // const startBlock = this.props.range.findIndex((element) =>
-      //   this.isStartInRange(element.pos)
-      // );
       let color = this.props.store.copyNumberColorArray[0];
       if (inverted) {
         color = this.props.store.invertedColorArray[0];
       }
-      // let color = this.props.color;
-
-      // let boundaryThickness = 0;
 
       if (this.props.store.colourRepeats && copyNumber > 1) {
         if (!inverted) {
-          // 11 items is number of colors in copyNumberColorArray
           if (copyNumber < 10) {
             color = this.props.store.copyNumberColorArray[copyNumber - 1];
           } else {
             color = this.props.store.copyNumberColorArray[9];
           }
         } else {
-          // 11 items is number of colors in invertedColorArray
           if (copyNumber < 10) {
             color = this.props.store.invertedColorArray[copyNumber - 1];
           } else {
@@ -531,16 +507,6 @@ export const MatrixCell = observer(
           }
         }
       }
-      // console.debug("[MatrixCell.render] x, y, width, height",
-      //               this.props.x,
-      //               this.props.y,
-      //               this.props.width,
-      //               this.props.height)
-      // TODO: if possible, use HTML/CSS to write the '<', avoiding the <Text />s rendering, therefore improving the performance
-      // console.debug("[MatrixCell.render] startPos ",startBlock)
-      // console.debug("[MatrixCell.render] isStart ",this.props.isStart)
-      // console.debug("[MatrixCell.render] isEnd ",this.props.isEnd)
-      // console.debug("[MatrixCell.render] isSplit ",this.props.isSplit)
 
       return (
         <>
@@ -568,25 +534,11 @@ export const MatrixCell = observer(
   }
 );
 
-MatrixCell.propTypes = {
-  store: PropTypes.object,
-  range: PropTypes.object,
-  x: PropTypes.number,
-  y: PropTypes.number,
-  width: PropTypes.number,
-  height: PropTypes.number,
-  color: PropTypes.node,
-  pathName: PropTypes.node,
-};
-
 export const SpanCell = observer(
   class extends React.Component {
+    // This class renders whole row of cells for a single component.
     constructor(props) {
       super(props);
-      // this.width = this.props.parent.numBins;
-      //https://github.com/graph-genome/Schematize/issues/87
-      //Sparse matrix includes the relative columns for each bin inside a component
-      //Columns are not necessarily contiguous, but follow the same order as `row`
     }
 
     adjustStart(adjustment, defaultValue) {
@@ -598,15 +550,13 @@ export const SpanCell = observer(
         startPos = defaultValue;
         x = 0;
       }
-      return [adjustment, startPos, x]; //startCompBin,startPos,x
+      return [adjustment, startPos, x];
     }
 
     adjustEnd(adjustment, defaultValue) {
-      // console.debug("[SpanCell.adjustEnd] adjustment", adjustment);
       let endPos = this.props.entry.occupiedBins.findIndex((value) => {
         return value > adjustment;
       });
-      // console.debug("[SpanCell.adjustEnd] endPos", endPos);
 
       let x = this.props.entry.occupiedBins[endPos - 1] - adjustment;
       if (endPos === -1) {
@@ -625,9 +575,7 @@ export const SpanCell = observer(
       if (!this.props.entry || !this.props.entry.occupiedBins.length) {
         return null;
       }
-      // if (this.props.store.getBeginBin === 41196 && this.props.entry.pathID===26) {
-      //   debugger;
-      // }
+
       let startPos = 0;
       let x = 0;
       let xAdjustment = 0;
@@ -676,18 +624,11 @@ export const SpanCell = observer(
             this.props.entry.occupiedBins.length
           );
         }
-
-        // endPos -= this.props.parent.lastBin - this.props.store.getEndBin;
       }
 
       if (startPos == endPos) {
         return null;
       }
-
-      // console.debug("[SpanCell.render] this.props.entry.binData[0]",
-      //   this.props.entry.binData[0].pos[0][0],this.props.entry.binData[0].pos[0][1])
-      // console.debug("[SpanCell.render] this.props.entry.binData[0].pos[0].includes(1)",
-      //   this.props.entry.binData[0].pos[0].includes(1))
 
       let startBeginningMarker = false;
       let startEndMarker = false;
@@ -711,18 +652,6 @@ export const SpanCell = observer(
 
       let isSplit = isStart && isEnd && this.props.parent.numBins == 1;
 
-      // console.debug("[SpanCell.render] this.props.parent",this.props.parent)
-      // console.debug("[SpanCell.render] this.props.rowNumber",this.props.rowNumber)
-      // console.debug("[SpanCell.render] isEnd",isEnd)
-
-      // console.debug("[SpanCell.render] Component index",this.props.parent.index)
-      // console.debug("[SpanCell.render] pathID",this.props.entry.pathID)
-
-      // console.debug("[SpanCell.render] startBeginningMarker",startBeginningMarker)
-      // console.debug("[SpanCell.render] startEndMarker",startEndMarker)
-      // console.debug("[SpanCell.render] endBeginningMarker",endBeginningMarker)
-      // console.debug("[SpanCell.render] endEndMarker",endEndMarker)
-
       let matrixCells = [];
       let newSpan = [];
       let binArray = [];
@@ -737,7 +666,6 @@ export const SpanCell = observer(
         starti = -1 * (endPos - 1);
         endi = -1 * (startPos - 1);
 
-        // Check this!
         prev =
           startPos < endPos ? this.props.entry.occupiedBins[endPos - 1] + 1 : 0;
       } else {
@@ -752,18 +680,6 @@ export const SpanCell = observer(
       let prevInv =
         this.props.entry.binData[starti * step].reversal > 0.5 ? 1 : 0;
 
-      // console.debug("[SpanCell.render] component", this.props.parent);
-      // console.debug("[SpanCell.render] pathName", this.props.pathName);
-      // console.debug("[SpanCell.render] xAdjustment", xAdjustment);
-      // console.debug("[SpanCell.render] x", x);
-      // console.debug("[SpanCell.render] props.x", this.props.x);
-      // console.debug("[SpanCell.render] starti", starti);
-      // console.debug("[SpanCell.render] endi", endi);
-
-      // if (this.props.parent.zoom_level=='32' &&
-      //     this.props.pathName=='6069') {
-      //   debugger;
-      // }
       let binArrayStart;
       let binArrayDir;
       if (this.props.entry.inverted) {
@@ -785,12 +701,6 @@ export const SpanCell = observer(
           newSpan.push(this.props.entry.binData[step * i]);
           binArray.push(binArrayStart + binArrayDir * column);
         } else {
-          // console.debug("[SpanCell.render] newSpan",newSpan)
-          // if (newSpan.length==0) {
-          //   debugger
-          // }
-          //non-contiguous
-
           matrixCells.push(
             <MatrixCell
               key={"span" + this.props.entry.pathID + "," + x}
@@ -859,14 +769,3 @@ export const SpanCell = observer(
     }
   }
 );
-
-MatrixCell.propTypes = {
-  row: PropTypes.node,
-  iColumns: PropTypes.node,
-  parent: PropTypes.object,
-  store: PropTypes.object,
-  pathName: PropTypes.node,
-  y: PropTypes.number,
-  rowNumber: PropTypes.number,
-  verticalRank: PropTypes.number,
-};

@@ -1,10 +1,10 @@
 import React from "react";
 import MouseTooltip from "react-sticky-mouse-tooltip";
 import { observer } from "mobx-react";
-import PropTypes from "prop-types";
 
 const NucleotideTooltip = observer(
   class extends React.Component {
+    // This very simple class is a component which implement mouse tool tip for our view.
     render() {
       let offsetX =
         this.props.store.mouseX + 150 >= this.props.store.windowWidth
@@ -24,9 +24,5 @@ const NucleotideTooltip = observer(
     }
   }
 );
-
-NucleotideTooltip.propTypes = {
-  store: PropTypes.object,
-};
 
 export default NucleotideTooltip;

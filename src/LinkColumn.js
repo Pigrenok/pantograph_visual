@@ -1,14 +1,7 @@
 import React from "react";
 import { Rect, Arrow } from "react-konva";
 import { observer } from "mobx-react";
-import PropTypes from "prop-types";
-import {
-  range,
-  stringToColorAndOpacity,
-  arraysEqual,
-  linkKey,
-} from "./utilities";
-import { values } from "mobx";
+import { stringToColorAndOpacity, arraysEqual, linkKey } from "./utilities";
 import ConnectorRect from "./ComponentConnectorRect";
 
 const LinkColumn = observer(
@@ -21,7 +14,7 @@ const LinkColumn = observer(
     }
 
     handleMouseOver(pathID) {
-      // console.debug("[LinkColumn.handleMouseOver] pathID", pathID);
+      // Show some link info in tooltip.
       if (pathID) {
         this.props.store.updateCellTooltipContent(
           `Accession ${this.props.store.chunkIndex.pathNames[pathID]} \n From bin ${this.props.item.upstream}\nTo bin ${this.props.item.downstream}`
@@ -45,26 +38,20 @@ const LinkColumn = observer(
     }
 
     handleClick() {
+      // Jumping by clicking on the link. It will jump to the other end of the arrow.
+      // Do not forget that if both start and end are in the view, most of the arrow belongs to the departure column
+      // and after click on the arrow itself, it jumps to arrival column (or nearest main matrix column).
       let centreBin;
       let highlightedLink = null;
-      // if (this.props.store.highlightedLink) {
-      //   highlightedLink = this.props.store.highlightedLink.key;
-      // }
 
       if (this.props.item.key[0] === "d") {
         // departure
         centreBin = this.props.item.downstream;
-        // if (highlightedLink) {
-        //   highlightedLink = "a" + highlightedLink.slice(1);
-        // }
       }
 
       if (this.props.item.key[0] === "a") {
         //arrival
         centreBin = this.props.item.upstream;
-        // if (highlightedLink) {
-        //   highlightedLink = "d" + highlightedLink.slice(1);
-        // }
       }
 
       let linkToRight;
@@ -87,17 +74,13 @@ const LinkColumn = observer(
     }
 
     points() {
-      // if (this.props.item.downstream===16) {
-      //   debugger;
-      // }
+      // This is the central function for drawing arrows.
+      // By adding extra points it can either draw a full arrow from start to end (if both are visible),
+      // which is done only for departure column (for arrival only stub with arrowhead is drawn)
+      // If start (for arrival) or end (for departure) is not in the view, this function does provides
+      // only coordinates for a stub
       let parentZoomLevel = this.props.parent.zoom_level;
-      if (
-        this.props.item.key[0] === "d"
-        //  &&
-        // this.props.item.downstream - this.props.item.upstream != 1 //This condition correct only for both forward blocks.
-        // Remove it from here
-        //Some of the info can be obtained from above (App.renderComponentLinks)
-      ) {
+      if (this.props.item.key[0] === "d") {
         // departure
 
         let arrowPoints = [
@@ -111,10 +94,6 @@ const LinkColumn = observer(
           this.props.item.downstream,
           parentZoomLevel
         );
-        //Check directionality of both upstream and downstream and then decide where to put arrows or not.
-        // console.debug("[LinkColumn.points] this.props.item", this.props.item);
-        // console.debug("[LinkColumn.points] this.props", this.props);
-        // console.debug("[LinkColumn.points] dComp", dComp);
         if (
           dComp &&
           this.props.item.downstream >= this.props.store.getBeginBin &&
@@ -125,9 +104,6 @@ const LinkColumn = observer(
             "a" +
             this.props.item.key.slice(1, this.props.item.key.length - 3) +
             (this.props.side === "right" ? "osr" : "osl");
-          // console.debug("[LinkColumn.points] link", this.props.item);
-
-          // console.debug("[LinkColumn.points] arrivalKey", arrivalKey);
           let dLink;
           let dOffset = 0;
           if (this.props.item.otherSideRight) {
@@ -153,9 +129,6 @@ const LinkColumn = observer(
               return [];
             }
           }
-          // console.debug("[LinkColumn.points] dComp", dComp);
-          // console.debug("[LinkColumn.points] dLink", dLink);
-
           if (dComp === undefined || dLink == undefined) {
             debugger;
           }
@@ -206,6 +179,7 @@ const LinkColumn = observer(
     }
 
     renderArrow(points, color, opacity, hideLink) {
+      // This function simply draws an arrow itself.
       let arrowOpacity = opacity;
       if (this.props.store.doHighlightRows) {
         if (this.props.store.highlightedAccession != null) {
@@ -249,17 +223,13 @@ const LinkColumn = observer(
     }
 
     checkSingleReverse() {
-      //Link from first component to second component
+      // This functionality will hide a pair of arrows describing simple inversion and make a simple pair of continuity arrows instead.
 
       let compLinks;
       let linkKeyToSearch;
 
       let isRight;
 
-      // debugger;
-
-      // if (this.props.item.key.slice(0, 1) === "d") {
-      // arrival
       if (this.props.item.key.slice(this.props.item.key.length - 3) === "osr") {
         // othe side right
         // check for edge case of upstream == last_bin_pangenome
@@ -336,13 +306,6 @@ const LinkColumn = observer(
     }
 
     render() {
-      // if (this.props.store.filterMainAccession != null &&
-      // this.props.store.doHighlightRows &&
-      // this.props.store.highlightedAccession != null &&
-      // if(this.props.item.upstream == 36 &&
-      //   this.props.item.downstream == 43) {
-      //   debugger;
-      // }
       if (this.props.store.chunkLoading) {
         return null;
       }
@@ -402,8 +365,7 @@ const LinkColumn = observer(
       }
 
       let points = this.points();
-      // console.debug("[LinkColumn.render] x,y",this.props.x,this.props.store.topOffset - 2*this.props.store.pixelsPerColumn)
-      // console.debug("[LinkColumn.render] points",points)
+
       return (
         <>
           {points.length > 0
@@ -416,21 +378,6 @@ const LinkColumn = observer(
             : null}
           {this.props.item.participants.map((pathID) => {
             let rowOpacity = localOpacity;
-
-            /*if (this.props.store.filterMainAccession != null &&
-              this.props.store.doHighlightRows &&
-              this.props.store.highlightedAccession != null &&
-              this.props.item.upstream == 40 &&
-              this.props.item.downstream == 38 &&
-              pathID === 3) {
-              debugger;
-            }*/
-            {
-              /*if(this.props.item.upstream == 36 &&
-              this.props.item.downstream == 43) {
-              debugger;
-            }*/
-            }
 
             if (!hideLink) {
               if (
@@ -473,23 +420,6 @@ const LinkColumn = observer(
               rowOpacity = this.props.store.hiddenElementOpacity;
             }
 
-            {
-              /*if (this.props.store.doHighlightRows) {
-              if (this.props.store.highlightedAccession != null && 
-                (this.props.store.filterPaths.includes(
-                            this.props.store.highlightedAccession) ||
-                this.props.store.filterPaths.length === 0)) {
-                if (this.props.store.highlightedAccession != pathID ) {
-                  rowOpacity = this.props.store.hiddenElementOpacity;
-                } else {
-                  rowOpacity = 1.0;
-                }
-              }
-            }
-
-            if (this.props.store)*/
-            }
-
             return (
               <Rect
                 key={"dot" + pathID}
@@ -500,7 +430,6 @@ const LinkColumn = observer(
                 fill={localColor}
                 opacity={rowOpacity}
                 stroke={localStroke}
-                // onClick={this.handleClick}
                 onMouseOver={
                   rowOpacity == 1 ? () => this.handleMouseOver(pathID) : null
                 }
@@ -514,15 +443,5 @@ const LinkColumn = observer(
     }
   }
 );
-
-LinkColumn.propTypes = {
-  store: PropTypes.object,
-  item: PropTypes.object,
-  updateHighlightedNode: PropTypes.func,
-  compressed_row_mapping: PropTypes.object,
-  x: PropTypes.node,
-  column: PropTypes.node,
-  color: PropTypes.node,
-};
 
 export default LinkColumn;

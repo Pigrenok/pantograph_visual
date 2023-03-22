@@ -5,8 +5,6 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import { store } from "./ViewportInputsStore";
 
-// console.debug("[index.js]", store)
-
 ReactDOM.render(
   <App store={store} selectedProject={"genegraph_tutorial"} />,
   document.getElementById("root")
@@ -31,9 +29,6 @@ document.addEventListener(
     if (name === "Escape") {
       clearFloating();
     }
-    //   var code = event.code;
-    //   // Alert the key name and key code on keydown
-    //   alert(`Key pressed ${name} \r\n Key code value: ${code}`);
   },
   false
 );

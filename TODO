@@ -1,8 +1,12 @@
 ## Schematise features
+- Need to come up with a possibility to demonstrate multi-chromosome graphs. A lot of preprocessing steps should be created before it will become possible anyway.
 
 - Notion of link order (in a given path) for components with multiple in/out links should be added in floating window, i.e.
   in floating window a notion of by which incoming link corresponds to which output link. This will also automatically add multiplicity of links.
 
-
 - Floating window should actually become floating, use some external library which implements functional floating window.
+
+- When "Show repeats" is set to false, legend should have only 0 and non 0 number of copies with one colour for normal and one for inverse.
+
+- Need to write a short description of the main concept of how data is manipulated.
 

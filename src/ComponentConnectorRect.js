@@ -1,10 +1,10 @@
 import React from "react";
-import { Rect, Text } from "react-konva";
+import { Text } from "react-konva";
 import { observer } from "mobx-react";
-import PropTypes from "prop-types";
 
 const ConnectorRect = observer(
   class extends React.Component {
+    // This React component draws connector arrows (continuity arrows) where they are needed.
     constructor(props) {
       super(props);
     }
@@ -77,12 +77,3 @@ const ConnectorRect = observer(
 );
 
 export default ConnectorRect;
-
-// ConnectorRect.propTypes = {
-//   x: PropTypes.number,
-//   y: PropTypes.number,
-//   width: PropTypes.number,
-//   height: PropTypes.number,
-//   store: PropTypes.node,
-//   color: PropTypes.node,
-// };

@@ -1,10 +1,10 @@
 import React from "react";
 import { Text } from "react-konva";
-import PropTypes from "prop-types";
 import { observer } from "mobx-react";
 
 const ComponentNucleotides = observer(
   class extends React.Component {
+    // React components for shwoing nucleotides where they are available,
     renderMatrixRow() {
       if (this.props.store.components.size === 0) {
         return null;
@@ -46,15 +46,9 @@ const ComponentNucleotides = observer(
     }
 
     render() {
-      //console.log('ComponentNucleotides - render')
       return this.renderMatrixRow();
     }
   }
 );
-
-ComponentNucleotides.propTypes = {
-  store: PropTypes.object,
-  item: PropTypes.object,
-};
 
 export default ComponentNucleotides;

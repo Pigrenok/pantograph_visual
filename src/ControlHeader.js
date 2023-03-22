@@ -1,14 +1,14 @@
+// Done
 import React from "react";
-import { Observer, observer } from "mobx-react";
-import { entries, keys, values } from "mobx";
-import { httpGetAsync } from "./URL";
-import PropTypes from "prop-types";
+import { observer } from "mobx-react";
+import { entries } from "mobx";
 import "./App.css";
 
 import { jsonCache } from "./ViewportInputsStore";
 
 const ControlHeader = observer(
   class extends React.Component {
+    // This component implements the control panel on top of the screen to control the whole viewer.
     constructor(props) {
       super(props);
 
@@ -17,8 +17,8 @@ const ControlHeader = observer(
     }
 
     shift(percentage) {
+      // move the matrix left (percentage<0) or right (percentage>0) by percentage % of the distance between central position and left or right edge respectively.
       const pos = this.props.store.getPosition;
-      // const endBin = this.props.store.getEndBin;
       let diff;
       if (percentage > 0) {
         let size = this.props.store.getEndBin - pos;
@@ -32,15 +32,7 @@ const ControlHeader = observer(
     }
 
     handleJump() {
-      // Need attention
-      // console.log(
-      //   "JUMP: path name: " +
-      //     this.props.store.pathNucPos.path +
-      //     " nucleotide position: " +
-      //     this.props.store.pathNucPos.nucPos
-      // );
-      // I don't know why, but in order for the CORS headers to exchange we need to make a first GET request to "/hi" which will not return anything
-
+      // That is the function that implements search for gene names or positions using API server and DB behind it.
       const store = this.props.store;
       const addr = store.pathIndexServerAddress;
       const path_name = store.searchTerms.path;
@@ -55,31 +47,17 @@ const ControlHeader = observer(
             `The search for ${search} in accession ${path_name} for case ${jsonName} did not return any results.`
           );
         } else {
-          // console.log('[ControlHeader.handleJump.handleSearchServerResponse] Found bin',result);
-          // go from nucleotide position to bin
-
           result = parseInt(result);
 
           result = Math.max(1, result);
 
-          // let jumpToRight;
-          // if (store.centreBin >= result) {
-          //   jumpToRight = -1;
-          // } else {
-          //   jumpToRight = 1;
-          // }
           if (searchType === 0 || searchType === 2) {
             store.updatePosition(result + 1, true, true);
           } else {
             store.updatePosition(result, true);
           }
-
-          // store.updateBeginEndBin(result, true);
         }
       }
-      // httpGetAsync(addr + "hi", printResult);
-      // httpGetAsync(addr + "5/1", printResult);
-      // httpGetAsync(addr + "4/3", printResult);
 
       let url;
       switch (searchType) {
@@ -99,11 +77,6 @@ const ControlHeader = observer(
           alert("Unrecognisable search type. Something went wrong.");
           break;
       }
-      // if (doSearchGenes) {
-      //   url = `${addr}/gene/${jsonName}/${path_name}/${search}`;
-      // } else {
-      //   url = `${addr}/pos/${jsonName}/${path_name}/${zoomLevel}/${search}`;
-      // }
 
       jsonCache
         .getRaw(url)
@@ -112,17 +85,12 @@ const ControlHeader = observer(
     }
 
     change_zoom_level(target) {
-      console.log(
-        "change_zoom_level: " +
-          target.value +
-          " ---" +
-          target.options[target.selectedIndex].text
-      );
-
+      // When zoom level requested to change from Select control
       this.props.store.setIndexSelectedZoomLevel(parseInt(target.value));
     }
 
     decIndexSelectedZoomLevel() {
+      // Changing zoom level (going to more detailed view) by clicking on "+" button
       this.props.store.setUpdatingVisible();
       let indexSelZoomLevel = this.props.store.indexSelectedZoomLevel;
       if (indexSelZoomLevel > 0) {
@@ -133,6 +101,7 @@ const ControlHeader = observer(
     }
 
     incIndexSelectedZoomLevel() {
+      // Changing zoom level (going to less detailed view) by clicking on "-" button
       this.props.store.setUpdatingVisible();
       let indexSelZoomLevel = this.props.store.indexSelectedZoomLevel;
       if (indexSelZoomLevel < this.props.store.availableZoomLevels.length - 1) {
@@ -142,21 +111,8 @@ const ControlHeader = observer(
       }
     }
 
-    // testJSON() {
-    //   jsonCache
-    //     .getJSON("/test_data/shorttest2.seg/bin2file.json")
-    //     .then((response) => {
-    //       console.log("This is what was returned from cache: ", response);
-    //     });
-
-    // }
-
-    // testChunkIndex() {
-    //   let jsonfilename = "AT_Chr1_OGOnly_strandReversal_new.seg"
-    //   this.props.store.loadIndexFile(jsonfilename);
-    // }
-
     handleShift(event) {
+      // Moving the view to a different column by directly entering the column number.
       this.props.store.setEditingPosition(Number(event.target.value));
       if (this.posTimer !== null) {
         clearTimeout(this.posTimer);
@@ -169,6 +125,7 @@ const ControlHeader = observer(
     }
 
     handleChangeWidth(event) {
+      // Changing column width
       this.props.store.updateEditingWidth(Number(event.target.value));
       if (this.widthTimer !== null) {
         clearTimeout(this.widthTimer);
@@ -184,11 +141,8 @@ const ControlHeader = observer(
       return (
         <div id="button-container" class="container-fluid">
           <div class="row">
-            {/*<button className="button" id="btn-download">*/}
-            {/*  Save Image*/}
-            {/*</button>*/}
             <div class="col-auto">
-              {/*This should be changed from text to a select with projects and select with chromosome in each project.*/}
+              {/*Project and cases selects (choices) block.*/}
               <div class="input-group">
                 <select
                   id="select_project"
@@ -232,8 +186,9 @@ const ControlHeader = observer(
               </div>
             </div>
             <div class="col-auto">
+              {/*Zoom control block*/}
               <div class="input-group">
-                <span class="input-group-text">Bin width:</span>
+                <span class="input-group-text">Zoom level:</span>
                 <button
                   type="button"
                   class="btn btn-secondary btn-sm"
@@ -266,8 +221,9 @@ const ControlHeader = observer(
             </div>
 
             <div class="col-auto">
+              {/*Position control block*/}
               <div class="input-group">
-                <span class="input-group-text">Pangenome Bin Position:</span>
+                <span class="input-group-text">Pangenome centre position:</span>
                 <button
                   type="button"
                   class="btn btn-secondary btn-sm"
@@ -311,10 +267,10 @@ const ControlHeader = observer(
               </div>
             </div>
 
-            {/*Debuggin fields: need to remove later*/}
+            {/*The following two blocks are read-only blocks showing column number of the left and right edge.*/}
             <div class="col-auto">
               <div class="input-group">
-                <span class="input-group-text">Begin Bin:</span>
+                <span class="input-group-text">Left edge Bin:</span>
                 <input
                   type="number"
                   value={this.props.store.getBeginBin}
@@ -325,7 +281,7 @@ const ControlHeader = observer(
             </div>
             <div class="col-auto">
               <div class="input-group">
-                <span class="input-group-text">End Bin:</span>
+                <span class="input-group-text">Right edge Bin:</span>
                 <input
                   type="number"
                   value={this.props.store.getEndBin}
@@ -338,6 +294,7 @@ const ControlHeader = observer(
           </div>
           <div class="row">
             <div class="col-auto">
+              {/*Search control block*/}
               <div class="input-group">
                 <div class="input-group-prepend">
                   <span class="input-group-text">Search:</span>
@@ -437,6 +394,7 @@ const ControlHeader = observer(
             </div>
 
             <div class="col-auto">
+              {/*Accession filter block*/}
               <div class="input-group">
                 <span class="input-group-text">Filter rearrangements:</span>
                 <div class="btn-group">
@@ -538,12 +496,15 @@ const ControlHeader = observer(
               </div>
             </div>
 
+            {/*The following two labels are information only*/}
             <div class="col-auto">
+              {/*Overall number of columns on the given zoom level*/}
               <label class="form-label">
                 Pangenome Last Bin: {this.props.store.last_bin_pangenome}
               </label>
             </div>
             <div class="col-auto">
+              {/*Number of accession*/}
               <label class="form-label">
                 Num. of individuals:{" "}
                 {this.props.store.chunkIndex === null
@@ -559,7 +520,7 @@ const ControlHeader = observer(
           </div>
           <div class="row">
             <div class="col-auto">
-              {" "}
+              {/*Choice: Whether to hide basic inversion links or not*/}
               <div class="form-check form-switch">
                 <input
                   class="form-check-input"
@@ -574,6 +535,7 @@ const ControlHeader = observer(
               </div>
             </div>
             <div class="col-auto">
+              {/*Choice: when a mouse is over specific accession, does it need to be highlighted?*/}
               <div class="form-check form-switch">
                 <input
                   class="form-check-input"
@@ -588,6 +550,7 @@ const ControlHeader = observer(
               </div>
             </div>
             <div class="col-auto align-middle">
+              {/*If accessions under mouse shoul dbe highlighted, should they be bright or dull (dehighlighted) when mouse is not over any of the accession?*/}
               <div class="form-check form-switch">
                 <input
                   class="form-check-input"
@@ -606,6 +569,7 @@ const ControlHeader = observer(
               </div>
             </div>
             <div class="col-auto">
+              {/*Show repeats by colour change?*/}
               <div class="form-check form-switch">
                 <input
                   class="form-check-input"
@@ -621,6 +585,7 @@ const ControlHeader = observer(
             </div>
 
             <div class="col-auto">
+              {/*Set how many pixels should each row be*/}
               <div class="input-group">
                 <span class="input-group-text">Row Height:</span>
                 <input
@@ -634,6 +599,7 @@ const ControlHeader = observer(
               </div>
             </div>
             <div class="col-auto">
+              {/*Set how many pixels each column should be.*/}
               <div class="input-group">
                 <span class="input-group-text">Column Width:</span>
                 <input
@@ -648,6 +614,7 @@ const ControlHeader = observer(
             </div>
 
             <div class="col-auto">
+              {/*If there is something not working right, cache should be cleared. This button provides an easy way to do it.*/}
               <button
                 type="button"
                 class="btn btn-secondary btn-sm"
@@ -657,22 +624,12 @@ const ControlHeader = observer(
               </button>
             </div>
 
-            <div class="col-auto">
+            {/*This is showing paths selected for filtering. DEBUG ONLY*/}
+            {/*<div class="col-auto">
               <label class="form-label">
                 [{this.props.store.filterPaths.join(", ")}]
               </label>
-            </div>
-            {/*<span>
-              &nbsp;
-              <a
-                href={"https://github.com/graph-genome/Schematize/wiki"}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <strong>Pantograph Tutorial</strong>
-              </a>
-              
-            </span>*/}
+            </div>*/}
           </div>
         </div>
       );
@@ -680,87 +637,4 @@ const ControlHeader = observer(
   }
 );
 
-ControlHeader.propTypes = {
-  store: PropTypes.object,
-};
-
-class VerticalCompressedViewSwitch extends React.Component {
-  render() {
-    return (
-      <Observer>
-        {() => (
-          <input
-            type="checkbox"
-            checked={this.props.store.useVerticalCompression}
-            onChange={this.props.store.toggleUseVerticalCompression}
-            disabled
-          />
-        )}
-      </Observer>
-    );
-  }
-}
-
-VerticalCompressedViewSwitch.propTypes = {
-  store: PropTypes.object,
-};
-
-class RenderConnectorSwitch extends React.Component {
-  render() {
-    return (
-      <Observer>
-        {() => (
-          <input
-            type="checkbox"
-            checked={this.props.store.useConnector}
-            onChange={this.props.store.toggleUseConnector}
-            disabled
-          />
-        )}
-      </Observer>
-    );
-  }
-}
-
-RenderConnectorSwitch.propTypes = {
-  store: PropTypes.object,
-};
-
-class WidthCompressedViewSwitch extends React.Component {
-  render() {
-    return (
-      <Observer>
-        {() => (
-          <input
-            type="checkbox"
-            checked={this.props.store.useWidthCompression}
-            onChange={this.props.store.toggleUseWidthCompression}
-            disabled
-          />
-        )}
-      </Observer>
-    );
-  }
-}
-
-WidthCompressedViewSwitch.propTypes = {
-  store: PropTypes.object,
-};
-
 export default ControlHeader;
-
-/*class ColorGeoSwitch extends React.Component {
-  render() {
-    return (
-        <input
-          type="checkbox"
-          checked={this.props.store.colorByGeo}
-          onChange={this.props.store.toggleColorByGeo}
-        />
-    );
-  }
-}
-
-ColorGeoSwitch.propTypes = {
-  store: PropTypes.object,
-};*/

@@ -1,12 +1,3 @@
-export const zip = (arr, ...arrs) => {
-  /*Credit: https://gist.github.com/renaudtertrais/25fc5a2e64fe5d0e86894094c6989e10*/
-  return arr.map((val, i) => arrs.reduce((a, arr) => [...a, arr[i]], [val]));
-};
-
-export function sum(a, b) {
-  return a + b;
-}
-
 export function arraysEqual(A, B) {
   return (
     (A.length === 0 && B.length === 0) ||
@@ -70,9 +61,6 @@ export function findEqualBins(arr) {
 }
 
 export function determineAdjacentIntersection(curLink, prevLink, same) {
-  // if (curLink.link.downstream===123 && prevLink.link.downstream===122) {
-  //   debugger;
-  // }
   let prevLinkLeft; // Is previous link adjacent side is on the left
   let curLinkLeft; // Is current link adjacent side is on the left
 
@@ -162,16 +150,6 @@ export function checkAndForceMinOrMaxValue(value, minValue, maxValue) {
   return value;
 }
 
-export function areOverlapping(startA, endA, startB, endB) {
-  if (startB < startA) {
-    return endB >= startA;
-  } else if (startB > startA) {
-    return startB <= endA;
-  } else {
-    return true;
-  }
-}
-
 // Short-circuiting, and saving a parse operation
 export function isInt(value) {
   var x;
@@ -180,60 +158,6 @@ export function isInt(value) {
   }
   x = parseFloat(value);
   return (x | 0) === x;
-}
-
-export function calculateEndBinFromScreen(
-  beginBin,
-  selZoomLev,
-  store,
-  widthInColumns
-) {
-  //console.log("calculateEndBinFromScreen: widthInColumns --> " + widthInColumns);
-
-  let chunkURLarray = [];
-  let fileArrayFasta = [];
-
-  let firstFieldX = -1;
-
-  const level = store.chunkIndex.zoom_levels.get(selZoomLev);
-  //this loop will automatically cap out at the last bin of the file
-  for (let ichunk = 0; ichunk < level.files.length; ichunk++) {
-    // The "x" info is not here
-    const chunk = level.files[ichunk];
-
-    //if (areOverlapping(beginBin, endBin, chunk.first_bin, chunk.last_bin)){
-    if (chunk.last_bin >= beginBin) {
-      const fieldX = store.useWidthCompression ? chunk.compressedX : chunk.x;
-
-      if (firstFieldX === -1) {
-        firstFieldX = fieldX;
-      }
-
-      /*console.log("fieldX: " + fieldX);
-      console.log('fieldX - firstFieldX: ' + (fieldX - firstFieldX))
-      console.log("chunk.last_bin: " + chunk.last_bin);*/
-
-      chunkURLarray.push(chunk["file"]);
-      if (chunk.fasta !== null) {
-        fileArrayFasta.push(chunk.fasta);
-      }
-
-      // If the new chunck is outside the windows, the chunk-pushing is over
-      if (fieldX - firstFieldX >= widthInColumns) {
-        break;
-      }
-    }
-  }
-
-  // store.updateBeginEndBin(b, b + widthInColumns);
-  //TODO the logic in let width = could be much more complex by looking at
-  //width of components and whether various settings are on.  The consequence
-  //of overestimating widthInColumns is to make the shift buttons step too big
-  return [chunkURLarray, fileArrayFasta];
-}
-
-export function range(start, end) {
-  return [...Array(1 + end - start).keys()].map((v) => start + v);
 }
 
 function colourKeyCalc(from, to) {
@@ -285,16 +209,4 @@ export function stringToColourSave(colorKey) {
     colour += ("00" + value.toString(16)).substr(-2);
   }
   return colour;
-}
-
-// From https://stackoverflow.com/questions/42623071/maximum-call-stack-size-exceeded-with-math-min-and-math-max/52613386#52613386
-// Not-recursive implementation of Math.max to avoid 'RangeError: Maximum call stack size exceeded' for big arrays
-export function getMax(arr) {
-  let len = arr.length;
-  let max = -Infinity;
-
-  while (len--) {
-    max = arr[len] > max ? arr[len] : max;
-  }
-  return max;
 }

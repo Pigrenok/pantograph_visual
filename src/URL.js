@@ -1,4 +1,4 @@
-/// a collection of functions to deal with URL requests
+// a collection of functions to deal with URL requests
 
 export function urlExists(dataName) {
   if (dataName === "") {
@@ -13,7 +13,6 @@ export function urlExists(dataName) {
       return false;
     }
 
-    // http.send();
     return http.status !== 404;
   }
 }
