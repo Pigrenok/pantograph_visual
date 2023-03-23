@@ -822,7 +822,7 @@ RootStore = types
       let firstLoadedBin;
       let lastLoadedBin;
 
-      if (self.components.size > 0) {
+      if (self.sortedComponentsKeys.length > 0) {
         firstLoadedBin = self.firstLoadedBin;
         lastLoadedBin = self.lastLoadedBin;
       } else {
@@ -899,7 +899,7 @@ RootStore = types
       let firstLoadedBin;
       let lastLoadedBin;
 
-      if (self.components.size > 0) {
+      if (self.sortedComponentsKeys.length > 0) {
         firstLoadedBin = self.firstLoadedBin;
         lastLoadedBin = self.lastLoadedBin;
       } else {
