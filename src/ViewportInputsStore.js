@@ -1051,11 +1051,7 @@ RootStore = types
         .then((json) => {
           console.log("Loading projects", url);
 
-          return self.setProjectsMap(
-            json.projects,
-            selectedProject,
-            selectedCase
-          );
+          return self.setProjectsMap(json, selectedProject, selectedCase);
         });
     },
 
