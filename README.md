@@ -41,3 +41,7 @@ flask run
 Please note, that this (as well as `npm run start`) will start development server not suitable for deployment!
 
 If you want more robust and self contained infrastructure, which will allow you to use Pantograph-vis with Redis DB and API (all behind NGINX reverse proxy) and do all preprocessing using `pantograph` command line tool (see documentation for [pyGenGraph](...) package for more details), then the easiest option is to use Docker Compose infrastructure available in [pantograph-docker](...) repository.
+
+## User manual
+
+Relatively basic user manual is available [here](user_manual.md) in markdown or as html in `manual` directory in self contained html format.
