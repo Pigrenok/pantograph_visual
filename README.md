@@ -1,6 +1,6 @@
-# Schematize
+# Pantograph visualisation tool
 
-Visualization component of Pangenome Schematics for 1,000s of individuals and gigabase genomes.
+Visualization component of Pantograph
 
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
@@ -8,10 +8,10 @@ Visualization component of Pangenome Schematics for 1,000s of individuals and gi
 
 
 ```bash
-git clone https://github.com/graph-genome/Schematize
-cd Schematize
+git clone ...
+cd Pantograph-vis
 npm install
-npm start
+npm run start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
@@ -26,33 +26,18 @@ npm run build
 
 Builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
 
-## JBrowse2 Integration
-((JBrowse2 integration is not done yet. If you'd like to contribute you can make a PR for [Issue #7](https://github.com/graph-genome/Schematize/issues/7) ))
+## Metadata DB and API.
 
-The whole code in this repository is integrated as a submodule in [GMOD](http://gmod.org/wiki/Main_Page)'s
- [JBrowse-Components](https://github.com/GMOD/jbrowse-components). 
- We are currently stashing our code @https://github.com/graph-genome/jbrowse-components/tree/pangenome_group_testing.
- 
- In order to get the plugin in JBrowse-Web to run, execute the following
- steps:
- 
- Clone the JBrowse-Components repository:
- 
- `git clone --recurse-submodules -b pangenome_group_testing git@github.com:graph-genome/jbrowse-components.git`
+In order to use metadata API, you should have running Redis DB instance with metadata for each available project stored there. In order to do it, you need to export each project with Redis server available and its credentials passed to exporting tool (either command line ot used as Python function). The Python package that implements it available [here](...).
 
-Install dependencies:
- 
- `cd jbrowse-components/`
- 
- `yarn`
- 
- Start the development server (it takes some time until it is up...):
- 
- `(cd packages/jbrowse-web/ && yarn start)`
- 
- Navigate to `File` -> `New pangenome view`. Now you have a PangenomeView track running in JBrowse2!
- 
- ### Developer Notes
+If Redis server is available, then do the following (given you already in the Pantograph-vis repo directory):
 
- All test files must be copied to `jbrowse-components/packages/jbrowse-web/test_data`. 
- In `jbrowse-components/packages/pangenome-view/src/PangenomeView/components/prototype/src/PangenomeSchematic.js` change path `data` to path `test_data` so that we point to the currect folder for our data to load.
+```bash
+cd API
+pip install -r requirements.txt
+flask run
+```
+
+Please note, that this (as well as `npm run start`) will start development server not suitable for deployment!
+
+If you want more robust and self contained infrastructure, which will allow you to use Pantograph-vis with Redis DB and API (all behind NGINX reverse proxy) and do all preprocessing using `pantograph` command line tool (see documentation for [pyGenGraph](...) package for more details), then the easiest option is to use Docker Compose infrastructure available in [pantograph-docker](...) repository.
