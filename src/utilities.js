@@ -133,7 +133,14 @@ export function determineAdjacentIntersection(curLink, prevLink, same) {
 }
 
 export function binFromCol(comp, col) {
-  let distRatio = (col - comp.firstCol) / (comp.lastCol - comp.firstCol);
+  let distRatio;
+
+  if (comp.lastCol === comp.firstCol) {
+    distRatio = 1;
+  } else {
+    distRatio = (col - comp.firstCol) / (comp.lastCol - comp.firstCol);
+  }
+
   let bin =
     comp.firstBin + Math.round(distRatio * (comp.lastBin - comp.firstBin));
 
