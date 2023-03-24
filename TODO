@@ -10,3 +10,7 @@
 
 - Need to write a short description of the main concept of how data is manipulated.
 
+## Issues
+
+When filtering or any dimming of an accession happens, cells with multiple copies becomes dimmer, but almost the same brightness as normal cells on highlighted accessions. This needs to be fixed by using the same colour for all cells (one grey for all normal and one red for all inverted cells) if an accession is dimmed.
+
