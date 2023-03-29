@@ -44,4 +44,4 @@ If you want more robust and self contained infrastructure, which will allow you 
 
 ## User manual
 
-Relatively basic user manual is available [here](user_manual.md) in markdown or as html in `manual` directory in self contained html format.
+Relatively basic user manual is available [here](user_manual.md) in markdown or as html [here](https://pigrenok.github.io/pantograph_visual/).
